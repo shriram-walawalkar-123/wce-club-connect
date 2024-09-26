@@ -1,43 +1,100 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert,Image } from 'react-native';
+import { View, Text, TextInput, Button, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
 
-export default function SignupScreen({ navigation }) {
+WebBrowser.maybeCompleteAuthSession();
+
+const Signup = () => {
+  const [isStudentSignup, setIsStudentSignup] = useState(true); // Toggle between Student and Admin
   const [name, setName] = useState('');
+  const [clubName,setClubName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [collageName, setCollageName] = useState('');
+  const [clubId,setClubId] = useState();
+  
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    expoClientId: 'YOUR_EXPO_CLIENT_ID',
+    androidClientId: 'YOUR_ANDROID_CLIENT_ID',
+    iosClientId: 'YOUR_IOS_CLIENT_ID',
+    webClientId: 'YOUR_WEB_CLIENT_ID',
+  });
 
   const handleSignup = () => {
-    if (!name || !email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill all the fields.');
-      return;
+    if (isStudentSignup) {
+      Alert.alert('Student Signup', 'Student signup logic goes here.');
+    } else {
+      Alert.alert('Admin Signup', 'Admin signup logic goes here.');
     }
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match.');
-      return;
-    }
-
-    Alert.alert('Success', 'User successfully signed up!');
-    navigation.navigate('Login');
   };
+
+  // Handle Google signup for students
+  const handleGoogleSignup = () => {
+    promptAsync();
+  };
+
+  // If Google authentication is successful
+  if (response?.type === 'success') {
+    Alert.alert('Success', 'Logged in with Google');
+  }
 
   return (
     <View style={styles.container}>
-      <View>
-    <Image
-        source={{ uri: 'https://th.bing.com/th?id=OIP.aP1NzCPFoFARQQVD4NrOEgAAAA&w=158&h=142&c=8&rs=1&qlt=90&o=6&dpr=1.3&pid=3.1&rm=2' }}
-        style={styles.logo}
-      />
-    </View>
+      {/* Signup Mode Toggle */}
+      <View style={styles.toggleContainer}>
+        <TouchableOpacity onPress={() => setIsStudentSignup(true)}>
+          <Text style={[styles.toggleButton, isStudentSignup && styles.selectedButton]}>Student Signup</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setIsStudentSignup(false)}>
+          <Text style={[styles.toggleButton, !isStudentSignup && styles.selectedButton]}>Admin Signup</Text>
+        </TouchableOpacity>
+      </View>
 
-      <Text style={styles.title}>Sign Up</Text>
+      <Text style={styles.title}>{isStudentSignup ? 'Student Signup' : 'Admin Signup'}</Text>
 
+      {/* Common fields for both Student and Admin */}
       <TextInput
         style={styles.input}
-        placeholder="Name"
+        placeholder="Full Name"
         value={name}
         onChangeText={setName}
       />
+
+      {
+        !isStudentSignup && (
+          <>
+      <TextInput
+        style={styles.input}
+        placeholder="club Name"
+        value={clubName}
+        onChangeText={setClubName}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="club id"
+        value={clubId}
+        onChangeText={setClubId}
+      />
+
+    </>
+        )
+      }
+      
+
+      {/* Conditional fields for Student Signup */}
+      {isStudentSignup && (
+        <>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Name of College"
+            value={collageName}
+            onChangeText={setCollageName}
+          />
+        </>
+      )}
 
       <TextInput
         style={styles.input}
@@ -45,7 +102,6 @@ export default function SignupScreen({ navigation }) {
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
-        autoCapitalize="none"
       />
 
       <TextInput
@@ -54,43 +110,21 @@ export default function SignupScreen({ navigation }) {
         value={password}
         onChangeText={setPassword}
         secureTextEntry
-        autoCapitalize="none"
       />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Confirm Password"
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        secureTextEntry
-        autoCapitalize="none"
-      />
+      <Button title="Signup" onPress={handleSignup} />
 
-      <TouchableOpacity style={styles.button} onPress={handleSignup}>
-        <Text style={styles.buttonText}>Sign Up</Text>
-      </TouchableOpacity>
-
-      <View style={styles.footerLinks}>
-        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-          <Text style={styles.linkText}>Already have an account? Login</Text>
+      {/* Google Signup only for students */}
+      {isStudentSignup && (
+        <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignup}>
+          <Text style={styles.googleButtonText}>Signup with Google</Text>
         </TouchableOpacity>
-      </View>
+      )}
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  logo:{
-    height:100,
-    width:100,
-    marginHorizontal:130,
-    marginTop:-150,
-    borderRadius:50,
-    resizeMode:'contain',
-    borderWidth: 1, 
-    borderColor: 'black', 
-    },
-
   container: {
     flex: 1,
     justifyContent: 'center',
@@ -101,38 +135,42 @@ const styles = StyleSheet.create({
     fontSize: 24,
     marginBottom: 20,
     textAlign: 'center',
-    fontWeight: 'bold',
   },
   input: {
-    width: '100%',
-    height: 50,
-    backgroundColor: '#fff',
-    borderColor: '#ddd',
     borderWidth: 1,
+    padding: 10,
+    marginBottom: 15,
     borderRadius: 5,
-    paddingHorizontal: 10,
+    backgroundColor: '#fff',
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     marginBottom: 20,
   },
-  button: {
-    backgroundColor: '#6200EE',
+  toggleButton: {
+    fontSize: 18,
+    marginHorizontal: 20,
+    padding: 10,
+    borderBottomWidth: 2,
+    borderColor: 'transparent',
+  },
+  selectedButton: {
+    borderColor: '#6200EE',
+    fontWeight: 'bold',
+  },
+  googleButton: {
+    marginTop: 20,
     padding: 15,
+    backgroundColor: '#DB4437',
     borderRadius: 5,
     alignItems: 'center',
-    marginBottom: 10,
   },
-  buttonText: {
+  googleButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
-  footerLinks: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  linkText: {
-    color: '#6200EE',
-    fontSize: 16,
-    textDecorationLine: 'underline',
-  },
 });
+
+export default Signup;

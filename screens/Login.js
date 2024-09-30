@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { setEmail, setPassword, setRole, setAuthentication, setUser } from '../slices/authSlice';
+const { width, height } = Dimensions.get('window');
+import { View, Text, TextInput, Button, TouchableOpacity, StyleSheet, Alert, Image, ImageBackground, Dimensions, Platform } from 'react-native';
 
 
 WebBrowser.maybeCompleteAuthSession();

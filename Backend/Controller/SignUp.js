@@ -1,12 +1,15 @@
 const bcrypt = require("bcryptjs");
 const User = require("../Models/SignUpModel");
+
 const signup = async (req, res) => {
     try {
         // Extract the fields from the request body
-        const { name, email, clubName, CollegeName, clubId, password, role } = req?.body;
-
+        const { name, email, clubName, collegeName, clubId, password, role } = req?.body;
+        console.log(req?.body);
+        
         // Basic input validation
         if (!name || !email || !password || !role) {
+            console.log("here is problem d");
             return res.status(400).json({
                 success: false,
                 message: "Name, email, password, and role are required fields",
@@ -15,20 +18,20 @@ const signup = async (req, res) => {
 
         // Role-specific validation
         if (role === "club") {
-            if (!clubName) {
+            if (!clubName || clubName.trim() === '') {
                 return res.status(400).json({
                     success: false,
                     message: "Club name is required for club role",
                 });
             }
-            if (!clubId) {
+            if (!clubId || clubId.trim() === '') {
                 return res.status(400).json({
                     success: false,
                     message: "Club ID is required for club role",
                 });
             }
-        } else if (role === "general") {
-            if (!CollegeName) {
+        } else if (role === "general" || role === "Student") { // Adjusted to include "Student"
+            if (!collegeName || collegeName.trim() === '') { // Fixed case
                 return res.status(400).json({
                     success: false,
                     message: "College name is required for general role",
@@ -69,7 +72,7 @@ const signup = async (req, res) => {
             email,
             clubName: role === "club" ? clubName : undefined,
             clubId: role === "club" ? clubId : undefined,
-            CollegeName: role === "general" ? CollegeName : undefined,
+            collegeName: role === "general" || role === "Student" ? collegeName : undefined, // Fixed case
             password: hashPassword,
             role,
         });
@@ -97,4 +100,4 @@ const signup = async (req, res) => {
     }
 };
 
-module.exports=signup
+module.exports = signup;

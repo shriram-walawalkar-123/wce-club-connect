@@ -31,8 +31,8 @@ const userSignUpSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['general', 'club','admin'], // Restricts role to 'user' or 'admin'
-        default: 'general' // Default role is 'user'
+        enum: ['Student', 'club','admin'], // Restricts role to 'user' or 'admin'
+        default: 'Student' // Default role is 'user'
     }
 }, { timestamps: true }); // Add timestamps option
 

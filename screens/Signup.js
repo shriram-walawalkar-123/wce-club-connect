@@ -1,10 +1,12 @@
-import React, { useEffect } from 'react';
-import { View, Text, TextInput, Button, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { setName, setClubName, setEmail, setPassword, setCollegeName, setClubId, toggleSignupMode } from '../slices/authSlice';
+import { View, Text, TextInput, Button, TouchableOpacity, StyleSheet, Alert, Dimensions } from 'react-native';
+import SummaryApi from '../backendRoutes';
 
+const { width, height } = Dimensions.get('window');
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -16,10 +18,11 @@ const Signup = () => {
     clubName,
     email,
     password,
-    collegeName,
+    CollegeName,
     clubId,
   } = useSelector((state) => state.auth);
-
+  const data=useSelector((state) => state.auth)
+  // console.log("usre data is here:",data);
   const [request, response, promptAsync] = Google.useAuthRequest({
     expoClientId: 'YOUR_EXPO_CLIENT_ID',
     androidClientId: 'YOUR_ANDROID_CLIENT_ID',
@@ -27,20 +30,37 @@ const Signup = () => {
     webClientId: 'YOUR_WEB_CLIENT_ID',
   });
 
-  const handleSignup = () => {
-    if (isStudentSignup) {
-      Alert.alert('Student Signup', 'Student signup logic goes here.');
-    } else {
-      Alert.alert('Admin Signup', 'Admin signup logic goes here.');
-    }
-  };
-
   useEffect(() => {
     if (response?.type === 'success') {
       Alert.alert('Success', 'Logged in with Google');
       // Dispatch authentication state changes if needed
     }
   }, [response]);
+
+  const handleSignup = async () => {
+    try {
+        const response = await fetch(SummaryApi.signUp.url, {
+            method: SummaryApi.signUp.method,
+            credentials:"include",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            Alert.alert('Success', 'Signup successful!');
+        } else {
+            Alert.alert('Error', result.message || 'Signup failed. Please try again.');
+        }
+    } catch (error) {
+        console.error('Signup error:', error); // Log the error for debugging
+        Alert.alert('Error', 'An error occurred during signup. Please try again.');
+    }
+};
+
 
   return (
     <View style={styles.container}>
@@ -86,7 +106,7 @@ const Signup = () => {
         <TextInput
           style={styles.input}
           placeholder="Name of College"
-          value={collegeName}
+          value={CollegeName}
           onChangeText={(text) => dispatch(setCollegeName(text))}
         />
       )}
@@ -120,11 +140,6 @@ const Signup = () => {
 };
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    resizeMode: 'cover',
-    justifyContent: 'center',
-  },
   container: {
     flex: 1,
     justifyContent: 'center',
@@ -173,11 +188,6 @@ const styles = StyleSheet.create({
     fontSize: width * 0.045, // Responsive font size
     fontWeight: 'bold',
     marginLeft: width * 0.02, // Responsive margin between logo and text
-  },
-  googleLogo: {
-    width: width * 0.08,
-    height: width * 0.08,
-    borderRadius:20
   },
 });
 

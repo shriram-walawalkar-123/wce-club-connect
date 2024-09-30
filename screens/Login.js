@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, ImageBackground } from 'react-native';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
+import { setEmail, setPassword, setRole, setAuthentication, setUser } from '../slices/authSlice';
+
 
 WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen({ navigation }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState('Student');  
+  const dispatch = useDispatch();
+  const { email, password, role } = useSelector((state) => state.auth);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     expoClientId: 'YOUR_EXPO_CLIENT_ID',
@@ -21,6 +23,7 @@ export default function LoginScreen({ navigation }) {
     if (response?.type === 'success') {
       const { authentication } = response;
       Alert.alert('Success', 'Logged in with Google');
+      dispatch(setAuthentication(true));
       navigateToRoleScreen(role);
     }
   }, [response]);
@@ -32,7 +35,8 @@ export default function LoginScreen({ navigation }) {
     }
 
     Alert.alert('Success', `Logged in as ${role}`);
-    navigateToRoleScreen(role); 
+    dispatch(setAuthentication(true));
+    navigateToRoleScreen(role);
   };
 
   const navigateToRoleScreen = (role) => {
@@ -46,93 +50,65 @@ export default function LoginScreen({ navigation }) {
   };
 
   return (
-    <ImageBackground
-      source={{ uri: 'https://www.nikaiacours.fr/wp-content/uploads/2019/12/login-background.jpg' }}
-      style={styles.background}
-    >
-      <View style={styles.container}>
-        <View>
-          <Image
-            source={{ uri: 'https://th.bing.com/th?id=OIP.aP1NzCPFoFARQQVD4NrOEgAAAA&w=158&h=142&c=8&rs=1&qlt=90&o=6&dpr=1.3&pid=3.1&rm=2' }}
-            style={styles.logo}
-          />
-        </View>
+    <View style={styles.container}>
+      <Text style={styles.title}>Login</Text>
 
-        <Text style={styles.title}>Login</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        value={email}
+        onChangeText={(text) => dispatch(setEmail(text))}
+      />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        value={password}
+        onChangeText={(text) => dispatch(setPassword(text))}
+        secureTextEntry
+      />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-
-        {/* Role Selection Buttons */}
-        <Text style={styles.label}>Select Role:</Text>
-        <View style={styles.roleButtonsContainer}>
-          <TouchableOpacity
-            style={[styles.roleButton, role === 'Student' && styles.selectedRoleButton]}
-            onPress={() => setRole('Student')}
-          >
-            <Text style={styles.buttonText}>Student</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.roleButton, role === 'Club Admin' && styles.selectedRoleButton]}
-            onPress={() => setRole('Club Admin')}
-          >
-            <Text style={styles.buttonText}>Club Admin</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.roleButton, role === 'Administrator' && styles.selectedRoleButton]}
-            onPress={() => setRole('Administrator')}
-          >
-            <Text style={styles.buttonText}>Administrator</Text>
-          </TouchableOpacity>
-        </View>
-
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Login</Text>
-        </TouchableOpacity>
-
-        {/* Google Sign-In Button */}
+      <View style={styles.roleButtonsContainer}>
         <TouchableOpacity
-          style={[styles.button, styles.googleButton]}
-          onPress={() => {
-            promptAsync();
-          }}
-          disabled={!request}
+          style={[styles.roleButton, role === 'Student' && styles.selectedRoleButton]}
+          onPress={() => dispatch(setRole('Student'))}
         >
-          <Image
-            source={{ uri: 'https://bulldogdigitalmedia.co.uk/wp-content/uploads/2019/03/image-12.jpg' }}
-            style={styles.googleIcon}
-          />
-          <Text style={styles.buttonText}>Login with Google</Text>
+          <Text style={styles.buttonText}>Student</Text>
         </TouchableOpacity>
-
-        {/* Signup and Forgot Password Links */}
-        <View style={styles.footerLinks}>
-          <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-            <Text style={styles.linkText}>Sign up</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
-            <Text style={styles.linkText}>Forgot password?</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={[styles.roleButton, role === 'Club Admin' && styles.selectedRoleButton]}
+          onPress={() => dispatch(setRole('Club Admin'))}
+        >
+          <Text style={styles.buttonText}>Club Admin</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.roleButton, role === 'Administrator' && styles.selectedRoleButton]}
+          onPress={() => dispatch(setRole('Administrator'))}
+        >
+          <Text style={styles.buttonText}>Administrator</Text>
+        </TouchableOpacity>
       </View>
-    </ImageBackground>
+
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+        <Text style={styles.buttonText}>Login</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.button, styles.googleButton]}
+        onPress={() => promptAsync()}
+        disabled={!request}
+      >
+        <Text style={styles.buttonText}>Login with Google</Text>
+      </TouchableOpacity>
+
+      {/* New Signup Link */}
+      <View style={styles.footerLinks}>
+        <Text style={styles.footerText}>Don't have an account?</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+          <Text style={styles.signupLink}>Sign Up</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }
 

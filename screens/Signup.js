@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, Button, TouchableOpacity, StyleSheet, Alert, Image, ImageBackground, Dimensions, Platform } from 'react-native';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 
 WebBrowser.maybeCompleteAuthSession();
 
+const { width, height } = Dimensions.get('window');
+
 const Signup = () => {
   const [isStudentSignup, setIsStudentSignup] = useState(true); // Toggle between Student and Admin
   const [name, setName] = useState('');
-  const [clubName,setClubName] = useState('');
+  const [clubName, setClubName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [collageName, setCollageName] = useState('');
-  const [clubId,setClubId] = useState();
-  
+  const [clubId, setClubId] = useState();
+
   const [request, response, promptAsync] = Google.useAuthRequest({
     expoClientId: 'YOUR_EXPO_CLIENT_ID',
     androidClientId: 'YOUR_ANDROID_CLIENT_ID',
@@ -40,136 +42,157 @@ const Signup = () => {
   }
 
   return (
-    <View style={styles.container}>
-      {/* Signup Mode Toggle */}
-      <View style={styles.toggleContainer}>
-        <TouchableOpacity onPress={() => setIsStudentSignup(true)}>
-          <Text style={[styles.toggleButton, isStudentSignup && styles.selectedButton]}>Student Signup</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setIsStudentSignup(false)}>
-          <Text style={[styles.toggleButton, !isStudentSignup && styles.selectedButton]}>Admin Signup</Text>
-        </TouchableOpacity>
-      </View>
+    <ImageBackground
+      source={{ uri: 'https://www.nikaiacours.fr/wp-content/uploads/2019/12/login-background.jpg' }}
+      style={styles.background}
+    >
+      <View style={styles.container}>
+        {/* Signup Mode Toggle */}
+        <View style={styles.toggleContainer}>
+          <TouchableOpacity onPress={() => setIsStudentSignup(true)}>
+            <Text style={[styles.toggleButton, isStudentSignup && styles.selectedButton]}>
+              Student Signup
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setIsStudentSignup(false)}>
+            <Text style={[styles.toggleButton, !isStudentSignup && styles.selectedButton]}>
+              Admin Signup
+            </Text>
+          </TouchableOpacity>
+        </View>
 
-      <Text style={styles.title}>{isStudentSignup ? 'Student Signup' : 'Admin Signup'}</Text>
+        <Text style={styles.title}>{isStudentSignup ? 'Student Signup' : 'Admin Signup'}</Text>
 
-      {/* Common fields for both Student and Admin */}
-      <TextInput
-        style={styles.input}
-        placeholder="Full Name"
-        value={name}
-        onChangeText={setName}
-      />
+        {/* Common fields for both Student and Admin */}
+        <TextInput
+          style={styles.input}
+          placeholder="Full Name"
+          value={name}
+          onChangeText={setName}
+        />
 
-      {
-        !isStudentSignup && (
+        {!isStudentSignup && (
           <>
-      <TextInput
-        style={styles.input}
-        placeholder="club Name"
-        value={clubName}
-        onChangeText={setClubName}
-      />
+            <TextInput
+              style={styles.input}
+              placeholder="Club Name"
+              value={clubName}
+              onChangeText={setClubName}
+            />
 
-      <TextInput
-        style={styles.input}
-        placeholder="club id"
-        value={clubId}
-        onChangeText={setClubId}
-      />
+            <TextInput
+              style={styles.input}
+              placeholder="Club ID"
+              value={clubId}
+              onChangeText={setClubId}
+            />
+          </>
+        )}
 
-    </>
-        )
-      }
-      
+        {/* Conditional fields for Student Signup */}
+        {isStudentSignup && (
+          <>
+            <TextInput
+              style={styles.input}
+              placeholder="Name of College"
+              value={collageName}
+              onChangeText={setCollageName}
+            />
+          </>
+        )}
 
-      {/* Conditional fields for Student Signup */}
-      {isStudentSignup && (
-        <>
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+        />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Name of College"
-            value={collageName}
-            onChangeText={setCollageName}
-          />
-        </>
-      )}
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-      />
+        <Button title="Signup" onPress={handleSignup} />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-
-      <Button title="Signup" onPress={handleSignup} />
-
-      {/* Google Signup only for students */}
-      {isStudentSignup && (
-        <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignup}>
-          <Text style={styles.googleButtonText}>Signup with Google</Text>
-        </TouchableOpacity>
-      )}
-    </View>
+        {/* Google Signup only for students */}
+        {isStudentSignup && (
+          <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignup}>
+            <Image
+              source={{ uri: 'https://bulldogdigitalmedia.co.uk/wp-content/uploads/2019/03/image-12.jpg' }}
+              style={styles.googleLogo}
+            />
+            <Text style={styles.googleButtonText}>Signup with Google</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    resizeMode: 'cover',
+    justifyContent: 'center',
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#f8f8f8',
+    padding: width * 0.05, // Responsive padding
+    backgroundColor: 'rgba(255, 255, 255, 0)', // Slightly more opaque background for readability
   },
   title: {
-    fontSize: 24,
-    marginBottom: 20,
+    fontSize: width * 0.06, // Responsive font size
+    marginBottom: height * 0.02,
     textAlign: 'center',
   },
   input: {
     borderWidth: 1,
-    padding: 10,
-    marginBottom: 15,
+    padding: width * 0.03, // Responsive padding
+    marginBottom: height * 0.02, // Responsive margin
     borderRadius: 5,
     backgroundColor: '#fff',
   },
   toggleContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 20,
+    marginBottom: height * 0.02,
   },
   toggleButton: {
-    fontSize: 18,
-    marginHorizontal: 20,
-    padding: 10,
+    fontSize: width * 0.045, // Responsive font size
+    marginHorizontal: width * 0.05,
+    padding: width * 0.02,
     borderBottomWidth: 2,
     borderColor: 'transparent',
   },
   selectedButton: {
-    borderColor: '#6200EE',
+    borderColor: '#dedeaf',
     fontWeight: 'bold',
   },
   googleButton: {
-    marginTop: 20,
-    padding: 15,
-    backgroundColor: '#DB4437',
+    marginTop: height * 0.03, // Responsive margin
+    padding: width * 0.04,
+    backgroundColor: '#07768c',
     borderRadius: 5,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   googleButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: width * 0.045, // Responsive font size
     fontWeight: 'bold',
+    marginLeft: width * 0.02, // Responsive margin between logo and text
+  },
+  googleLogo: {
+    width: width * 0.08,
+    height: width * 0.08,
+    borderRadius:20
   },
 });
 

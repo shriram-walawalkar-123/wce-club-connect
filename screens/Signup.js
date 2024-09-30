@@ -1,20 +1,24 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, TouchableOpacity, StyleSheet, Alert, Image, ImageBackground, Dimensions, Platform } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, TextInput, Button, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
+import { setName, setClubName, setEmail, setPassword, setCollegeName, setClubId, toggleSignupMode } from '../slices/authSlice';
+
 
 WebBrowser.maybeCompleteAuthSession();
 
-const { width, height } = Dimensions.get('window');
-
 const Signup = () => {
-  const [isStudentSignup, setIsStudentSignup] = useState(true); // Toggle between Student and Admin
-  const [name, setName] = useState('');
-  const [clubName, setClubName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [collageName, setCollageName] = useState('');
-  const [clubId, setClubId] = useState();
+  const dispatch = useDispatch();
+  const {
+    isStudentSignup,
+    name,
+    clubName,
+    email,
+    password,
+    collegeName,
+    clubId,
+  } = useSelector((state) => state.auth);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     expoClientId: 'YOUR_EXPO_CLIENT_ID',
@@ -31,106 +35,87 @@ const Signup = () => {
     }
   };
 
-  // Handle Google signup for students
-  const handleGoogleSignup = () => {
-    promptAsync();
-  };
-
-  // If Google authentication is successful
-  if (response?.type === 'success') {
-    Alert.alert('Success', 'Logged in with Google');
-  }
+  useEffect(() => {
+    if (response?.type === 'success') {
+      Alert.alert('Success', 'Logged in with Google');
+      // Dispatch authentication state changes if needed
+    }
+  }, [response]);
 
   return (
-    <ImageBackground
-      source={{ uri: 'https://www.nikaiacours.fr/wp-content/uploads/2019/12/login-background.jpg' }}
-      style={styles.background}
-    >
-      <View style={styles.container}>
-        {/* Signup Mode Toggle */}
-        <View style={styles.toggleContainer}>
-          <TouchableOpacity onPress={() => setIsStudentSignup(true)}>
-            <Text style={[styles.toggleButton, isStudentSignup && styles.selectedButton]}>
-              Student Signup
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setIsStudentSignup(false)}>
-            <Text style={[styles.toggleButton, !isStudentSignup && styles.selectedButton]}>
-              Admin Signup
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <Text style={styles.title}>{isStudentSignup ? 'Student Signup' : 'Admin Signup'}</Text>
-
-        {/* Common fields for both Student and Admin */}
-        <TextInput
-          style={styles.input}
-          placeholder="Full Name"
-          value={name}
-          onChangeText={setName}
-        />
-
-        {!isStudentSignup && (
-          <>
-            <TextInput
-              style={styles.input}
-              placeholder="Club Name"
-              value={clubName}
-              onChangeText={setClubName}
-            />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Club ID"
-              value={clubId}
-              onChangeText={setClubId}
-            />
-          </>
-        )}
-
-        {/* Conditional fields for Student Signup */}
-        {isStudentSignup && (
-          <>
-            <TextInput
-              style={styles.input}
-              placeholder="Name of College"
-              value={collageName}
-              onChangeText={setCollageName}
-            />
-          </>
-        )}
-
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-
-        <Button title="Signup" onPress={handleSignup} />
-
-        {/* Google Signup only for students */}
-        {isStudentSignup && (
-          <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignup}>
-            <Image
-              source={{ uri: 'https://bulldogdigitalmedia.co.uk/wp-content/uploads/2019/03/image-12.jpg' }}
-              style={styles.googleLogo}
-            />
-            <Text style={styles.googleButtonText}>Signup with Google</Text>
-          </TouchableOpacity>
-        )}
+    <View style={styles.container}>
+      {/* Signup Mode Toggle */}
+      <View style={styles.toggleContainer}>
+        <TouchableOpacity onPress={() => dispatch(toggleSignupMode(true))}>
+          <Text style={[styles.toggleButton, isStudentSignup && styles.selectedButton]}>Student Signup</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => dispatch(toggleSignupMode(false))}>
+          <Text style={[styles.toggleButton, !isStudentSignup && styles.selectedButton]}>Admin Signup</Text>
+        </TouchableOpacity>
       </View>
-    </ImageBackground>
+
+      <Text style={styles.title}>{isStudentSignup ? 'Student Signup' : 'Admin Signup'}</Text>
+
+      {/* Common fields for both Student and Admin */}
+      <TextInput
+        style={styles.input}
+        placeholder="Full Name"
+        value={name}
+        onChangeText={(text) => dispatch(setName(text))}
+      />
+
+      {!isStudentSignup && (
+        <>
+          <TextInput
+            style={styles.input}
+            placeholder="Club Name"
+            value={clubName}
+            onChangeText={(text) => dispatch(setClubName(text))}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Club ID"
+            value={clubId}
+            onChangeText={(text) => dispatch(setClubId(text))}
+          />
+        </>
+      )}
+
+      {/* Conditional fields for Student Signup */}
+      {isStudentSignup && (
+        <TextInput
+          style={styles.input}
+          placeholder="Name of College"
+          value={collegeName}
+          onChangeText={(text) => dispatch(setCollegeName(text))}
+        />
+      )}
+
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        value={email}
+        onChangeText={(text) => dispatch(setEmail(text))}
+        keyboardType="email-address"
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        value={password}
+        onChangeText={(text) => dispatch(setPassword(text))}
+        secureTextEntry
+      />
+
+      <Button title="Signup" onPress={handleSignup} />
+
+      {/* Google Signup only for students */}
+      {isStudentSignup && (
+        <TouchableOpacity style={styles.googleButton} onPress={() => promptAsync()}>
+          <Text style={styles.googleButtonText}>Signup with Google</Text>
+        </TouchableOpacity>
+      )}
+    </View>
   );
 };
 

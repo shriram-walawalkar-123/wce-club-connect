@@ -114,6 +114,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   clubCard: {
+    // boxSizing: borderBox,
     height: 150,
     backgroundColor: '#FFFFFF',
     // backgroundColor: 'rgb(33,122,122)',
@@ -136,6 +137,7 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   clubText: {
+    resizeMode: 'contain',
     fontSize: width > 600 ? 18 : 16, // Adjust text size for larger screens
     fontWeight: 'bold',
     color: '#333',

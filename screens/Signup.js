@@ -23,9 +23,6 @@ const Signup = () => {
     role,
   } = useSelector((state) => state.auth);
   
-  const data = useSelector((state) => state.auth);
-  console.log("data" , data);
-
   const [request, response, promptAsync] = Google.useAuthRequest({
     expoClientId: 'YOUR_EXPO_CLIENT_ID',
     androidClientId: 'YOUR_ANDROID_CLIENT_ID',
@@ -144,18 +141,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    padding: width * 0.05, // Responsive padding
-    backgroundColor: 'rgba(255, 255, 255, 0)', // Slightly more opaque background for readability
+    padding: width * 0.05,
+    backgroundColor: 'rgba(255, 255, 255, 0)',
   },
   title: {
-    fontSize: width * 0.06, // Responsive font size
+    fontSize: width * 0.06,
     marginBottom: height * 0.02,
     textAlign: 'center',
   },
   input: {
     borderWidth: 1,
-    padding: width * 0.03, // Responsive padding
-    marginBottom: height * 0.02, // Responsive margin
+    padding: width * 0.03,
+    marginBottom: height * 0.02,
     borderRadius: 5,
     backgroundColor: '#fff',
   },
@@ -165,7 +162,7 @@ const styles = StyleSheet.create({
     marginBottom: height * 0.02,
   },
   toggleButton: {
-    fontSize: width * 0.045, // Responsive font size
+    fontSize: width * 0.045,
     marginHorizontal: width * 0.05,
     padding: width * 0.02,
     borderBottomWidth: 2,
@@ -176,7 +173,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   googleButton: {
-    marginTop: height * 0.03, // Responsive margin
+    marginTop: height * 0.03,
     padding: width * 0.04,
     backgroundColor: '#07768c',
     borderRadius: 5,
@@ -186,9 +183,9 @@ const styles = StyleSheet.create({
   },
   googleButtonText: {
     color: '#fff',
-    fontSize: width * 0.045, // Responsive font size
+    fontSize: width * 0.045,
     fontWeight: 'bold',
-    marginLeft: width * 0.02, // Responsive margin between logo and text
+    marginLeft: width * 0.02,
   },
 });
 

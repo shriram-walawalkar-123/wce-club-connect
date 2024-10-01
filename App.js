@@ -5,9 +5,12 @@ import { createStackNavigator } from '@react-navigation/stack';
 import Home from './screens/Home';
 import Login from './screens/Login';
 import Signup from './screens/Signup';
+import { store } from './store'; // Import your Redux store
 import UpcomingEvents from './screens/UpcomingEvents';
 import PastEvents from './screens/PastEvents';
-import { store } from './store'; // Import your Redux store
+import ClubOptionsScreen from './screens/ClubOptions';
+import UpdateDescriptionScreen from './screens/updateDescription';
+import UpdateMembersScreen from './screens/updateMember';
 
 const Stack = createStackNavigator();
 
@@ -21,6 +24,9 @@ export default function App() {
           <Stack.Screen name="Signup" component={Signup} />
           <Stack.Screen name="UpcomingEvents" component={UpcomingEvents} />
           <Stack.Screen name="PastEvents" component={PastEvents} />
+         <Stack.Screen name="ClubOptionsScreen" component={ClubOptionsScreen} />
+          <Stack.Screen name="UpdateDescriptionScreen" component={UpdateDescriptionScreen} />
+          <Stack.Screen name="UpdateMembersScreen" component={UpdateMembersScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

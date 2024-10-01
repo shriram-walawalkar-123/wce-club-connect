@@ -2,10 +2,11 @@ import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // For local storage
 import { setEmail, setPassword, setRole, setAuthentication, setUser } from '../slices/authSlice';
-const { width, height } = Dimensions.get('window');
-import { View, Text, TextInput, Button, TouchableOpacity, StyleSheet, Alert, Image, ImageBackground, Dimensions, Platform } from 'react-native';
-
+import { View, Text, TextInput, Button, TouchableOpacity, StyleSheet, Alert, Image, Dimensions } from 'react-native';
+import SummaryApi from '../backendRoutes';
+import Home from './Home';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -29,27 +30,50 @@ export default function LoginScreen({ navigation }) {
     }
   }, [response]);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert('Error', 'Please enter both email and password.');
       return;
     }
 
-    Alert.alert('Success', `Logged in as ${role}`);
-    dispatch(setAuthentication(true));
-    navigateToRoleScreen(role);
+    try {
+      // Make a POST request to your backend API for login
+      const response = await fetch(SummaryApi.logIn.url, {
+        method: SummaryApi.logIn.method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+      console.log("user data",data);
+      if (data.success===true) {
+        // Store the token in AsyncStorage
+        await AsyncStorage.setItem('authToken', data.token);
+        console.log("login success",data)
+        // Dispatch authentication action
+        dispatch(setAuthentication(true));
+        // Navigate based on role
+        navigateToRoleScreen(role);
+
+      } else {
+        Alert.alert('Error', data.message || 'Login failed');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'An error occurred during login');
+    }
   };
 
   const navigateToRoleScreen = (role) => {
     if (role === 'Student') {
-      navigation.navigate('StudentDashboard');
-    } else if (role === 'Club Admin') {
-      navigation.navigate('ClubAdminDashboard');
-    } else if (role === 'Administrator') {
-      navigation.navigate('AdminDashboard');
+      navigation.navigate('Home');
+    } else if (role === 'club') {
+      navigation.navigate('Home');
+    } else if (role === 'admin') {
+      navigation.navigate('Home');
     }
   };
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login</Text>
@@ -77,16 +101,16 @@ export default function LoginScreen({ navigation }) {
           <Text style={styles.buttonText}>Student</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.roleButton, role === 'Club Admin' && styles.selectedRoleButton]}
-          onPress={() => dispatch(setRole('Club Admin'))}
+          style={[styles.roleButton, role === 'club' && styles.selectedRoleButton]}
+          onPress={() => dispatch(setRole('club'))}
         >
-          <Text style={styles.buttonText}>Club Admin</Text>
+          <Text style={styles.buttonText}>Club</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.roleButton, role === 'Administrator' && styles.selectedRoleButton]}
-          onPress={() => dispatch(setRole('Administrator'))}
+          style={[styles.roleButton, role === 'admin' && styles.selectedRoleButton]}
+          onPress={() => dispatch(setRole('admin'))}
         >
-          <Text style={styles.buttonText}>Administrator</Text>
+          <Text style={styles.buttonText}>Admin</Text>
         </TouchableOpacity>
       </View>
 
@@ -102,7 +126,6 @@ export default function LoginScreen({ navigation }) {
         <Text style={styles.buttonText}>Login with Google</Text>
       </TouchableOpacity>
 
-      {/* New Signup Link */}
       <View style={styles.footerLinks}>
         <Text style={styles.footerText}>Don't have an account?</Text>
         <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
@@ -114,28 +137,11 @@ export default function LoginScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    resizeMode: 'cover', // This will scale the image appropriately
-    justifyContent: 'center',
-  },
-  logo: {
-    // marginTop:100,
-    height: 100,
-    width: 100,
-    padding:50,
-    marginHorizontal: 130,
-    marginTop: -120,
-    borderRadius: 50,
-    resizeMode: 'contain',
-    borderWidth: 1,
-    borderColor: 'black',
-  },
   container: {
     flex: 1,
     justifyContent: 'center',
     padding: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0)', // Semi-transparent background for readability
+    backgroundColor: 'rgba(255, 255, 255, 0)',
   },
   title: {
     fontSize: 24,
@@ -171,22 +177,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  googleIcon: {
-    height: 30,
-    width: 30,
-    marginRight: 10,
-    borderRadius:40
-  },
-  footerLinks: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
-  },
-  linkText: {
-    color: '#003366',
-    fontSize: 16,
-    textDecorationLine: 'underline',
-  },
   roleButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -203,8 +193,14 @@ const styles = StyleSheet.create({
   selectedRoleButton: {
     backgroundColor: '#07768c',
   },
-  label: {
+  footerLinks: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  signupLink: {
+    color: '#003366',
     fontSize: 16,
-    marginBottom: 10,
+    textDecorationLine: 'underline',
   },
 });

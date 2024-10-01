@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
@@ -20,9 +20,12 @@ const Signup = () => {
     password,
     CollegeName,
     clubId,
+    role,
   } = useSelector((state) => state.auth);
-  const data=useSelector((state) => state.auth)
-  // console.log("usre data is here:",data);
+  
+  const data = useSelector((state) => state.auth);
+  console.log("data" , data);
+
   const [request, response, promptAsync] = Google.useAuthRequest({
     expoClientId: 'YOUR_EXPO_CLIENT_ID',
     androidClientId: 'YOUR_ANDROID_CLIENT_ID',
@@ -33,34 +36,33 @@ const Signup = () => {
   useEffect(() => {
     if (response?.type === 'success') {
       Alert.alert('Success', 'Logged in with Google');
-      // Dispatch authentication state changes if needed
+      // Handle Google auth success
     }
   }, [response]);
 
   const handleSignup = async () => {
     try {
-        const response = await fetch(SummaryApi.signUp.url, {
-            method: SummaryApi.signUp.method,
-            credentials:"include",
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data),
-        });
+      const response = await fetch(SummaryApi.signUp.url, {
+        method: SummaryApi.signUp.method,
+        credentials: "include",
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, clubName, email, password, CollegeName, clubId, role }),
+      });
 
-        const result = await response.json();
+      const result = await response.json();
 
-        if (response.ok) {
-            Alert.alert('Success', 'Signup successful!');
-        } else {
-            Alert.alert('Error', result.message || 'Signup failed. Please try again.');
-        }
+      if (response.ok) {
+        Alert.alert('Success', 'Signup successful!');
+      } else {
+        Alert.alert('Error', result.message || 'Signup failed. Please try again.');
+      }
     } catch (error) {
-        console.error('Signup error:', error); // Log the error for debugging
-        Alert.alert('Error', 'An error occurred during signup. Please try again.');
+      console.error('Signup error:', error);
+      Alert.alert('Error', 'An error occurred during signup. Please try again.');
     }
-};
-
+  };
 
   return (
     <View style={styles.container}>
@@ -101,7 +103,6 @@ const Signup = () => {
         </>
       )}
 
-      {/* Conditional fields for Student Signup */}
       {isStudentSignup && (
         <TextInput
           style={styles.input}

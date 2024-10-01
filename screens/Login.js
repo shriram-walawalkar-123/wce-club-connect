@@ -46,9 +46,9 @@ export default function LoginScreen({ navigation }) {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
+      const data = await response?.json();
       console.log("user data",data);
-      if (data.success===true) {
+      if (data?.success===true) {
         // Store the token in AsyncStorage
         await AsyncStorage.setItem('authToken', data.token);
         console.log("login success",data)
@@ -58,7 +58,7 @@ export default function LoginScreen({ navigation }) {
         navigateToRoleScreen(role);
 
       } else {
-        Alert.alert('Error', data.message || 'Login failed');
+        Alert.alert('Error', data?.message || 'Login failed');
       }
     } catch (error) {
       Alert.alert('Error', 'An error occurred during login');

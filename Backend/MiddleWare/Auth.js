@@ -51,7 +51,7 @@ exports.isAdmin = (req, res, next) => {
 // Check if the user is a Student
 exports.isStudent = (req, res, next) => {
   try {
-    if (req.user.role === "Student") {
+    if (req.user.role === "student") {
       next();
     } else {
       return res.status(403).json({

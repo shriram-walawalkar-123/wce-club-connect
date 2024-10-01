@@ -30,7 +30,7 @@ const signup = async (req, res) => {
                     message: "Club ID is required for club role",
                 });
             }
-        } else if (role === "general" || role === "Student") { // Adjusted to include "Student"
+        } else if (role === "student") { // Adjusted to include "Student"
             if (!collegeName || collegeName.trim() === '') { // Fixed case
                 return res.status(400).json({
                     success: false,

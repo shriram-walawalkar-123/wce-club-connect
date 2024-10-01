@@ -18,11 +18,14 @@ const Signup = () => {
     clubName,
     email,
     password,
-    CollegeName,
+    collegeName,
     clubId,
     role,
   } = useSelector((state) => state.auth);
   
+  const data = useSelector((state) => state.auth);
+  console.log("data" , data);
+
   const [request, response, promptAsync] = Google.useAuthRequest({
     expoClientId: 'YOUR_EXPO_CLIENT_ID',
     androidClientId: 'YOUR_ANDROID_CLIENT_ID',
@@ -104,7 +107,7 @@ const Signup = () => {
         <TextInput
           style={styles.input}
           placeholder="Name of College"
-          value={CollegeName}
+          value={collegeName}
           onChangeText={(text) => dispatch(setCollegeName(text))}
         />
       )}

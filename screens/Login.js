@@ -13,7 +13,7 @@ WebBrowser.maybeCompleteAuthSession();
 export default function LoginScreen({ navigation }) {
   const dispatch = useDispatch();
   const { email, password, role } = useSelector((state) => state.auth);
-
+  console.log("thsi is user data",email,password,role);
   const [request, response, promptAsync] = Google.useAuthRequest({
     expoClientId: 'YOUR_EXPO_CLIENT_ID',
     androidClientId: 'YOUR_ANDROID_CLIENT_ID',
@@ -35,7 +35,6 @@ export default function LoginScreen({ navigation }) {
       Alert.alert('Error', 'Please enter both email and password.');
       return;
     }
-
     try {
       // Make a POST request to your backend API for login
       const response = await fetch(SummaryApi.logIn.url, {
@@ -43,22 +42,22 @@ export default function LoginScreen({ navigation }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password ,role}),
       });
 
-      const data = await response?.json();
+      const data = await response.json();
       console.log("user data",data);
-      if (data?.success===true) {
+      if (data.success===true) {
         // Store the token in AsyncStorage
         await AsyncStorage.setItem('authToken', data.token);
         console.log("login success",data)
         // Dispatch authentication action
-        dispatch(setAuthentication(true));
-        // Navigate based on role
+        // dispatch(setAuthentication(true));
+        // // Navigate based on role
         navigateToRoleScreen(role);
 
       } else {
-        Alert.alert('Error', data?.message || 'Login failed');
+        Alert.alert('Error', data.message || 'Login failed');
       }
     } catch (error) {
       Alert.alert('Error', 'An error occurred during login');
@@ -66,7 +65,7 @@ export default function LoginScreen({ navigation }) {
   };
 
   const navigateToRoleScreen = (role) => {
-    if (role === 'Student') {
+    if (role === 'student') {
       navigation.navigate('Home');
     } else if (role === 'club') {
       navigation.navigate('Home');

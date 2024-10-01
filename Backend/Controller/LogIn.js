@@ -6,7 +6,7 @@ require("dotenv").config();
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
-
+        console.log("this is backend side",email,password);
         // Check if email and password are provided
         if (!email) {
             return res.status(400).json({

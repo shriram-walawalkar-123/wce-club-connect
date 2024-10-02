@@ -11,6 +11,8 @@ import PastEvents from './screens/PastEvents';
 import ClubOptionsScreen from './screens/ClubOptions';
 import UpdateDescriptionScreen from './screens/updateDescription';
 import UpdateMembersScreen from './screens/updateMember';
+import GalleryScreen  from './screens/updateGallery';
+import ContactInfoScreen from './screens/updateContactInfo';
 
 const Stack = createStackNavigator();
 
@@ -24,9 +26,11 @@ export default function App() {
           <Stack.Screen name="Signup" component={Signup} />
           <Stack.Screen name="UpcomingEvents" component={UpcomingEvents} />
           <Stack.Screen name="PastEvents" component={PastEvents} />
-         <Stack.Screen name="ClubOptionsScreen" component={ClubOptionsScreen} />
+          <Stack.Screen name="ClubOptionsScreen" component={ClubOptionsScreen} />
           <Stack.Screen name="UpdateDescriptionScreen" component={UpdateDescriptionScreen} />
           <Stack.Screen name="UpdateMembersScreen" component={UpdateMembersScreen} />
+          <Stack.Screen name="GalleryScreen" component={GalleryScreen}/>
+          <Stack.Screen name="ContactInfoScreen" component={ContactInfoScreen}/>
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

@@ -23,12 +23,20 @@ const ClubOptionsScreen = () => {
         <Text style={styles.buttonText}>Update Club Members</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.optionButton}
-        onPress={() => navigation.navigate('UpdateGalleryScreen')}
+      <TouchableOpacity 
+      style={styles.optionButton}
+      onPress={() => navigation.navigate('GalleryScreen')}
       >
-        <Text style={styles.buttonText}>Update Club Gallery</Text>
+        <Text style={styles.buttonText}>Update Gallery</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity 
+      style={styles.optionButton}
+      onPress={() => navigation.navigate('ContactInfoScreen')}
+      >
+        <Text style={styles.buttonText}>Update Contact Info</Text>
+      </TouchableOpacity>
+
 
       {/* Add more options as needed */}
     </View>

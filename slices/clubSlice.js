@@ -9,7 +9,12 @@ const initialState = {
     gallery: [],           // Club gallery, can store images as array
     services: [],          // Club services, initially empty
     events: [],            // Club events, will store upcoming/past events
-    contactInfo: '',       // Club contact information, initially empty
+    contactInfo: {         // Updated to store multiple contact fields
+        phone: '',         // Club phone number
+        linkedin: '',      // LinkedIn link
+        instagram: '',     // Instagram link
+        email: '',         // Email address of the club
+    },
 };
 
 // Create a slice of the store
@@ -63,7 +68,10 @@ const clubSlice = createSlice({
         },
         // Action to update club contact information
         updateContactInfo: (state, action) => {
-            state.contactInfo = action.payload;
+            const { field, value } = action.payload;  // Expecting { field: 'phone', value: '1234567890' }
+            if (state.contactInfo.hasOwnProperty(field)) {
+                state.contactInfo[field] = value;
+            }
         },
     },
 });
@@ -71,8 +79,8 @@ const clubSlice = createSlice({
 // Selectors
 export const selectClubDescription = (state) => state.club.description;
 export const selectClubMembers = (state) => state.club.members;
-// Add this selector to your existing selectors
 export const selectClubId = (state) => state.club.clubId;
+export const selectContactInfo = (state) => state.club.contactInfo; // Selector for contact info
 
 // Export the actions so they can be dispatched from components
 export const {

@@ -11,7 +11,7 @@ const ClubOptionsScreen = () => {
     <View style={styles.container}>
       <TouchableOpacity
         style={styles.optionButton}
-        onPress={() => navigation.navigate('UpdateDescriptionScreen')}
+        onPress={() => navigation.navigate('UpdateClubInfoScreen')}
       >
         <Text style={styles.buttonText}>Update Club Description</Text>
       </TouchableOpacity>

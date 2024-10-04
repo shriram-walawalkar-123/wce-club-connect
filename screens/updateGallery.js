@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Modal, Button } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { updateGallery } from '../slices/clubSlice';  // Redux action to update gallery
+import uploadImage from '../helper/uploadImage';
 
 export default function GalleryScreen() {
   const dispatch = useDispatch();
@@ -10,6 +11,7 @@ export default function GalleryScreen() {
   const [localGallery, setLocalGallery] = useState([...gallery]);
   const [selectedImage, setSelectedImage] = useState(null);  // State to handle selected image for viewing in modal
   const [isModalVisible, setModalVisible] = useState(false);  // State to control modal visibility
+  const [uploading, setUploading] = useState(false);  // State to handle loading state during image upload
 
   // Function to open image picker and allow image upload
   const uploadPhoto = async () => {
@@ -18,29 +20,42 @@ export default function GalleryScreen() {
       alert("You've refused to allow this app to access your photos!");
       return;
     }
+    
     const result = await ImagePicker.launchImageLibraryAsync({
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
     });
 
-    // Check if the result contains assets (indicating that the user has picked a photo)
     if (result.assets && result.assets.length > 0) {
-      const selectedImageUri = result.assets[0].uri; // Get the first selected image's URI
-      const updatedGallery = [...localGallery, selectedImageUri];  // Add new image to gallery
-      setLocalGallery(updatedGallery);  // Update local state
-      dispatch(updateGallery(updatedGallery));  // Update Redux state
+      const selectedImageUri = result.assets[0].uri;  // Use full URI
+      console.log("Image URI:", selectedImageUri);  // Log full URI to debug
+
+      try {
+        setUploading(true);
+        // Pass the full URI to the uploadImage function
+        const dataResponse = await uploadImage(selectedImageUri);  // Pass full URI
+        console.log("dataResponse:", dataResponse);
+
+        if (dataResponse.url) {
+          const updatedGallery = [...localGallery, dataResponse.url];  // Add new image URL to gallery
+          setLocalGallery(updatedGallery);  // Update local state
+          dispatch(updateGallery(updatedGallery));  // Update Redux state
+        }
+      } catch (error) {
+        console.error("Image upload failed:", error);
+        alert("Failed to upload image. Please try again.");
+      } finally {
+        setUploading(false);  // Stop uploading state
+      }
     }
   };
-
-  // Function to remove a photo from the gallery
   const deletePhoto = (uri) => {
     const updatedGallery = localGallery.filter((item) => item !== uri);  // Remove selected image
     setLocalGallery(updatedGallery);
     dispatch(updateGallery(updatedGallery));  // Update Redux state
   };
 
-  // Function to open the modal with the clicked image
   const viewImage = (uri) => {
     setSelectedImage(uri);  // Set the selected image
     setModalVisible(true);  // Open the modal
@@ -69,8 +84,8 @@ export default function GalleryScreen() {
       />
 
       {/* Upload Photo Button */}
-      <TouchableOpacity style={styles.uploadButton} onPress={uploadPhoto}>
-        <Text style={styles.uploadButtonText}>Upload New Photo</Text>
+      <TouchableOpacity style={styles.uploadButton} onPress={uploadPhoto} disabled={uploading}>
+        <Text style={styles.uploadButtonText}>{uploading ? "Uploading..." : "Upload New Photo"}</Text>
       </TouchableOpacity>
 
       {/* Modal to show full-screen image */}

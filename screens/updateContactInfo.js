@@ -13,7 +13,10 @@ const ContactInfoScreen = () => {
         const updatedContactInfo = {};
         if (contactInfo.phone) updatedContactInfo.phone = contactInfo.phone;
         if (contactInfo.linkedin) updatedContactInfo.linkedin = contactInfo.linkedin;
+        if (contactInfo.twitter) updatedContactInfo.twitter = contactInfo.twitter;
+        if (contactInfo.facebook) updatedContactInfo.facebook = contactInfo.facebook;
         if (contactInfo.instagram) updatedContactInfo.instagram = contactInfo.instagram;
+        if (contactInfo.github) updatedContactInfo.github = contactInfo.github;
         if (contactInfo.email) updatedContactInfo.email = contactInfo.email;
 
         // If all fields are empty, show an error
@@ -55,6 +58,24 @@ const ContactInfoScreen = () => {
                 value={contactInfo.email} // Directly use Redux state
                 onChangeText={(text) => dispatch(updateContactInfo({ field: 'email', value: text }))} // Update Redux state
                 keyboardType="email-address"
+            />
+            <TextInput
+                style={styles.input}
+                placeholder="Twitter link"
+                value={contactInfo.twitter} // Directly use Redux state
+                onChangeText={(text) => dispatch(updateContactInfo({ field: 'twitter', value: text }))} // Update Redux state
+            />
+            <TextInput
+                style={styles.input}
+                placeholder="facebook link"
+                value={contactInfo.facebook} // Directly use Redux state
+                onChangeText={(text) => dispatch(updateContactInfo({ field: 'facebook', value: text }))} // Update Redux state
+            />
+            <TextInput
+                style={styles.input}
+                placeholder="GitHub link"
+                value={contactInfo.github} // Directly use Redux state
+                onChangeText={(text) => dispatch(updateContactInfo({ field: 'github', value: text }))} // Update Redux state
             />
             <TouchableOpacity style={styles.button} onPress={handleUpdateContactInfo}>
                 <Text style={styles.buttonText}>Update Contact Info</Text>

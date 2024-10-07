@@ -2,6 +2,7 @@ const Club=require('../../Models/ClubModel')
 const mongoose = require('mongoose');
 // Create or Update club details
 const clubDescription = async (req, res) => {
+    console.log("userdata",req);
     try {
         const {
             clubName,
@@ -13,8 +14,7 @@ const clubDescription = async (req, res) => {
             motto,
             objectives,
             facultyAdvisor
-        } = req.body;
-        // console.log("userdata",req);
+        } = req?.body;
         const id=req?.user?.id;
         // console.log(req?.user);
         const clubId = mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : id;
@@ -67,6 +67,7 @@ const clubDescription = async (req, res) => {
         }
 
     } catch (err) {
+        console.log("userdata",req);
         return res.status(500).json({
             success: false,
             message: "Server error during clubDescription",

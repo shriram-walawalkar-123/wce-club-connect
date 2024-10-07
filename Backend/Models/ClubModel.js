@@ -15,7 +15,7 @@ const clubSchema = new mongoose.Schema({
         type: String,
     },
     establishmentYear: {
-        type: Number,
+        type: String,
     },
     typeOfClub: {
         type: String,

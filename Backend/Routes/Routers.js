@@ -10,6 +10,7 @@ const clubMemberDelete = require('../Controller/ClubController/ClubMemberDetele'
 const clubSocialMedia = require('../Controller/ClubController/ClubSocialMedia');
 const clubGallery = require('../Controller/ClubController/ClubGallary');
 const deleteGalleryImage = require('../Controller/ClubController/ClubGallaryDelete');
+const clubMemberUpdate = require('../Controller/ClubController/ClubMemberEdit');
 
 // user route
 router.post("/sign-up",signup);
@@ -28,5 +29,7 @@ router.post("/club_social_media",auth,isClub,clubSocialMedia);
 router.post("/club_gallery",auth,isClub,clubGallery);
 
 router.post("/club_gallery_detele",auth,isClub,deleteGalleryImage);
+
+router.post("/club_member_update",auth,isClub,clubMemberUpdate);
 
 module.exports=router

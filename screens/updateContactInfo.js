@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { updateContactInfo, selectContactInfo } from '../slices/clubSlice';
+import SummaryApi from '../backendRoutes';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ContactInfoScreen = () => {
     const dispatch = useDispatch();
@@ -18,16 +20,36 @@ const ContactInfoScreen = () => {
         if (contactInfo.instagram) updatedContactInfo.instagram = contactInfo.instagram;
         if (contactInfo.github) updatedContactInfo.github = contactInfo.github;
         if (contactInfo.email) updatedContactInfo.email = contactInfo.email;
-
         // If all fields are empty, show an error
         if (Object.keys(updatedContactInfo).length === 0) {
             Alert.alert('Error', 'Please enter at least one field to update.');
             return;
         }
-
         // Dispatch updateContactInfo with updated contact details
         dispatch(updateContactInfo(updatedContactInfo));
         Alert.alert('Success', 'Contact information updated successfully!');
+        updateData();
+        
+    };
+    const updateData = async () => {
+        try {
+            const token = await AsyncStorage.getItem("authToken");
+            // console.log("token",token);
+            const response = await fetch(SummaryApi.club_social_media.url, {
+                method: SummaryApi.club_social_media.method,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body:JSON.stringify(contactInfo)
+
+            });
+            const data = await response.json();    
+            // console.log("socail media",data);
+
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
     };
 
     return (

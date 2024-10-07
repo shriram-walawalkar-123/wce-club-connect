@@ -1,4 +1,4 @@
-const backend_url = "http://10.40.3.100:5000/api/v1";
+const backend_url = "http://192.168.81.87:5000/api/v1";
 
 const SummaryApi = {
     signUp: { // Changed to camelCase and used quotes for keys with hyphens
@@ -8,6 +8,18 @@ const SummaryApi = {
     logIn: { // Changed to camelCase and used quotes for keys with hyphens
         url: `${backend_url}/login`,
         method: "post",
+    },
+    club_description:{
+        url:`${backend_url}/club_description`,
+        method:"post",
+    },
+    club_social_media:{
+        url:`${backend_url}/club_social_media`,
+        method:"post",
+    },
+    club_member:{
+        url:`${backend_url}/club_member`,
+        method:"post",
     }
 };
 export default SummaryApi;

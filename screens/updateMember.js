@@ -1,57 +1,59 @@
-// UpdateMembersScreen.js
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, ScrollView, Modal, StyleSheet, Image } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { addClubMember, updateClubMember, deleteClubMember, removeClubMember } from '../slices/clubSlice'; // Adjust import based on your file structure
 import * as ImagePicker from 'expo-image-picker';
 import uploadImage from '../helper/uploadImage';
+import SummaryApi from '../backendRoutes';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const UpdateMembersScreen = () => {
-    const dispatch = useDispatch();
-    const members = useSelector(state => state.club.members); // Fetch members from Redux store
+    const [member, setMember] = useState({ name: '', role: '', email: '', instagram: '', linkedin: '', slogan: '', description: '', image: '' });
     const [modalVisible, setModalVisible] = useState(false);
-    const [currentMember, setCurrentMember] = useState({ id: '', name: '', role: '', email: '', instagram: '', linkedin: '', slogan: '', description: '', image: '' }); // Initialize state for current member
-    const [selectedImage, setSelectedImage] = useState(null); // State for selected image
-    const [uploading, setUploading] = useState(false);  // State to handle loading state during image upload
-
-    // Handle adding a new member
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    
+    // Handle adding a member
     const handleAddMember = () => {
-        const newMemberId = Date.now().toString(); // Generate a unique ID
-        dispatch(addClubMember({ ...currentMember, id: newMemberId, image: selectedImage }));
-        resetModal();
+        // Add the selected image to the member state
+        setMember((prevMember) => ({
+            ...prevMember,
+            image: selectedImage,
+        }));
+
+        // Optionally, you can store the new member in a list of members or handle further processing here
+        console.log("Added Member:", member);
+
+        // Close the modal without resetting the member state
+        setModalVisible(false);
+        updateData();
     };
 
-    // Handle updating an existing member
-    const handleUpdateMember = () => {
-        if (currentMember.id) {
-            dispatch(updateClubMember({ ...currentMember, image: selectedImage })); // Update member in Redux store
-            resetModal();
+    const updateData = async () => {
+        try {
+            const token = await AsyncStorage.getItem("authToken");
+            // console.log("token",token);
+            const response = await fetch(SummaryApi.club_member.url, {
+                method: SummaryApi.club_member.method,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body:JSON.stringify(member)
+            });
+            const data = await response.json();
+            console.log("memeber data",data);        
+        } catch (error) {
+            console.error('Error fetching data:', error);
         }
     };
 
-    // Handle deleting a member
-    const handleDeleteMember = (id) => {
-        dispatch(removeClubMember(id)); // Delete member from Redux store
+    // Handle input change
+    const handleInputChange = (name, value) => {
+        setMember((prevMember) => ({ ...prevMember, [name]: value }));
     };
 
-    // Open modal for adding a new member
+    // Open modal for adding a member
     const openAddMemberModal = () => {
-        resetModal(); // Reset fields for new member
         setModalVisible(true);
-    };
-
-    // Open modal for editing an existing member
-    const openEditMemberModal = (member) => {
-        setCurrentMember(member); // Set current member to edit
-        setSelectedImage(member.image || null); // Set selected image to current member's image
-        setModalVisible(true);
-    };
-
-    // Reset modal state
-    const resetModal = () => {
-        setCurrentMember({ id: '', name: '', role: '', email: '', instagram: '', linkedin: '', slogan: '', description: '', image: '' }); // Reset to initial state
-        setSelectedImage(null); // Reset selected image
-        setModalVisible(false); // Close modal
     };
 
     // Handle image selection
@@ -67,16 +69,14 @@ const UpdateMembersScreen = () => {
             const selectedImageUri = result.assets[0].uri;
             try {
                 setUploading(true);
-                // Pass the full URI to the uploadImage function
-                const dataResponse = await uploadImage(selectedImageUri);  // Pass full URI
-                console.log("dataResponse:", dataResponse);
-              } catch (error) {
+                const dataResponse = await uploadImage(selectedImageUri); // Upload image
+                setSelectedImage(dataResponse.url); // Set uploaded image URL
+            } catch (error) {
                 console.error("Image upload failed:", error);
                 alert("Failed to upload image. Please try again.");
-              } finally {
-                setUploading(false);  // Stop uploading state
-              }
-            setSelectedImage(result.assets[0].uri); // Set selected image URI
+            } finally {
+                setUploading(false);
+            }
         }
     };
 
@@ -84,8 +84,9 @@ const UpdateMembersScreen = () => {
         <ScrollView contentContainerStyle={{ padding: 20 }}>
             <Button title="Add Member" onPress={openAddMemberModal} />
 
-            {members.map((member) => (
-                <View key={member.id} style={styles.memberCard}>
+            {/* Display the member details */}
+            {member.name && (
+                <View style={styles.memberCard}>
                     <Text>Name: {member.name}</Text>
                     <Text>Role: {member.role}</Text>
                     <Text>Email: {member.email}</Text>
@@ -94,71 +95,68 @@ const UpdateMembersScreen = () => {
                     <Text>Slogan: {member.slogan}</Text>
                     <Text>Description: {member.description}</Text>
                     {member.image && <Image source={{ uri: member.image }} style={styles.image} />}
-                    <Button title="Edit" onPress={() => openEditMemberModal(member)} />
-                    <Button title="Delete" onPress={() => handleDeleteMember(member.id)} color="red" />
                 </View>
-            ))}
+            )}
 
-            {/* Modal for adding or updating a member */}
+            {/* Modal for adding a member */}
             <Modal
                 visible={modalVisible}
                 animationType="slide"
                 transparent={true}
-                onRequestClose={resetModal}
+                onRequestClose={() => setModalVisible(false)}
             >
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>{currentMember.id ? 'Edit Member' : 'Add New Member'}</Text>
+                        <Text style={styles.modalTitle}>Add New Member</Text>
 
                         <TextInput
                             placeholder="Member Name"
-                            value={currentMember.name}
-                            onChangeText={(text) => setCurrentMember({ ...currentMember, name: text })}
+                            value={member.name}
+                            onChangeText={(text) => handleInputChange('name', text)}
                             style={styles.input}
                         />
                         <TextInput
                             placeholder="Role"
-                            value={currentMember.role}
-                            onChangeText={(text) => setCurrentMember({ ...currentMember, role: text })}
+                            value={member.role}
+                            onChangeText={(text) => handleInputChange('role', text)}
                             style={styles.input}
                         />
                         <TextInput
                             placeholder="Email"
-                            value={currentMember.email}
-                            onChangeText={(text) => setCurrentMember({ ...currentMember, email: text })}
+                            value={member.email}
+                            onChangeText={(text) => handleInputChange('email', text)}
                             style={styles.input}
                         />
                         <TextInput
                             placeholder="Instagram"
-                            value={currentMember.instagram}
-                            onChangeText={(text) => setCurrentMember({ ...currentMember, instagram: text })}
+                            value={member.instagram}
+                            onChangeText={(text) => handleInputChange('instagram', text)}
                             style={styles.input}
                         />
                         <TextInput
                             placeholder="LinkedIn"
-                            value={currentMember.linkedin}
-                            onChangeText={(text) => setCurrentMember({ ...currentMember, linkedin: text })}
+                            value={member.linkedin}
+                            onChangeText={(text) => handleInputChange('linkedin', text)}
                             style={styles.input}
                         />
                         <TextInput
                             placeholder="Slogan"
-                            value={currentMember.slogan}
-                            onChangeText={(text) => setCurrentMember({ ...currentMember, slogan: text })}
+                            value={member.slogan}
+                            onChangeText={(text) => handleInputChange('slogan', text)}
                             style={styles.input}
                         />
                         <TextInput
                             placeholder="Brief Description"
-                            value={currentMember.description}
-                            onChangeText={(text) => setCurrentMember({ ...currentMember, description: text })}
+                            value={member.description}
+                            onChangeText={(text) => handleInputChange('description', text)}
                             style={styles.input}
                         />
 
                         {/* Image Picker */}
                         <Button title="Pick an Image" onPress={pickImage} />
                         {selectedImage && <Image source={{ uri: selectedImage }} style={styles.image} />}
-
-                        <Button title={currentMember.id ? "Update Member" : "Add Member"} onPress={currentMember.id ? handleUpdateMember : handleAddMember} />
-                        <Button title="Cancel" onPress={resetModal} color="red" />
+                        <Button title="Add Member" onPress={handleAddMember} />
+                        <Button title="Cancel" onPress={() => setModalVisible(false)} color="red" />
                     </View>
                 </View>
             </Modal>

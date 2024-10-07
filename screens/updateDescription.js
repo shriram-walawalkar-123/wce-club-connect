@@ -12,17 +12,19 @@ import {
     Image,
     Modal,
     KeyboardAvoidingView,
+    ToastAndroid,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { updateClubInfo } from '../slices/clubSlice'; // Adjust the path as necessary
 import uploadImage from '../helper/uploadImage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import SummaryApi from '../backendRoutes';
 
 const UpdateClubInfoScreen = () => {
     const dispatch = useDispatch();
     const club = useSelector((state) => state.club.clubInfo); // Fetch club info from Redux store
-
     const [formState, setFormState] = useState({
         clubName: '',
         department: '',
@@ -35,6 +37,23 @@ const UpdateClubInfoScreen = () => {
         facultyAdvisors: [],
     });
 
+    const updateData = async () => {
+        try {
+            const token = await AsyncStorage.getItem("authToken");
+            // console.log("token",token);
+            const response = await fetch(SummaryApi.club_description.url, {
+                method: SummaryApi.club_description.method,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body:JSON.stringify(formState)
+            });
+            const data = await response.json();        
+        } catch (error) {
+            console.error('Error fetching data:', error);
+        }
+    };
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showAdvisorModal, setShowAdvisorModal] = useState(false);
     const [showImageModal, setShowImageModal] = useState(false); // New state for image modal
@@ -62,7 +81,7 @@ const UpdateClubInfoScreen = () => {
                     setUploading(true);
                     // Pass the full URI to the uploadImage function
                     const dataResponse = await uploadImage(selectedImageUri);  // Pass full URI
-                    console.log("dataResponse:", dataResponse);
+                    // console.log("dataResponse:", dataResponse);
                   } catch (error) {
                     console.error("Image upload failed:", error);
                     alert("Failed to upload image. Please try again.");
@@ -75,7 +94,7 @@ const UpdateClubInfoScreen = () => {
                     setUploading(true);
                     // Pass the full URI to the uploadImage function
                     const dataResponse = await uploadImage(selectedImageUri);  // Pass full URI
-                    console.log("dataResponse:", dataResponse);
+                    // console.log("dataResponse:", dataResponse);
                   } catch (error) {
                     console.error("Image upload failed:", error);
                     alert("Failed to upload image. Please try again.");
@@ -114,6 +133,7 @@ const UpdateClubInfoScreen = () => {
 
     const handleUpdate = () => {
         dispatch(updateClubInfo(formState)); // Dispatch update action
+        updateData();
         Alert.alert('Success', 'Club information updated successfully');
     };
 

@@ -35,7 +35,7 @@ export default function Home({ navigation }) {
           key={'two-columns'}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => navigation.navigate('ClubDetails', { clubId: item.id })}> 
+            <TouchableOpacity onPress={() => navigation.navigate('ClubDetailsScreen', { clubId: item.id })}> 
               <View style={styles.clubCard}>
                 <Image source={{ uri: item.image }} style={styles.clubImage} />
                 <Text style={styles.clubText}>{item.name}</Text>

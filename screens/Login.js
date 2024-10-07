@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import AsyncStorage from '@react-native-async-storage/async-storage'; // For local storage
-import { setEmail, setPassword, setRole, setAuthentication, setUser } from '../slices/authSlice';
+import { setEmail, setPassword, setRole, setAuthentication, setUser,setClubId } from '../slices/authSlice';
 import { View, Text, TextInput, Button, TouchableOpacity, StyleSheet, Alert, Image, Dimensions } from 'react-native';
 import SummaryApi from '../backendRoutes';
 import Home from './Home';
@@ -50,7 +50,13 @@ export default function LoginScreen({ navigation }) {
       if (data.success===true) {
         // Store the token in AsyncStorage
         await AsyncStorage.setItem('authToken', data.token);
-        console.log("login success",data)
+
+        // Set the club ID if the role is club
+        if (role === 'club' && data.clubId) { // Ensure clubId exists
+          dispatch(setClubId(data.clubId)); // Dispatch action to set clubId
+        }
+
+        console.log("login success",data.clubId)
         // Dispatch authentication action
         // dispatch(setAuthentication(true));
         // // Navigate based on role
@@ -68,7 +74,7 @@ export default function LoginScreen({ navigation }) {
     if (role === 'student') {
       navigation.navigate('Home');
     } else if (role === 'club') {
-      navigation.navigate('Home');
+      navigation.navigate('ClubOptionsScreen');
     } else if (role === 'admin') {
       navigation.navigate('Home');
     }

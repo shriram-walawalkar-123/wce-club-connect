@@ -1,10 +1,13 @@
 const jwt = require("jsonwebtoken");
 require('dotenv').config();
-
 // Authentication Middleware
 exports.auth = (req, res, next) => {
   try {
-    const token = req.body.token || req.headers.authorization; // You can check token in header as well
+    // console.log(req?.cookie);
+    // console.log("req body",req);
+    const token = req?.body.token || req?.headers.authorization || req?.cookies || req?.headers.token; // You can check token in header as well
+   
+  //  console.log(req.headers.token);
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -12,13 +15,14 @@ exports.auth = (req, res, next) => {
       });
     }
     try {
-      const decode = jwt.verify(token, process.env.JWT_SECRET);
+      const decode = jwt.verify(token, process.env.JWT_TOKEN);
       req.user = decode;
       next();
     } catch (err) {
       return res.status(401).json({
         success: false,
-        message: "Invalid Token"
+        message: "Invalid Token",
+        data:err.message,
       });
     }
   } catch (err) {

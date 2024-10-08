@@ -18,7 +18,7 @@ import ContactInfo from './screens/contactInfo';
 import MembersInfo from './screens/memberInfo';
 import GalleryInfo from './screens/galleryInfo';
 import DescriptionInfo from './screens/DescriptionInfo';
-
+// import ShowAllUpdatedMembers from './screens/showAllUpdatedMember';
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -41,6 +41,7 @@ export default function App() {
           <Stack.Screen name="MembersInfo" component={MembersInfo}/>
           <Stack.Screen name="GalleryInfo" component={GalleryInfo}/>
           <Stack.Screen name="DescriptionInfo" component={DescriptionInfo}/>
+          {/* <Stack.Screen name="ShowAllUpdatedMembers" component={ShowAllUpdatedMembers}/> */}
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

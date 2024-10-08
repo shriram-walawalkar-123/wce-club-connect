@@ -4,10 +4,11 @@ const ClubMember = require("../../Models/ClubMemberModel");
 const clubMemberUpdate = async (req, res) => {
     console.log("req body for update", req.body);
     try {
-        const { memberId, image, name, role, email, instagram, linkedin, slogan, description } = req?.body;
-
+        console.log("user data",req.body);
+        const { _id, image, name, role, email, instagram, linkedin, slogan, description } = req?.body;
+        const clubId=req?.user?.clubId
         // Validate member ID and required fields
-        if (!memberId || !image || !name || !role || !email) {
+        if (!_id || !image || !name || !role || !email) {
             return res.status(400).json({
                 success: false,
                 message: "Please provide all required fields, including the member ID."
@@ -15,7 +16,7 @@ const clubMemberUpdate = async (req, res) => {
         }
 
         // Check if the member exists
-        const clubMember = await ClubMember.findById(memberId);
+        const clubMember = await ClubMember.findById({_id:_id,clubId:clubId});
         if (!clubMember) {
             return res.status(404).json({
                 success: false,

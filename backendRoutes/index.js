@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream
 const backend_url = "http://192.168.81.40:5000/api/v1";
+=======
+const backend_url = "http://192.168.29.210:5000/api/v1";
+>>>>>>> Stashed changes
 
 const SummaryApi = {
     signUp: { // Changed to camelCase and used quotes for keys with hyphens

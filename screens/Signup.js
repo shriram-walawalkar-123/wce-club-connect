@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { setName, setClubName, setEmail, setPassword, setCollegeName, setClubId, toggleSignupMode } from '../slices/authSlice';
-import { View, Text, TextInput, Button, TouchableOpacity, StyleSheet, Alert, Dimensions } from 'react-native';
+import { View, Text, TextInput, Button, TouchableOpacity, StyleSheet, Alert, Dimensions, Image, ImageBackground } from 'react-native';
 import SummaryApi from '../backendRoutes';
 
 const { width, height } = Dimensions.get('window');
@@ -65,92 +65,107 @@ const Signup = () => {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Signup Mode Toggle */}
-      <View style={styles.toggleContainer}>
-        <TouchableOpacity onPress={() => dispatch(toggleSignupMode(true))}>
-          <Text style={[styles.toggleButton, isStudentSignup && styles.selectedButton]}>Student Signup</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => dispatch(toggleSignupMode(false))}>
-          <Text style={[styles.toggleButton, !isStudentSignup && styles.selectedButton]}>Admin Signup</Text>
-        </TouchableOpacity>
-      </View>
+    <ImageBackground 
+      source={{ uri: 'https://www.nikaiacours.fr/wp-content/uploads/2019/12/login-background.jpg' }} 
+      style={styles.backgroundImage}
+    >
+      <View style={styles.container}>
+        {/* Signup Mode Toggle */}
+        <View style={styles.toggleContainer}>
+          <TouchableOpacity onPress={() => dispatch(toggleSignupMode(true))}>
+            <Text style={[styles.toggleButton, isStudentSignup && styles.selectedButton]}>Student Signup</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => dispatch(toggleSignupMode(false))}>
+            <Text style={[styles.toggleButton, !isStudentSignup && styles.selectedButton]}>Admin Signup</Text>
+          </TouchableOpacity>
+        </View>
 
-      <Text style={styles.title}>{isStudentSignup ? 'Student Signup' : 'Admin Signup'}</Text>
+        <Text style={styles.title}>{isStudentSignup ? 'Student Signup' : 'Admin Signup'}</Text>
 
-      {/* Common fields for both Student and Admin */}
-      <TextInput
-        style={styles.input}
-        placeholder="Full Name"
-        value={name}
-        onChangeText={(text) => dispatch(setName(text))}
-      />
-
-      {!isStudentSignup && (
-        <>
-          <TextInput
-            style={styles.input}
-            placeholder="Club Name"
-            value={clubName}
-            onChangeText={(text) => dispatch(setClubName(text))}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Club ID"
-            value={clubId}
-            onChangeText={(text) => dispatch(setClubId(text))}
-          />
-        </>
-      )}
-
-      {isStudentSignup && (
+        {/* Common fields for both Student and Admin */}
         <TextInput
           style={styles.input}
-          placeholder="Name of College"
-          value={collegeName}
-          onChangeText={(text) => dispatch(setCollegeName(text))}
+          placeholder="Full Name"
+          value={name}
+          onChangeText={(text) => dispatch(setName(text))}
         />
-      )}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={(text) => dispatch(setEmail(text))}
-        keyboardType="email-address"
-      />
+        {!isStudentSignup && (
+          <>
+            <TextInput
+              style={styles.input}
+              placeholder="Club Name"
+              value={clubName}
+              onChangeText={(text) => dispatch(setClubName(text))}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Club ID"
+              value={clubId}
+              onChangeText={(text) => dispatch(setClubId(text))}
+            />
+          </>
+        )}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={(text) => dispatch(setPassword(text))}
-        secureTextEntry
-      />
+        {isStudentSignup && (
+          <TextInput
+            style={styles.input}
+            placeholder="Name of College"
+            value={collegeName}
+            onChangeText={(text) => dispatch(setCollegeName(text))}
+          />
+        )}
 
-      <Button title="Signup" onPress={handleSignup} />
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          value={email}
+          onChangeText={(text) => dispatch(setEmail(text))}
+          keyboardType="email-address"
+        />
 
-      {/* Google Signup only for students */}
-      {isStudentSignup && (
-        <TouchableOpacity style={styles.googleButton} onPress={() => promptAsync()}>
-          <Text style={styles.googleButtonText}>Signup with Google</Text>
-        </TouchableOpacity>
-      )}
-    </View>
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          value={password}
+          onChangeText={(text) => dispatch(setPassword(text))}
+          secureTextEntry
+        />
+
+        <Button title="Signup" onPress={handleSignup} />
+
+        {/* Google Signup only for students */}
+        {isStudentSignup && (
+          <TouchableOpacity style={styles.googleButton} onPress={() => promptAsync()}>
+            <Image 
+              source={{ uri: 'http://pluspng.com/img-png/google-logo-png-revised-google-logo-1600.png' }} 
+              style={styles.googleLogo} 
+            />
+            <Text style={styles.googleButtonText}>Signup with Google</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+    resizeMode: 'cover',
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
     padding: width * 0.05,
-    backgroundColor: 'rgba(255, 255, 255, 0)',
+    backgroundColor: 'rgba(255, 255, 255, 0)', // Make transparent
+    
   },
   title: {
     fontSize: width * 0.06,
     marginBottom: height * 0.02,
     textAlign: 'center',
+    fontStyle:'italic',
   },
   input: {
     borderWidth: 1,
@@ -158,11 +173,13 @@ const styles = StyleSheet.create({
     marginBottom: height * 0.02,
     borderRadius: 5,
     backgroundColor: '#fff',
+    
   },
   toggleContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginBottom: height * 0.02,
+    
   },
   toggleButton: {
     fontSize: width * 0.045,
@@ -170,10 +187,13 @@ const styles = StyleSheet.create({
     padding: width * 0.02,
     borderBottomWidth: 2,
     borderColor: 'transparent',
+    
   },
   selectedButton: {
+    color:'#1e90ff',
     borderColor: '#dedeaf',
     fontWeight: 'bold',
+    fontStyle:'italic',
   },
   googleButton: {
     marginTop: height * 0.03,
@@ -184,11 +204,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  googleLogo: {
+    width: 25,
+    height: 23,
+    marginRight: width * 0.02,
+    borderRadius:20,
+  },
   googleButtonText: {
     color: '#fff',
     fontSize: width * 0.045,
     fontWeight: 'bold',
-    marginLeft: width * 0.02,
   },
 });
 

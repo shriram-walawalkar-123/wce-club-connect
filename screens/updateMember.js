@@ -1,5 +1,12 @@
+<<<<<<< Updated upstream
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, Modal, StyleSheet, Image, ScrollView } from 'react-native';
+=======
+import React, { useState } from 'react';
+import { View, Text, TextInput, Button, ScrollView, Modal, StyleSheet, Image } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { addClubMember, updateClubMember, removeClubMember } from '../slices/clubSlice'; // Adjust import based on your file structure
+>>>>>>> Stashed changes
 import * as ImagePicker from 'expo-image-picker';
 import uploadImage from '../helper/uploadImage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -23,6 +30,7 @@ const UpdateMembersScreen = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [currentMemberId, setCurrentMemberId] = useState(null);
 
+<<<<<<< Updated upstream
     // Fetch existing members from the backend
     const fetchExistingMembers = async () => {
         try {
@@ -105,11 +113,31 @@ const UpdateMembersScreen = () => {
     };
 
     // Open modal for adding a member
+=======
+    const handleAddMember = () => {
+        const newMemberId = Date.now().toString(); // Generate a unique ID
+        dispatch(addClubMember({ ...currentMember, id: newMemberId, image: selectedImage }));
+        resetModal();
+    };
+
+    const handleUpdateMember = () => {
+        if (currentMember.id) {
+            dispatch(updateClubMember({ ...currentMember, image: selectedImage })); // Update member in Redux store
+            resetModal();
+        }
+    };
+
+    const handleDeleteMember = (id) => {
+        dispatch(removeClubMember(id)); // Delete member from Redux store
+    };
+
+>>>>>>> Stashed changes
     const openAddMemberModal = () => {
         resetMemberState(); // Reset state to avoid carrying over old data
         setModalVisible(true);
     };
 
+<<<<<<< Updated upstream
     // Open modal for editing a member
     const openEditMemberModal = (memberData) => {
         setMember(memberData); // Set member data to edit
@@ -117,9 +145,20 @@ const UpdateMembersScreen = () => {
         setCurrentMemberId(memberData._id); // Set current member ID
         setIsEditing(true); // Set editing state
         setModalVisible(true); // Open modal
+=======
+    const openEditMemberModal = (member) => {
+        setCurrentMember(member); // Set current member to edit
+        setSelectedImage(member.image || null); // Set selected image to current member's image
+        setModalVisible(true);
     };
 
-    // Handle image selection
+    const resetModal = () => {
+        setCurrentMember({ id: '', name: '', role: '', email: '', instagram: '', linkedin: '', slogan: '', description: '', image: '' }); // Reset to initial state
+        setSelectedImage(null); // Reset selected image
+        setModalVisible(false); // Close modal
+>>>>>>> Stashed changes
+    };
+
     const pickImage = async () => {
         const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (permissionResult.granted === false) {
@@ -130,6 +169,7 @@ const UpdateMembersScreen = () => {
         const result = await ImagePicker.launchImageLibraryAsync();
         if (!result.canceled) {
             const selectedImageUri = result.assets[0].uri;
+<<<<<<< Updated upstream
             const dataResponse = await uploadImage(selectedImageUri);
             setSelectedImage(dataResponse.url);
         }
@@ -158,14 +198,52 @@ const UpdateMembersScreen = () => {
             }
         } catch (error) {
             console.error('Error deleting member:', error);
+=======
+            try {
+                setUploading(true);
+                const dataResponse = await uploadImage(selectedImageUri);  // Pass full URI
+                console.log("dataResponse:", dataResponse);
+              } catch (error) {
+                console.error("Image upload failed:", error);
+                alert("Failed to upload image. Please try again.");
+              } finally {
+                setUploading(false);  // Stop uploading state
+              }
+            setSelectedImage(result.assets[0].uri); // Set selected image URI
+>>>>>>> Stashed changes
         }
     };
 
     return (
+<<<<<<< Updated upstream
         <View style={{ flex: 1, padding: 20 }}>
             <Button title="Add Member" onPress={openAddMemberModal} />
 
             {/* Modal for adding or editing a member */}
+=======
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+            <Button title="Add Member" onPress={openAddMemberModal} color='#003366' />
+
+            {members.map((member) => (
+                <View key={member.id} style={styles.memberCard} >
+              
+                        <Text>Name: {member.name}</Text>
+                        <Text>Role: {member.role}</Text>
+                        <Text>Email: {member.email}</Text>
+                        <Text>Instagram: {member.instagram}</Text>
+                        <Text>LinkedIn: {member.linkedin}</Text>
+                        <Text>Slogan: {member.slogan}</Text>
+                        <Text>Description: {member.description}</Text>
+         
+                    
+                    {member.image && <Image source={{ uri: member.image }} style={styles.image} />}
+                    <Button title="Edit" onPress={() => openEditMemberModal(member)} color='#003366'/>
+                    <Button title="Delete" onPress={() => handleDeleteMember(member.id)} color="red" />
+                </View>
+            ))}
+
+            {/* Modal for adding or updating a member */}
+>>>>>>> Stashed changes
             <Modal
                 visible={modalVisible}
                 animationType="slide"
@@ -174,6 +252,7 @@ const UpdateMembersScreen = () => {
             >
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
+<<<<<<< Updated upstream
                         <Text style={styles.modalTitle}>{isEditing ? "Edit Member" : "Add New Member"}</Text>
                         <TextInput placeholder="Member Name" value={member.name} onChangeText={(text) => handleInputChange('name', text)} style={styles.input} />
                         <TextInput placeholder="Role" value={member.role} onChangeText={(text) => handleInputChange('role', text)} style={styles.input} />
@@ -182,12 +261,63 @@ const UpdateMembersScreen = () => {
                         <TextInput placeholder="LinkedIn" value={member.linkedin} onChangeText={(text) => handleInputChange('linkedin', text)} style={styles.input} />
                         <TextInput placeholder="Slogan" value={member.slogan} onChangeText={(text) => handleInputChange('slogan', text)} style={styles.input} />
                         <TextInput placeholder="Brief Description" value={member.description} onChangeText={(text) => handleInputChange('description', text)} style={styles.input} />
+=======
+                        <Text style={styles.modalTitle }>{currentMember.id ? 'Edit Member' : 'Add New Member'}</Text>
 
-                        {/* Image Picker */}
-                        <Button title="Pick an Image" onPress={pickImage} />
+                        <TextInput
+                            placeholder="Member Name"
+                            value={currentMember.name}
+                            onChangeText={(text) => setCurrentMember({ ...currentMember, name: text })}
+                            style={styles.input}
+                        />
+                        <TextInput
+                            placeholder="Role"
+                            value={currentMember.role}
+                            onChangeText={(text) => setCurrentMember({ ...currentMember, role: text })}
+                            style={styles.input}
+                        />
+                        <TextInput
+                            placeholder="Email"
+                            value={currentMember.email}
+                            onChangeText={(text) => setCurrentMember({ ...currentMember, email: text })}
+                            style={styles.input}
+                        />
+                        <TextInput
+                            placeholder="Instagram"
+                            value={currentMember.instagram}
+                            onChangeText={(text) => setCurrentMember({ ...currentMember, instagram: text })}
+                            style={styles.input}
+                        />
+                        <TextInput
+                            placeholder="LinkedIn"
+                            value={currentMember.linkedin}
+                            onChangeText={(text) => setCurrentMember({ ...currentMember, linkedin: text })}
+                            style={styles.input}
+                        />
+                        <TextInput
+                            placeholder="Slogan"
+                            value={currentMember.slogan}
+                            onChangeText={(text) => setCurrentMember({ ...currentMember, slogan: text })}
+                            style={styles.input}
+                        />
+                        <TextInput
+                            placeholder="Brief Description"
+                            value={currentMember.description}
+                            onChangeText={(text) => setCurrentMember({ ...currentMember, description: text })}
+                            style={styles.input}
+                        />
+>>>>>>> Stashed changes
+
+                        <Button title="Pick an Image" onPress={pickImage} color='#003366'/>
                         {selectedImage && <Image source={{ uri: selectedImage }} style={styles.image} />}
+<<<<<<< Updated upstream
                         <Button title={isEditing ? "Update Member" : "Add Member"} onPress={isEditing ? handleEditMember : handleAddMember} />
                         <Button title="Cancel" onPress={() => setModalVisible(false)} color="red" />
+=======
+
+                        <Button title={currentMember.id ? "Update Member" : "Add Member"} onPress={currentMember.id ? handleUpdateMember : handleAddMember}  color='#003366'/>
+                        <Button title="Cancel" onPress={resetModal} color="pink" />
+>>>>>>> Stashed changes
                     </View>
                 </View>
             </Modal>
@@ -210,11 +340,35 @@ const UpdateMembersScreen = () => {
 
 // Styles for the component
 const styles = StyleSheet.create({
+<<<<<<< Updated upstream
+=======
+    scrollContainer: {
+        flexGrow: 1,
+        backgroundColor: '#e7e7c7',
+        padding: 20,
+        justifyContent: 'flex-start', // To ensure content starts from top
+        gap:20,
+        
+    },
+    memberCard: {
+        marginBottom: 20,
+        padding: 10,
+        color:'lightblue',
+        backgroundColor: 'white',
+        borderRadius: 8,
+        elevation: 2,
+        gap:5,
+          
+    },
+    
+>>>>>>> Stashed changes
     input: {
         borderBottomWidth: 1,
         marginBottom: 10,
         padding: 5,
         width: '100%',
+        color:'#003366',
+        
     },
     modalContainer: {
         flex: 1,
@@ -225,13 +379,24 @@ const styles = StyleSheet.create({
     modalContent: {
         width: '80%',
         padding: 20,
+<<<<<<< Updated upstream
         backgroundColor: '#fff',
         borderRadius: 10,
+=======
+        backgroundColor: '#e7e7c7',
+        borderRadius: 10,
+        alignItems: 'center',
+        gap:5,
+>>>>>>> Stashed changes
     },
     modalTitle: {
         fontSize: 18,
         marginBottom: 10,
+<<<<<<< Updated upstream
         textAlign: 'center',
+=======
+
+>>>>>>> Stashed changes
     },
     image: {
         width: 100,

@@ -1,10 +1,13 @@
 const jwt = require("jsonwebtoken");
 require('dotenv').config();
-
 // Authentication Middleware
 exports.auth = (req, res, next) => {
   try {
-    const token = req.body.token || req.headers.authorization; // You can check token in header as well
+    // console.log(req);
+    const token = req?.body?.token || req?.headers?.authorization?.split(' ')[1] || req?.cookies?.authToken;
+
+    // console.log("Token:", token);
+  //  console.log(req);
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -12,13 +15,14 @@ exports.auth = (req, res, next) => {
       });
     }
     try {
-      const decode = jwt.verify(token, process.env.JWT_SECRET);
+      const decode = jwt.verify(token, process.env.JWT_TOKEN);
       req.user = decode;
       next();
     } catch (err) {
       return res.status(401).json({
         success: false,
-        message: "Invalid Token"
+        message: "Invalid Token",
+        data:err.message,
       });
     }
   } catch (err) {
@@ -51,7 +55,7 @@ exports.isAdmin = (req, res, next) => {
 // Check if the user is a Student
 exports.isStudent = (req, res, next) => {
   try {
-    if (req.user.role === "Student") {
+    if (req.user.role === "student") {
       next();
     } else {
       return res.status(403).json({

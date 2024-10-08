@@ -6,7 +6,7 @@ const initialState = {
   clubName: '',
   email: '',
   password: '',
-  CollegeName: '',
+  collegeName: '',
   clubId: '',
   role: 'student', // Default role
 };
@@ -28,7 +28,7 @@ const authSlice = createSlice({
       state.password = action.payload;
     },
     setCollegeName: (state, action) => {
-      state.CollegeName = action.payload;
+      state.collegeName = action.payload;
     },
     setClubId: (state, action) => {
       state.clubId = action.payload;

@@ -17,7 +17,7 @@ const userSignUpSchema = new mongoose.Schema({
         type: String,
         trim: true // Removes extra spaces
     },
-    CollegeName:{
+    collegeName:{
         type: String,
         trim: true // Removes extra spaces
     },
@@ -31,8 +31,8 @@ const userSignUpSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['Student', 'club','admin'], // Restricts role to 'user' or 'admin'
-        default: 'Student' // Default role is 'user'
+        enum: ['student', 'club','admin'], // Restricts role to 'user' or 'admin'
+        default: 'student' // Default role is 'user'
     }
 }, { timestamps: true }); // Add timestamps option
 

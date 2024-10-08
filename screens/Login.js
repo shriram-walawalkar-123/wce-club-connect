@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import AsyncStorage from '@react-native-async-storage/async-storage'; // For local storage
-import { setEmail, setPassword, setRole, setAuthentication, setUser } from '../slices/authSlice';
+import { setEmail, setPassword, setRole, setAuthentication, setUser,setClubId } from '../slices/authSlice';
 import { View, Text, TextInput, Button, TouchableOpacity, StyleSheet, Alert, Image, Dimensions } from 'react-native';
 import SummaryApi from '../backendRoutes';
 import Home from './Home';
@@ -13,7 +13,7 @@ WebBrowser.maybeCompleteAuthSession();
 export default function LoginScreen({ navigation }) {
   const dispatch = useDispatch();
   const { email, password, role } = useSelector((state) => state.auth);
-
+  console.log("thsi is user data",email,password,role);
   const [request, response, promptAsync] = Google.useAuthRequest({
     expoClientId: 'YOUR_EXPO_CLIENT_ID',
     androidClientId: 'YOUR_ANDROID_CLIENT_ID',
@@ -35,7 +35,6 @@ export default function LoginScreen({ navigation }) {
       Alert.alert('Error', 'Please enter both email and password.');
       return;
     }
-
     try {
       // Make a POST request to your backend API for login
       const response = await fetch(SummaryApi.logIn.url, {
@@ -43,7 +42,7 @@ export default function LoginScreen({ navigation }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password ,role}),
       });
 
       const data = await response.json();
@@ -51,10 +50,16 @@ export default function LoginScreen({ navigation }) {
       if (data.success===true) {
         // Store the token in AsyncStorage
         await AsyncStorage.setItem('authToken', data.token);
-        console.log("login success",data)
+
+        // Set the club ID if the role is club
+        if (role === 'club' && data.clubId) { // Ensure clubId exists
+          dispatch(setClubId(data.clubId)); // Dispatch action to set clubId
+        }
+
+        console.log("login success",data.clubId)
         // Dispatch authentication action
-        dispatch(setAuthentication(true));
-        // Navigate based on role
+        // dispatch(setAuthentication(true));
+        // // Navigate based on role
         navigateToRoleScreen(role);
 
       } else {
@@ -66,10 +71,10 @@ export default function LoginScreen({ navigation }) {
   };
 
   const navigateToRoleScreen = (role) => {
-    if (role === 'Student') {
+    if (role === 'student') {
       navigation.navigate('Home');
     } else if (role === 'club') {
-      navigation.navigate('Home');
+      navigation.navigate('ClubOptionsScreen');
     } else if (role === 'admin') {
       navigation.navigate('Home');
     }

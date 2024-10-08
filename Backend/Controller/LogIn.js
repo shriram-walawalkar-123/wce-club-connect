@@ -5,8 +5,8 @@ require("dotenv").config();
 
 const login = async (req, res) => {
     try {
-        const { email, password } = req.body;
-
+        const { email, password,role } = req.body;
+        // console.log("this is backend side",email,password);
         // Check if email and password are provided
         if (!email) {
             return res.status(400).json({
@@ -18,6 +18,12 @@ const login = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: "Please provide password for login",
+            });
+        }
+        if(!role){
+            return res.status(400).json({
+                success: false,
+                message: "Please provide role for login",
             });
         }
 
@@ -43,9 +49,11 @@ const login = async (req, res) => {
         const payload = {
             email: user.email,
             id: user._id,
-            role: user.role // Include the role in the payload
+            role: user.role,
+            clubId:user.clubId
         };
-        const token = jwt.sign(payload, process.env.JWT_TOKEN, { expiresIn: "1h" });
+        // console.log("userId",user.clubId);
+        const token = jwt.sign(payload, process.env.JWT_TOKEN, { expiresIn: "1d" });
 
         // Set the token as a cookie and respond with success
         res.cookie("token", token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' }).status(200).json({
@@ -53,6 +61,8 @@ const login = async (req, res) => {
             message: "Login Successful",
             token: token, // Include token in response
             role: user.role, // Optionally include role in response
+            clubId:user.clubId,
+            id: user._id,
             error: false,
         });
         

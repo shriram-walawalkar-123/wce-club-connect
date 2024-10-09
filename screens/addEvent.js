@@ -40,7 +40,6 @@ const AddEvent = () => {
     rounds: [],
   });
 
-  // Handler for picking event poster
   const pickEventPoster = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -54,7 +53,6 @@ const AddEvent = () => {
     }
   };
 
-  // Handler for adding a sponsor image
   const addSponsor = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -80,7 +78,6 @@ const AddEvent = () => {
     setMainEvent({ ...mainEvent, sponsors: newSponsors });
   };
 
-  // Handler to add a new subevent dynamically
   const addSubEvent = () => {
     setModalVisible(true);
     setSelectedSubEvent(null);
@@ -106,7 +103,7 @@ const AddEvent = () => {
     });
   };
 
-  const updateSubEventContact = (contactIndex, value) => {
+  const updateSubEventContact = (contactIndex, key, value) => {
     const updatedContacts = [...newSubEvent.contacts];
     updatedContacts[contactIndex][key] = value;
     setNewSubEvent({ ...newSubEvent, contacts: updatedContacts });
@@ -119,11 +116,6 @@ const AddEvent = () => {
     });
   };
 
-  const addSubEventContact = () => {
-    setNewSubEvent({ ...newSubEvent, contacts: [...newSubEvent.contacts, { name: '', phone: '' }] });
-  };
-
-  // Handler for picking a rulebook PDF
   const pickRulebookPDF = async () => {
     const result = await DocumentPicker.getDocumentAsync({
       type: 'application/pdf',
@@ -166,36 +158,15 @@ const AddEvent = () => {
     setNewSubEvent({ ...newSubEvent, rounds: updatedRounds });
   };
 
-  // Handlers for adding and updating rounds
-  const addRound = () => {
-    setNewSubEvent({
-      ...newSubEvent,
-      rounds: [...newSubEvent.rounds, { roundTime: '', description: [''] }],
-    });
-  };
-
-  const updateRound = (roundIndex, key, value) => {
-    const updatedRounds = [...newSubEvent.rounds];
-    updatedRounds[roundIndex][key] = value;
-    setNewSubEvent({ ...newSubEvent, rounds: updatedRounds });
-  };
-
-  const addRoundDescriptionPoint = (roundIndex) => {
-    const updatedRounds = [...newSubEvent.rounds];
-    updatedRounds[roundIndex].description.push('');
-    setNewSubEvent({ ...newSubEvent, rounds: updatedRounds });
-  };
-
-  const updateRoundDescription = (roundIndex, descIndex, value) => {
-    const updatedRounds = [...newSubEvent.rounds];
-    updatedRounds[roundIndex].description[descIndex] = value;
-    setNewSubEvent({ ...newSubEvent, rounds: updatedRounds });
-  };
-
   const handleSubmit = () => {
     const eventDetails = { ...mainEvent, subEvents };
     console.log('Event Created:', eventDetails);
-    // Logic to send the eventDetails to backend
+    navigation.navigate('UploadEventScreen');
+  };
+
+  const openSubEventModal = (subEvent) => {
+    setSelectedSubEvent(subEvent);
+    setModalVisible(true);
   };
 
   return (
@@ -252,7 +223,7 @@ const AddEvent = () => {
         <View key={index} style={styles.sponsorContainer}>
           <TextInput
             style={styles.input}
-            placeholder="Sponsor Type (e.g., Media Partner, Title Sponsor)"
+            placeholder="Sponsor Type"
             value={sponsor.sponsorType}
             onChangeText={(text) => updateSponsor(index, 'sponsorType', text)}
           />
@@ -265,90 +236,146 @@ const AddEvent = () => {
           </TouchableOpacity>
         </View>
       ))}
-      <Button title="Add Sponsor" onPress={addSponsor} />
 
-      {/* Subevent Button */}
-      <Button title="Add Subevent" onPress={addSubEvent} />
+      <View style={styles.buttonContainer}>
+        <Button title="Add Sub Event" onPress={addSubEvent} />
+        <Button title="Add Sponsor" onPress={addSponsor} />
+        <Button title="Submit Event" onPress={handleSubmit} />
+      </View>
 
-      {/* Subevent Modal */}
+      {/* Display Added Sub Events */}
+      <View style={styles.subEventList}>
+        <Text style={styles.subtitle}>Sub Events</Text>
+        {subEvents.map((subEvent, index) => (
+          <View key={index} style={styles.subEventContainer}>
+            <Text style={styles.subEventTitle}>{subEvent.subEventName}</Text>
+            <Text>{`Entry Fee: ${subEvent.entryFee}`}</Text>
+            <Text>{`Description: ${subEvent.description}`}</Text>
+            <Text>{`Date: ${subEvent.date}`}</Text>
+            <Text>{`Time: ${subEvent.time}`}</Text>
+            <Text>{`Venue: ${subEvent.venue}`}</Text>
+          </View>
+        ))}
+      </View>
+
       <Modal
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}>
+        onRequestClose={() => setModalVisible(!modalVisible)}
+      >
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add Subevent</Text>
-
-            <TextInput
-              style={styles.input}
-              placeholder="Subevent Name"
-              value={newSubEvent.subEventName}
-              onChangeText={(text) => setNewSubEvent({ ...newSubEvent, subEventName: text })}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Entry Fee"
-              value={newSubEvent.entryFee}
-              keyboardType="numeric"
-              onChangeText={(text) => setNewSubEvent({ ...newSubEvent, entryFee: text })}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Subevent Description"
-              value={newSubEvent.description}
-              onChangeText={(text) => setNewSubEvent({ ...newSubEvent, description: text })}
-              multiline
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Date"
-              value={newSubEvent.date}
-              onChangeText={(text) => setNewSubEvent({ ...newSubEvent, date: text })}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Time"
-              value={newSubEvent.time}
-              onChangeText={(text) => setNewSubEvent({ ...newSubEvent, time: text })}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Venue"
-              value={newSubEvent.venue}
-              onChangeText={(text) => setNewSubEvent({ ...newSubEvent, venue: text })}
-            />
-
-            {/* Rulebook PDF */}
-            <TouchableOpacity onPress={pickRulebookPDF} style={styles.imagePicker}>
-              {newSubEvent.rulebookPDF ? (
-                <Text>{newSubEvent.rulebookPDF.name}</Text>
-              ) : (
-                <Text>Pick Rulebook PDF</Text>
-              )}
-            </TouchableOpacity>
-
-            {/* Subevent Contacts */}
-            <Text style={styles.subtitle}>Contacts</Text>
-            {newSubEvent.contacts.map((contact, contactIndex) => (
+            <ScrollView contentContainerStyle={styles.scrollView}>
+              <Text style={styles.modalTitle}>
+                {selectedSubEvent ? 'Edit Sub Event' : 'Add Sub Event'}
+              </Text>
               <TextInput
-                key={contactIndex}
                 style={styles.input}
-                placeholder={`Contact ${contactIndex + 1}`}
-                value={contact}
-                onChangeText={(text) => updateSubEventContact(contactIndex, text)}
+                placeholder="Sub Event Name"
+                value={newSubEvent.subEventName}
+                onChangeText={(text) =>
+                  setNewSubEvent({ ...newSubEvent, subEventName: text })
+                }
               />
-            ))}
-
-            <View style={styles.buttonContainer}>
-              <Button title="Save Subevent" onPress={handleAddSubEvent} />
-              <Button title="Cancel" onPress={() => setModalVisible(false)} />
-            </View>
+              <TextInput
+                style={styles.input}
+                placeholder="Entry Fee"
+                value={newSubEvent.entryFee}
+                onChangeText={(text) =>
+                  setNewSubEvent({ ...newSubEvent, entryFee: text })
+                }
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Sub Event Description"
+                value={newSubEvent.description}
+                onChangeText={(text) =>
+                  setNewSubEvent({ ...newSubEvent, description: text })
+                }
+                multiline
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Date"
+                value={newSubEvent.date}
+                onChangeText={(text) =>
+                  setNewSubEvent({ ...newSubEvent, date: text })
+                }
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Time"
+                value={newSubEvent.time}
+                onChangeText={(text) =>
+                  setNewSubEvent({ ...newSubEvent, time: text })
+                }
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Venue"
+                value={newSubEvent.venue}
+                onChangeText={(text) =>
+                  setNewSubEvent({ ...newSubEvent, venue: text })
+                }
+              />
+              {newSubEvent.contacts.map((contact, index) => (
+                <View key={index} style={styles.contactContainer}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Contact Name"
+                    value={contact.name}
+                    onChangeText={(text) =>
+                      updateSubEventContact(index, 'name', text)
+                    }
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Contact Phone"
+                    value={contact.phone}
+                    onChangeText={(text) =>
+                      updateSubEventContact(index, 'phone', text)
+                    }
+                  />
+                </View>
+              ))}
+              <Button title="Add Contact" onPress={addSubEventContact} />
+              <View style={styles.pdfContainer}>
+                <Button title="Upload Rulebook PDF" onPress={pickRulebookPDF} />
+                {newSubEvent.rulebookPDF && (
+                  <Text style={styles.pdfName}>{newSubEvent.rulebookPDF.name}</Text>
+                )}
+              </View>
+              <Button title="Add Round" onPress={addRound} />
+              {newSubEvent.rounds.map((round, roundIndex) => (
+                <View key={roundIndex} style={styles.roundContainer}>
+                  <Text style={styles.roundTitle}>Round {roundIndex + 1}</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Round Time"
+                    value={round.roundTime}
+                    onChangeText={(text) => updateRound(roundIndex, 'roundTime', text)}
+                  />
+                  {round.description.map((desc, descIndex) => (
+                    <TextInput
+                      key={descIndex}
+                      style={styles.input}
+                      placeholder={`Description Point ${descIndex + 1}`}
+                      value={desc}
+                      onChangeText={(text) => updateRoundDescription(roundIndex, descIndex, text)}
+                    />
+                  ))}
+                  <Button
+                    title="Add Description Point"
+                    onPress={() => addRoundDescriptionPoint(roundIndex)}
+                  />
+                </View>
+              ))}
+              <Button title="Save Sub Event" onPress={handleAddSubEvent} />
+            </ScrollView>
           </View>
-        </ScrollView>
+        </View>
       </Modal>
-
-      <Button title="Submit Event" onPress={handleSubmit} />
     </ScrollView>
   );
 };
@@ -362,6 +389,10 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
   },
+  subtitle: {
+    fontSize: 18,
+    marginVertical: 10,
+  },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
@@ -370,9 +401,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   imagePicker: {
-    alignItems: 'center',
-    marginBottom: 15,
-    padding: 10,
     borderWidth: 1,
     borderColor: '#ccc',
     padding: 10,
@@ -383,20 +411,19 @@ const styles = StyleSheet.create({
   image: {
     width: 100,
     height: 100,
-    borderRadius: 5,
   },
   sponsorContainer: {
-    marginBottom: 15,
+    marginBottom: 10,
   },
   modalContainer: {
-    flexGrow: 1,
+    flex: 1,
     justifyContent: 'center',
-    padding: 20,
+    alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: '80%',
     backgroundColor: 'white',
+    padding: 20,
     borderRadius: 10,
     width: '90%',
     maxHeight: '90%',
@@ -404,16 +431,47 @@ const styles = StyleSheet.create({
   scrollView: {
     paddingBottom: 20,
   },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 15,
+  contactContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  roundContainer: {
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 20,
   },
+  subEventList: {
+    marginVertical: 20,
+  },
+  subEventContainer: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+  },
+  subEventTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  roundTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+},
 });
 
 export default AddEvent;

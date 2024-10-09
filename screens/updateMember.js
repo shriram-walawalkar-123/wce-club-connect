@@ -15,7 +15,7 @@ const UpdateMembersScreen = () => {
         linkedin: '',
         slogan: '',
         description: '',
-        image: ''
+        profilepic: ''
     });
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
@@ -53,7 +53,7 @@ const UpdateMembersScreen = () => {
 
     // Handle adding a member
     const handleAddMember = async () => {
-        const newMember = { ...member, image: selectedImage };
+        const newMember = { ...member, profilepic: selectedImage };
         await updateData(newMember);
         setModalVisible(false);
         resetMemberState();
@@ -61,7 +61,11 @@ const UpdateMembersScreen = () => {
 
     // Handle editing a member
     const handleEditMember = async () => {
-        const updatedMember = { ...member, image: selectedImage, id: currentMemberId };
+        const updatedMember = { 
+            ...member, 
+            profilepic: selectedImage || member.profilepic, // Use the selected profilepic or the previous image
+            id: currentMemberId 
+        };
         await updateData(updatedMember, true);
         setModalVisible(false);
         resetMemberState();
@@ -69,21 +73,29 @@ const UpdateMembersScreen = () => {
     };
 
     const updateData = async (memberData, isEditing = false) => {
+        console.log("member data ni frontend deepak",memberData);
         try {
             const token = await AsyncStorage.getItem("authToken");
-            const response = await fetch(SummaryApi.club_member.url, {
-                method: isEditing ? 'PUT' : SummaryApi.club_member.method,
+            const response = await fetch(isEditing ? SummaryApi.club_member_update.url : SummaryApi.club_member.url, {
+                method: isEditing ? SummaryApi.club_member_update.method : SummaryApi.club_member.method,
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(memberData)
+                body: JSON.stringify(memberData),
             });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error("Error response:", errorData.message); 
+                throw new Error(`Error: ${response.status}`);
+            }
+    
             const data = await response.json();
-            console.log(isEditing ? "Member updated:" : "Member added:", data);
+            // console.log(isEditing ? "Member updated:" : "Member added:", data);
             fetchExistingMembers(); // Refresh the member list after update
         } catch (error) {
-            console.error('Error updating member data:', error);
+            console.error('Error updating member data:', error); 
         }
     };
 
@@ -97,28 +109,25 @@ const UpdateMembersScreen = () => {
             linkedin: '',
             slogan: '',
             description: '',
-            image: ''
+            profilepic: ''
         });
         setSelectedImage(null);
         setIsEditing(false);
         setCurrentMemberId(null);
     };
-
     // Open modal for adding a member
     const openAddMemberModal = () => {
-        resetMemberState(); // Reset state to avoid carrying over old data
+        resetMemberState(); 
         setModalVisible(true);
     };
-
     // Open modal for editing a member
     const openEditMemberModal = (memberData) => {
-        setMember(memberData); // Set member data to edit
-        setSelectedImage(memberData.image); // Set selected image if exists
-        setCurrentMemberId(memberData._id); // Set current member ID
-        setIsEditing(true); // Set editing state
-        setModalVisible(true); // Open modal
+        setMember(memberData); 
+        setSelectedImage(memberData.profilepic || null); // Set selected image if exists
+        setCurrentMemberId(memberData._id); 
+        setIsEditing(true); 
+        setModalVisible(true); 
     };
-
     // Handle image selection
     const pickImage = async () => {
         const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -134,10 +143,8 @@ const UpdateMembersScreen = () => {
             setSelectedImage(dataResponse.url);
         }
     };
-
     // Handle deleting a member
     const handleDeleteMember = async (id) => {
-        console.log("Deleting member with ID:", id);
         try {
             const token = await AsyncStorage.getItem("authToken");
             const response = await fetch(SummaryApi.club_member_delete.url, {
@@ -148,7 +155,6 @@ const UpdateMembersScreen = () => {
                 },
                 body: JSON.stringify({ MemberId: id }),
             });
-
             if (response.ok) {
                 console.log("Member deleted successfully");
                 fetchExistingMembers(); // Refresh the member list
@@ -185,7 +191,7 @@ const UpdateMembersScreen = () => {
 
                         {/* Image Picker */}
                         <Button title="Pick an Image" onPress={pickImage} />
-                        {selectedImage && <Image source={{ uri: selectedImage }} style={styles.image} />}
+                        {selectedImage && <Image source={{ uri: selectedImage }} style={styles.profilepic} />}
                         <Button title={isEditing ? "Update Member" : "Add Member"} onPress={isEditing ? handleEditMember : handleAddMember} />
                         <Button title="Cancel" onPress={() => setModalVisible(false)} color="red" />
                     </View>
@@ -233,22 +239,19 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         textAlign: 'center',
     },
-    image: {
+    profilepic: {
         width: 100,
         height: 100,
-        marginBottom: 10,
-        alignSelf: 'center',
+        marginTop: 10,
     },
     memberCard: {
-        marginVertical: 10,
         padding: 15,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 5,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ccc',
     },
     buttonContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'space-around',
         marginTop: 10,
     },
 });

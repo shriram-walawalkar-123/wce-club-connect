@@ -58,9 +58,11 @@ const clubSchema = new mongoose.Schema({
     website: { type: String},
 
     //gallary
-    eventPhoto:[{type:String}],
-    projectShowCase:[{type:String}],
-    achievement:[{type:String}],
+    gallary:[{
+        url:{
+            type:String,
+        }
+    }],
 });
 // Create the Club model
 const Club = mongoose.model("Club", clubSchema);

@@ -4,10 +4,10 @@ const ClubMember = require("../../Models/ClubMemberModel");
 const clubMemberAdd = async (req, res) => {
     console.log("req body of member", req.body);
     try {
-        const { image, name, role, email, instagram, linkedin, slogan, description } = req?.body;
+        const { profilepic, name, role, email, instagram, linkedin, slogan, description } = req?.body;
         console.log("res bosy",req?.body);
         // Validate required fields
-        if (!image || !name || !role || !email) {
+        if (!profilepic || !name || !role || !email) {
             return res.status(400).json({
                 success: false,
                 message: "Please provide all required fields."
@@ -21,7 +21,7 @@ const clubMemberAdd = async (req, res) => {
 
         // Create a new club member
         const newMember = new ClubMember({
-            profilepic: image,
+            profilepic: profilepic,
             name,
             role,
             email,

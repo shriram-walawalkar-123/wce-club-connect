@@ -48,10 +48,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: width * 0.1,  // Padding according to screen width
-    backgroundColor: '#f7f7f7',  // Light background
+    backgroundColor: '#07768c',  // Light background
+    // 003366
+    //07768c
   },
   optionButton: {
-    backgroundColor: '#4A90E2',  // Button background color
+    backgroundColor: '#003366',  // Button background color
     paddingVertical: height * 0.02,  // Responsive vertical padding
     paddingHorizontal: width * 0.05,  // Responsive horizontal padding
     borderRadius: 10,

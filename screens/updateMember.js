@@ -1,17 +1,9 @@
-<<<<<<< Updated upstream
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, Modal, StyleSheet, Image, ScrollView } from 'react-native';
-=======
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, ScrollView, Modal, StyleSheet, Image } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { addClubMember, updateClubMember, removeClubMember } from '../slices/clubSlice'; // Adjust import based on your file structure
->>>>>>> Stashed changes
 import * as ImagePicker from 'expo-image-picker';
 import uploadImage from '../helper/uploadImage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SummaryApi from '../backendRoutes';
-import ShowAllUpdatedMembers from './showAllUpdatedMember';
 
 const UpdateMembersScreen = () => {
     const [member, setMember] = useState({
@@ -30,7 +22,6 @@ const UpdateMembersScreen = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [currentMemberId, setCurrentMemberId] = useState(null);
 
-<<<<<<< Updated upstream
     // Fetch existing members from the backend
     const fetchExistingMembers = async () => {
         try {
@@ -71,17 +62,15 @@ const UpdateMembersScreen = () => {
     const handleEditMember = async () => {
         const updatedMember = { 
             ...member, 
-            profilepic: selectedImage || member.profilepic, // Use the selected profilepic or the previous image
+            profilepic: selectedImage || member.profilepic,
             id: currentMemberId 
         };
         await updateData(updatedMember, true);
         setModalVisible(false);
         resetMemberState();
-        fetchExistingMembers(); // Refresh members after editing
     };
 
     const updateData = async (memberData, isEditing = false) => {
-        console.log("member data ni frontend deepak",memberData);
         try {
             const token = await AsyncStorage.getItem("authToken");
             const response = await fetch(isEditing ? SummaryApi.club_member_update.url : SummaryApi.club_member.url, {
@@ -100,7 +89,6 @@ const UpdateMembersScreen = () => {
             }
     
             const data = await response.json();
-            // console.log(isEditing ? "Member updated:" : "Member added:", data);
             fetchExistingMembers(); // Refresh the member list after update
         } catch (error) {
             console.error('Error updating member data:', error); 
@@ -123,41 +111,8 @@ const UpdateMembersScreen = () => {
         setIsEditing(false);
         setCurrentMemberId(null);
     };
-    // Open modal for adding a member
-=======
-    const handleAddMember = () => {
-        const newMemberId = Date.now().toString(); // Generate a unique ID
-        dispatch(addClubMember({ ...currentMember, id: newMemberId, image: selectedImage }));
-        resetModal();
-    };
 
-    const handleUpdateMember = () => {
-        if (currentMember.id) {
-            dispatch(updateClubMember({ ...currentMember, image: selectedImage })); // Update member in Redux store
-            resetModal();
-        }
-    };
-
-    const handleDeleteMember = (id) => {
-        dispatch(removeClubMember(id)); // Delete member from Redux store
-    };
-
->>>>>>> Stashed changes
-    const openAddMemberModal = () => {
-        resetMemberState(); 
-        setModalVisible(true);
-    };
-
-    // Open modal for editing a member
-    const openEditMemberModal = (memberData) => {
-        setMember(memberData); // Set member data to edit
-        setSelectedImage(memberData.image); // Set selected image if exists
-        setCurrentMemberId(memberData._id); // Set current member ID
-        setIsEditing(true); // Set editing state
-        setModalVisible(true); // Open modal
-    };
-
-    // Handle image selection
+    // Handle profilepic selection
     const pickImage = async () => {
         const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (permissionResult.granted === false) {
@@ -168,11 +123,11 @@ const UpdateMembersScreen = () => {
         const result = await ImagePicker.launchImageLibraryAsync();
         if (!result.canceled) {
             const selectedImageUri = result.assets[0].uri;
-<<<<<<< Updated upstream
             const dataResponse = await uploadImage(selectedImageUri);
             setSelectedImage(dataResponse.url);
         }
     };
+
     // Handle deleting a member
     const handleDeleteMember = async (id) => {
         try {
@@ -185,8 +140,8 @@ const UpdateMembersScreen = () => {
                 },
                 body: JSON.stringify({ MemberId: id }),
             });
+
             if (response.ok) {
-                console.log("Member deleted successfully");
                 fetchExistingMembers(); // Refresh the member list
             } else {
                 const errorData = await response.json();
@@ -194,52 +149,23 @@ const UpdateMembersScreen = () => {
             }
         } catch (error) {
             console.error('Error deleting member:', error);
-=======
-            try {
-                setUploading(true);
-                const dataResponse = await uploadImage(selectedImageUri);  // Pass full URI
-                console.log("dataResponse:", dataResponse);
-              } catch (error) {
-                console.error("Image upload failed:", error);
-                alert("Failed to upload image. Please try again.");
-              } finally {
-                setUploading(false);  // Stop uploading state
-              }
-            setSelectedImage(result.assets[0].uri); // Set selected image URI
->>>>>>> Stashed changes
         }
     };
 
+    // Open modal for editing a member
+    const openEditMemberModal = (memberData) => {
+        setIsEditing(true);
+        setCurrentMemberId(memberData._id);
+        setMember(memberData); // Set member data to the selected member's data
+        setSelectedImage(memberData.profilepic); // Set the selected image to the current member's image
+        setModalVisible(true); // Open the modal
+    };
+
     return (
-<<<<<<< Updated upstream
         <View style={{ flex: 1, padding: 20 }}>
-            <Button title="Add Member" onPress={openAddMemberModal} />
+            <Button title="Add Member" onPress={() => { setModalVisible(true); resetMemberState(); }} />
 
             {/* Modal for adding or editing a member */}
-=======
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-            <Button title="Add Member" onPress={openAddMemberModal} color='#003366' />
-
-            {members.map((member) => (
-                <View key={member.id} style={styles.memberCard} >
-              
-                        <Text>Name: {member.name}</Text>
-                        <Text>Role: {member.role}</Text>
-                        <Text>Email: {member.email}</Text>
-                        <Text>Instagram: {member.instagram}</Text>
-                        <Text>LinkedIn: {member.linkedin}</Text>
-                        <Text>Slogan: {member.slogan}</Text>
-                        <Text>Description: {member.description}</Text>
-         
-                    
-                    {member.image && <Image source={{ uri: member.image }} style={styles.image} />}
-                    <Button title="Edit" onPress={() => openEditMemberModal(member)} color='#003366'/>
-                    <Button title="Delete" onPress={() => handleDeleteMember(member.id)} color="red" />
-                </View>
-            ))}
-
-            {/* Modal for adding or updating a member */}
->>>>>>> Stashed changes
             <Modal
                 visible={modalVisible}
                 animationType="slide"
@@ -248,7 +174,6 @@ const UpdateMembersScreen = () => {
             >
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
-<<<<<<< Updated upstream
                         <Text style={styles.modalTitle}>{isEditing ? "Edit Member" : "Add New Member"}</Text>
                         <TextInput placeholder="Member Name" value={member.name} onChangeText={(text) => handleInputChange('name', text)} style={styles.input} />
                         <TextInput placeholder="Role" value={member.role} onChangeText={(text) => handleInputChange('role', text)} style={styles.input} />
@@ -260,14 +185,9 @@ const UpdateMembersScreen = () => {
 
                         {/* Image Picker */}
                         <Button title="Pick an Image" onPress={pickImage} />
-                        {selectedImage && <Image source={{ uri: selectedImage }} style={styles.image} />}
+                        {selectedImage && <Image source={{ uri: selectedImage }} style={styles.profilepic} />}
                         <Button title={isEditing ? "Update Member" : "Add Member"} onPress={isEditing ? handleEditMember : handleAddMember} />
                         <Button title="Cancel" onPress={() => setModalVisible(false)} color="red" />
-=======
-
-                        <Button title={currentMember.id ? "Update Member" : "Add Member"} onPress={currentMember.id ? handleUpdateMember : handleAddMember}  color='#003366'/>
-                        <Button title="Cancel" onPress={resetModal} color="pink" />
->>>>>>> Stashed changes
                     </View>
                 </View>
             </Modal>
@@ -276,7 +196,14 @@ const UpdateMembersScreen = () => {
             <ScrollView>
                 {existingMembers.map((memberData) => (
                     <View key={memberData._id} style={styles.memberCard}>
-                        <ShowAllUpdatedMembers allMembers={[memberData]} />
+                        <Text>Name: {memberData.name}</Text>
+                        <Text>Role: {memberData.role}</Text>
+                        <Text>Email: {memberData.email}</Text>
+                        <Text>Instagram: {memberData.instagram}</Text>
+                        <Text>LinkedIn: {memberData.linkedin}</Text>
+                        <Text>Slogan: {memberData.slogan}</Text>
+                        <Text>Description: {memberData.description}</Text>
+                        {memberData.profilepic && <Image source={{ uri: memberData.profilepic }} style={styles.profilepic} />}
                         <View style={styles.buttonContainer}>
                             <Button title="Edit" onPress={() => openEditMemberModal(memberData)} />
                             <Button title="Delete" onPress={() => handleDeleteMember(memberData._id)} color="red" />
@@ -288,38 +215,7 @@ const UpdateMembersScreen = () => {
     );
 };
 
-// Styles for the component
 const styles = StyleSheet.create({
-<<<<<<< Updated upstream
-=======
-    scrollContainer: {
-        flexGrow: 1,
-        backgroundColor: '#e7e7c7',
-        padding: 20,
-        justifyContent: 'flex-start', // To ensure content starts from top
-        gap:20,
-        
-    },
-    memberCard: {
-        marginBottom: 20,
-        padding: 10,
-        color:'lightblue',
-        backgroundColor: 'white',
-        borderRadius: 8,
-        elevation: 2,
-        gap:5,
-          
-    },
-    
->>>>>>> Stashed changes
-    input: {
-        borderBottomWidth: 1,
-        marginBottom: 10,
-        padding: 5,
-        width: '100%',
-        color:'#003366',
-        
-    },
     modalContainer: {
         flex: 1,
         justifyContent: 'center',
@@ -328,40 +224,37 @@ const styles = StyleSheet.create({
     },
     modalContent: {
         width: '80%',
+        backgroundColor: 'white',
         padding: 20,
-<<<<<<< Updated upstream
-        backgroundColor: '#fff',
         borderRadius: 10,
-=======
-        backgroundColor: '#e7e7c7',
-        borderRadius: 10,
-        alignItems: 'center',
-        gap:5,
->>>>>>> Stashed changes
     },
     modalTitle: {
-        fontSize: 18,
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 20,
+    },
+    input: {
+        height: 40,
+        borderColor: 'gray',
+        borderWidth: 1,
         marginBottom: 10,
-<<<<<<< Updated upstream
-        textAlign: 'center',
-=======
-
->>>>>>> Stashed changes
+        padding: 10,
     },
     profilepic: {
         width: 100,
         height: 100,
-        marginTop: 10,
+        borderRadius: 50,
+        marginBottom: 10,
     },
     memberCard: {
-        padding: 15,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
+        padding: 10,
+        marginVertical: 5,
+        backgroundColor: '#f9f9f9',
+        borderRadius: 5,
     },
     buttonContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-around',
-        marginTop: 10,
+        justifyContent: 'space-between',
     },
 });
 

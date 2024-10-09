@@ -37,7 +37,12 @@ const ClubOptionsScreen = () => {
         <Text style={styles.buttonText}>Update Contact Info</Text>
       </TouchableOpacity>
 
-
+      <TouchableOpacity 
+      style={styles.optionButton}
+      onPress={() => navigation.navigate('UploadEventScreen')}
+      >
+        <Text style={styles.buttonText}>Updload Event</Text>
+      </TouchableOpacity>
       {/* Add more options as needed */}
     </View>
   );

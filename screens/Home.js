@@ -21,7 +21,7 @@ export default function Home({ navigation }) {
         </TouchableOpacity>
 
         <View style={styles.navBar}>
-          <TouchableOpacity onPress={() => navigation.navigate('UpcomingEvents')}>
+          <TouchableOpacity onPress={() => navigation.navigate('UpcomingEventsScreen')}>
             <Text style={styles.navText}>Upcoming Events</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate('PastEvents')}>

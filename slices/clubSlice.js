@@ -16,16 +16,23 @@ const initialState = {
     members: [],           // Club members, initially an empty array
     gallery: [],           // Club gallery, can store images as an array
     services: [],          // Club services, initially empty
-    events: [],            // Club events, will store upcoming/past events
+    upcomingEvents: [],    // Store upcoming events
+    pastEvents: [],        // Store past events
     contactInfo: {         // Updated to store multiple contact fields
         phone: '',         // Club phone number
         linkedin: '',      // LinkedIn link
         instagram: '',     // Instagram link
         email: '',         // Email address of the club
-        facebook:'',
-        twitter:'',
-        github:'',
+        facebook: '',
+        twitter: '',
+        github: '',
     },
+};
+
+// Helper function to move past events
+const isEventPast = (eventDate) => {
+    const today = new Date();
+    return new Date(eventDate) < today;
 };
 
 // Create a slice of the store
@@ -101,11 +108,25 @@ const clubSlice = createSlice({
         updateEvents: (state, action) => {
             state.events = action.payload;
         },
-        // Add this inside the reducers object
-        updateDescription: (state, action) => {
-        state.description = action.payload;
+        // Add event to upcomingEvents
+        addUpcomingEvent: (state, action) => {
+            state.upcomingEvents.push(action.payload);
         },
-
+        // Update event in upcomingEvents
+        updateUpcomingEvent: (state, action) => {
+            const index = state.upcomingEvents.findIndex(event => event.id === action.payload.id);
+            if (index !== -1) {
+                state.upcomingEvents[index] = action.payload;
+            }
+        },
+        // Move event to pastEvents
+        moveEventToPast: (state, action) => {
+            const event = state.upcomingEvents.find(event => event.id === action.payload);
+            if (event && isEventPast(event.date)) {
+                state.upcomingEvents = state.upcomingEvents.filter(event => event.id !== action.payload);
+                state.pastEvents.push(event);
+            }
+        },
         // Action to update club contact information
         updateContactInfo: (state, action) => {
             const { field, value } = action.payload;
@@ -129,13 +150,9 @@ export const selectClubMembers = (state) => state.club.members;
 export const selectClubId = (state) => state.club.clubId;
 export const selectContactInfo = (state) => state.club.contactInfo;
 export const selectGallery = (state) => state.club.gallery;
+export const selectUpcomingEvents = (state) => state.club.upcomingEvents;
+export const selectPastEvents = (state) => state.club.pastEvents;
 export const { setClubInfo, updateClubInfo } = clubSlice.actions;
-
-// ... rest of your selectors
-
-
-
-
 
 // Export the actions so they can be dispatched from components
 export const {
@@ -148,7 +165,6 @@ export const {
     updateClubLogo,
     updateMotto,
     updateObjectives,
-    updateDescription,
     updateFacultyAdvisor,
     updateMembers,
     updateClubMember,
@@ -157,6 +173,9 @@ export const {
     updateGallery,
     updateServices,
     updateEvents,
+    addUpcomingEvent,
+    updateUpcomingEvent,
+    moveEventToPast,
     updateContactInfo,
 } = clubSlice.actions;
 

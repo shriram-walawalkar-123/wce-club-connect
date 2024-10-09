@@ -1,12 +1,25 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import React from 'react';
+import { View, Text, Image, ScrollView } from 'react-native';
+import { useSelector } from 'react-redux'; // To get event data from Redux
 
-export default function UpcomingEvents() {
+const UpcomingEventsScreen = () => {
+  const upcomingEvents = useSelector((state) => state.events.upcomingEvents); // Get events from Redux
+
   return (
-    <View>
-      <Text>UpcomingEvents</Text>
-    </View>
-  )
-}
+    <ScrollView>
+      {upcomingEvents.map((event, index) => (
+        <View key={index} style={{ margin: 20 }}>
+          <Image source={{ uri: event.eventImage }} style={{ width: 200, height: 200 }} />
+          <Text style={{ fontWeight: 'bold', fontSize: 18 }}>{event.eventName}</Text>
+          <Text>Date: {event.date}</Text>
+          <Text>Venue: {event.venue}</Text>
+          <Text>Time: {event.time}</Text>
+          <Text>Rulebook: {event.rulebook}</Text>
+          <Text>Rounds: {event.rounds}</Text>
+        </View>
+      ))}
+    </ScrollView>
+  );
+};
 
-const styles = StyleSheet.create({})
+export default UpcomingEventsScreen;

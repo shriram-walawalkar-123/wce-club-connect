@@ -13,6 +13,9 @@ const deleteGalleryImage = require('../Controller/ClubController/ClubGallaryDele
 const clubMemberUpdate = require('../Controller/ClubController/ClubMemberEdit');
 const getClubMember = require('../Controller/ClubController/getClubMember');
 const getClubGallery = require('../Controller/ClubController/getClubGallary');
+const { clubEventAdd } = require('../Controller/ClubController/ClubEventAdd');
+const clubEventEdit = require('../Controller/ClubController/CLubEventEdit');
+const getClubEvent = require('../Controller/ClubController/getClubEvent');
 
 // user route
 router.post("/sign-up",signup);
@@ -22,20 +25,30 @@ router.post("/login",login);
 // club router
 router.post("/club_description",auth,isClub,clubDescription);
 
-router.post("/club_member",auth,isClub,clubMemberAdd);
-
-router.post("/club_member_delete",auth,isClub,clubMemberDelete);
-
 router.post("/club_social_media",auth,isClub,clubSocialMedia);
 
+
+// galary
 router.post("/club_gallery",auth,isClub,clubGallery);
 
 router.post("/club_gallery_detele",auth,isClub,deleteGalleryImage);
 
+router.get("/get_club_gallery",auth,isClub,getClubGallery);
+
+// member
 router.post("/club_member_update",auth,isClub,clubMemberUpdate);
 
 router.get("/get_club_member",auth,isClub,getClubMember)
 
-router.get("/get_club_gallery",auth,isClub,getClubGallery);
+router.post("/club_member_delete",auth,isClub,clubMemberDelete);
+
+router.post("/club_member",auth,isClub,clubMemberAdd);
+
+// event 
+router.post("/club_event_add",auth,isClub,clubEventAdd);
+
+router.post("/club_event_edit",auth,isClub,clubEventEdit);
+
+router.get("/get_club_event",auth,isClub,getClubEvent);
 
 module.exports=router

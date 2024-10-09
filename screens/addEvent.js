@@ -22,10 +22,12 @@ const AddEvent = () => {
     date: '',
     time: '',
     venue: '',
-    contacts: ['', ''],
+    contacts: [{ name: '', phone: '' }],
     rulebookPDF: null,
+    rounds: [],
   });
 
+  // Handler for picking event poster
   const pickEventPoster = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -39,6 +41,7 @@ const AddEvent = () => {
     }
   };
 
+  // Handler for adding a sponsor image
   const addSponsor = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -61,7 +64,7 @@ const AddEvent = () => {
     setMainEvent({ ...mainEvent, sponsors: newSponsors });
   };
 
-  // Handler to add a new subevent dynamically
+  // Handler for adding a new subevent
   const addSubEvent = () => {
     setModalVisible(true);
   };
@@ -69,6 +72,10 @@ const AddEvent = () => {
   const handleAddSubEvent = () => {
     setSubEvents([...subEvents, newSubEvent]);
     setModalVisible(false);
+    resetSubEventForm();
+  };
+
+  const resetSubEventForm = () => {
     setNewSubEvent({
       subEventName: '',
       entryFee: '',
@@ -76,17 +83,24 @@ const AddEvent = () => {
       date: '',
       time: '',
       venue: '',
-      contacts: ['', ''],
+      contacts: [{ name: '', phone: '' }],
       rulebookPDF: null,
+      rounds: [],
     });
   };
 
-  const updateSubEventContact = (contactIndex, value) => {
+  // Handler for subevent contacts
+  const updateSubEventContact = (contactIndex, key, value) => {
     const updatedContacts = [...newSubEvent.contacts];
-    updatedContacts[contactIndex] = value;
+    updatedContacts[contactIndex][key] = value;
     setNewSubEvent({ ...newSubEvent, contacts: updatedContacts });
   };
 
+  const addSubEventContact = () => {
+    setNewSubEvent({ ...newSubEvent, contacts: [...newSubEvent.contacts, { name: '', phone: '' }] });
+  };
+
+  // Handler for picking a rulebook PDF
   const pickRulebookPDF = async () => {
     const result = await DocumentPicker.getDocumentAsync({
       type: 'application/pdf',
@@ -98,10 +112,36 @@ const AddEvent = () => {
     }
   };
 
+  // Handlers for adding and updating rounds
+  const addRound = () => {
+    setNewSubEvent({
+      ...newSubEvent,
+      rounds: [...newSubEvent.rounds, { roundTime: '', description: [''] }],
+    });
+  };
+
+  const updateRound = (roundIndex, key, value) => {
+    const updatedRounds = [...newSubEvent.rounds];
+    updatedRounds[roundIndex][key] = value;
+    setNewSubEvent({ ...newSubEvent, rounds: updatedRounds });
+  };
+
+  const addRoundDescriptionPoint = (roundIndex) => {
+    const updatedRounds = [...newSubEvent.rounds];
+    updatedRounds[roundIndex].description.push('');
+    setNewSubEvent({ ...newSubEvent, rounds: updatedRounds });
+  };
+
+  const updateRoundDescription = (roundIndex, descIndex, value) => {
+    const updatedRounds = [...newSubEvent.rounds];
+    updatedRounds[roundIndex].description[descIndex] = value;
+    setNewSubEvent({ ...newSubEvent, rounds: updatedRounds });
+  };
+
   const handleSubmit = () => {
     const eventDetails = { ...mainEvent, subEvents };
     console.log('Event Created:', eventDetails);
-    // Logic to send the eventDetails to backend
+    // Here, you'd typically send eventDetails to the backend.
   };
 
   return (
@@ -150,7 +190,7 @@ const AddEvent = () => {
         <View key={index} style={styles.sponsorContainer}>
           <TextInput
             style={styles.input}
-            placeholder="Sponsor Type (e.g., Media Partner, Title Sponsor)"
+            placeholder="Sponsor Type (e.g., Media Partner)"
             value={sponsor.sponsorType}
             onChangeText={(text) => updateSponsor(index, 'sponsorType', text)}
           />
@@ -163,7 +203,19 @@ const AddEvent = () => {
       ))}
       <Button title="Add Sponsor" onPress={addSponsor} />
 
-      {/* Subevent Button */}
+      {/* Display SubEvents */}
+      <Text style={styles.subtitle}>Subevents</Text>
+      {subEvents.map((subEvent, index) => (
+        <View key={index} style={styles.subEventContainer}>
+          <Text style={styles.subEventTitle}>{subEvent.subEventName}</Text>
+          <Text>{`Entry Fee: ${subEvent.entryFee}`}</Text>
+          <Text>{`Date: ${subEvent.date}`}</Text>
+          <Text>{`Time: ${subEvent.time}`}</Text>
+          <Text>{`Venue: ${subEvent.venue}`}</Text>
+        </View>
+      ))}
+
+      {/* Button to add subevents */}
       <Button title="Add Subevent" onPress={addSubEvent} />
 
       {/* Subevent Modal */}
@@ -172,7 +224,7 @@ const AddEvent = () => {
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}>
-        <View style={styles.modalContainer}>
+        <ScrollView contentContainerStyle={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Add Subevent</Text>
 
@@ -215,35 +267,65 @@ const AddEvent = () => {
               onChangeText={(text) => setNewSubEvent({ ...newSubEvent, venue: text })}
             />
 
-            {/* Rulebook PDF */}
-            <TouchableOpacity onPress={pickRulebookPDF} style={styles.imagePicker}>
-              {newSubEvent.rulebookPDF ? (
-                <Text>{newSubEvent.rulebookPDF.name}</Text>
-              ) : (
-                <Text>Pick Rulebook PDF</Text>
-              )}
-            </TouchableOpacity>
-
-            {/* Subevent Contacts */}
+            {/* Contacts Section */}
             <Text style={styles.subtitle}>Contacts</Text>
             {newSubEvent.contacts.map((contact, contactIndex) => (
-              <TextInput
-                key={contactIndex}
-                style={styles.input}
-                placeholder={`Contact ${contactIndex + 1}`}
-                value={contact}
-                onChangeText={(text) => updateSubEventContact(contactIndex, text)}
-              />
+              <View key={contactIndex} style={styles.contactContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Contact Name"
+                  value={contact.name}
+                  onChangeText={(text) => updateSubEventContact(contactIndex, 'name', text)}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Contact Phone"
+                  value={contact.phone}
+                  keyboardType="phone-pad"
+                  onChangeText={(text) => updateSubEventContact(contactIndex, 'phone', text)}
+                />
+              </View>
             ))}
+            <Button title="Add Another Contact" onPress={addSubEventContact} />
 
-            <View style={styles.buttonContainer}>
-              <Button title="Save Subevent" onPress={handleAddSubEvent} />
-              <Button title="Cancel" onPress={() => setModalVisible(false)} />
-            </View>
+            {/* Rulebook Picker */}
+            <TouchableOpacity onPress={pickRulebookPDF} style={styles.button}>
+              <Text>Pick Rulebook PDF</Text>
+            </TouchableOpacity>
+            {newSubEvent.rulebookPDF && <Text>Selected: {newSubEvent.rulebookPDF.name}</Text>}
+
+            {/* Rounds Section */}
+            <Text style={styles.subtitle}>Rounds</Text>
+            {newSubEvent.rounds.map((round, roundIndex) => (
+              <View key={roundIndex} style={styles.roundContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Round Time"
+                  value={round.roundTime}
+                  onChangeText={(text) => updateRound(roundIndex, 'roundTime', text)}
+                />
+                {round.description.map((point, descIndex) => (
+                  <TextInput
+                    key={descIndex}
+                    style={styles.input}
+                    placeholder={`Description Point ${descIndex + 1}`}
+                    value={point}
+                    onChangeText={(text) => updateRoundDescription(roundIndex, descIndex, text)}
+                  />
+                ))}
+                <Button title="Add Description Point" onPress={() => addRoundDescriptionPoint(roundIndex)} />
+              </View>
+            ))}
+            <Button title="Add Round" onPress={addRound} />
+
+            {/* Finalize Subevent */}
+            <Button title="Add Subevent" onPress={handleAddSubEvent} />
+            <Button title="Cancel" onPress={() => setModalVisible(false)} />
           </View>
-        </View>
+        </ScrollView>
       </Modal>
 
+      {/* Submit Event */}
       <Button title="Submit Event" onPress={handleSubmit} />
     </ScrollView>
   );
@@ -259,20 +341,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 20,
   },
-  subtitle: {
-    fontSize: 18,
-    marginVertical: 10,
-  },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 5,
     padding: 10,
-    marginBottom: 15,
+    marginBottom: 10,
+    borderRadius: 5,
   },
   imagePicker: {
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 20,
     padding: 10,
     borderWidth: 1,
     borderColor: '#ccc',
@@ -281,32 +359,54 @@ const styles = StyleSheet.create({
   image: {
     width: 100,
     height: 100,
-    borderRadius: 5,
+    marginTop: 10,
+  },
+  subtitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
   },
   sponsorContainer: {
-    marginBottom: 15,
+    marginBottom: 10,
+  },
+  subEventContainer: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    marginBottom: 10,
+  },
+  subEventTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  contactContainer: {
+    marginBottom: 10,
+  },
+  button: {
+    backgroundColor: '#ccc',
+    padding: 10,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  roundContainer: {
+    marginBottom: 20,
   },
   modalContainer: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+    padding: 20,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: '80%',
-    backgroundColor: 'white',
+    backgroundColor: '#fff',
     borderRadius: 10,
     padding: 20,
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 15,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
+    marginBottom: 20,
+    textAlign: 'center',
   },
 });
 

@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, Dimensions, Platform, ImageBackground } from 'react-native';
+import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, Dimensions, Platform, ImageBackground ,ScrollView } from 'react-native';
 import { clubs } from '../ClubData'; 
-
+import ScrollingMessage from './ScrollingMessage';
 const { width, height } = Dimensions.get('window'); // Get device dimensions
 
 export default function Home({ navigation }) {
@@ -10,6 +10,7 @@ export default function Home({ navigation }) {
           source={{ uri: 'https://www.nikaiacours.fr/wp-content/uploads/2019/12/login-background.jpg' }} 
           style={styles.backgroundImage}
         >
+      <ScrollingMessage message="🚀 Upcoming Event: Club Meeting on Friday!" />
       <View style={styles.container}>
         <Image
           source={{ uri: 'https://th.bing.com/th?id=OIP.aP1NzCPFoFARQQVD4NrOEgAAAA&w=158&h=142&c=8&rs=1&qlt=90&o=6&dpr=1.3&pid=3.1&rm=2' }}

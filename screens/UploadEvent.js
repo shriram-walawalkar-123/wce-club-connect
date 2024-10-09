@@ -5,7 +5,12 @@ import AllUploadedEvents from './allUploadedEvents'; // Component to show all ev
 
 const UploadEventScreen = () => {
   const navigation = useNavigation();
- 
+  // const [events, setEvents] = useState([]); // State to hold all events
+
+  // // Function to add a new event
+  // const handleAddEvent = (newEvent) => {
+  //   setEvents([...events, newEvent]); // Add new event to the list
+  // };
 
   const handleNavigateToUpload = () => {
     navigation.navigate('AddEvent'); // Pass the handler to the next screen

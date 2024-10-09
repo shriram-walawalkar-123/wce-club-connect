@@ -175,12 +175,37 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#e7e7c7',
+    // backgroundColor: '#f5f5f5',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
+    color:'#003366',
+  },
+  imageContainer: {
+    position: 'relative',
+    marginRight: 10,
+  },
+  image: {
+    width: 150,
+    height: 150,
+    borderRadius: 10,
+    borderColor: '#ddd',
+    borderWidth: 1,
+  },
+  deleteButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: '#ff4444',
+    padding: 5,
+    borderRadius: 5,
+  },
+  deleteButtonText: {
+    color: '#fff',
+    fontSize: 12,
   },
   uploadButton: {
     backgroundColor: '#003366',

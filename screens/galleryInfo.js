@@ -23,6 +23,7 @@ const GalleryInfo = ({ route }) => {
           renderItem={renderImage}
           keyExtractor={(item, index) => index.toString()}
           numColumns={2} // Display images in 2 columns
+          contentContainerStyle={styles.galleryContent} // Center the gallery content
         />
       ) : (
         <Text style={styles.noImagesText}>No images available for this club</Text>
@@ -34,22 +35,32 @@ const GalleryInfo = ({ route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center', // Center content vertically
+    alignItems: 'center', // Center content horizontally
     padding: 16,
+    
+    backgroundColor:'#e7e7c7',
   },
   title: {
-    fontSize: 20,
+    marginTop:110,
+    fontSize: 25,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 40,
     color: '#003366',
+    textAlign: 'center', // Center the title text
+  },
+  galleryContent: {
+    // justifyContent: 'center', // Center gallery content vertically
+    alignItems: 'center', // Center gallery content horizontally
+    flexGrow: 1, // Ensures that content takes up the available space to center properly
   },
   imageContainer: {
-    padding: 10,
+    // padding: 10,
+    alignItems: 'center', // Center image within its container
   },
   image: {
-    width: 150,
-    height: 150,
+    width: 200,
+    height: 200,
     borderRadius: 10,
   },
   noImagesText: {

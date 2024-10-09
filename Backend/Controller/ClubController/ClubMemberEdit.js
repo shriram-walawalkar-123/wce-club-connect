@@ -4,11 +4,12 @@ const ClubMember = require("../../Models/ClubMemberModel");
 const clubMemberUpdate = async (req, res) => {
     console.log("req body for update", req.body);
     try {
-        console.log("user data",req.body);
-        const { _id, image, name, role, email, instagram, linkedin, slogan, description } = req?.body;
+        console.log("user data into backend",req.body);
+        const { _id, profilepic, name, role, email, instagram, linkedin, slogan, description } = req?.body;
+        console.log("profilepic",profilepic);
         const clubId=req?.user?.clubId
         // Validate member ID and required fields
-        if (!_id || !image || !name || !role || !email) {
+        if (!_id|| !name || !role || !email) {
             return res.status(400).json({
                 success: false,
                 message: "Please provide all required fields, including the member ID."
@@ -25,7 +26,7 @@ const clubMemberUpdate = async (req, res) => {
         }
 
         // Update the club member's details
-        clubMember.profilepic = image;
+        clubMember.profilepic = profilepic;
         clubMember.name = name;
         clubMember.role = role;
         clubMember.email = email;
@@ -36,7 +37,7 @@ const clubMemberUpdate = async (req, res) => {
 
         // Save the updated member
         await clubMember.save();
-
+        console.log("clubMember",clubMember);
         return res.status(200).json({
             success: true,
             message: "Club member updated successfully",

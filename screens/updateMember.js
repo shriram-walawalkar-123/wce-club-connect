@@ -4,7 +4,6 @@ import * as ImagePicker from 'expo-image-picker';
 import uploadImage from '../helper/uploadImage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SummaryApi from '../backendRoutes';
-import ShowAllUpdatedMembers from './showAllUpdatedMember';
 
 const UpdateMembersScreen = () => {
     const [member, setMember] = useState({
@@ -15,7 +14,7 @@ const UpdateMembersScreen = () => {
         linkedin: '',
         slogan: '',
         description: '',
-        image: ''
+        profilepic: ''
     });
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedImage, setSelectedImage] = useState(null);
@@ -53,7 +52,7 @@ const UpdateMembersScreen = () => {
 
     // Handle adding a member
     const handleAddMember = async () => {
-        const newMember = { ...member, image: selectedImage };
+        const newMember = { ...member, profilepic: selectedImage };
         await updateData(newMember);
         setModalVisible(false);
         resetMemberState();
@@ -61,29 +60,38 @@ const UpdateMembersScreen = () => {
 
     // Handle editing a member
     const handleEditMember = async () => {
-        const updatedMember = { ...member, image: selectedImage, id: currentMemberId };
+        const updatedMember = { 
+            ...member, 
+            profilepic: selectedImage || member.profilepic,
+            id: currentMemberId 
+        };
         await updateData(updatedMember, true);
         setModalVisible(false);
         resetMemberState();
-        fetchExistingMembers(); // Refresh members after editing
     };
 
     const updateData = async (memberData, isEditing = false) => {
         try {
             const token = await AsyncStorage.getItem("authToken");
-            const response = await fetch(SummaryApi.club_member.url, {
-                method: isEditing ? 'PUT' : SummaryApi.club_member.method,
+            const response = await fetch(isEditing ? SummaryApi.club_member_update.url : SummaryApi.club_member.url, {
+                method: isEditing ? SummaryApi.club_member_update.method : SummaryApi.club_member.method,
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(memberData)
+                body: JSON.stringify(memberData),
             });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error("Error response:", errorData.message); 
+                throw new Error(`Error: ${response.status}`);
+            }
+    
             const data = await response.json();
-            console.log(isEditing ? "Member updated:" : "Member added:", data);
             fetchExistingMembers(); // Refresh the member list after update
         } catch (error) {
-            console.error('Error updating member data:', error);
+            console.error('Error updating member data:', error); 
         }
     };
 
@@ -97,29 +105,14 @@ const UpdateMembersScreen = () => {
             linkedin: '',
             slogan: '',
             description: '',
-            image: ''
+            profilepic: ''
         });
         setSelectedImage(null);
         setIsEditing(false);
         setCurrentMemberId(null);
     };
 
-    // Open modal for adding a member
-    const openAddMemberModal = () => {
-        resetMemberState(); // Reset state to avoid carrying over old data
-        setModalVisible(true);
-    };
-
-    // Open modal for editing a member
-    const openEditMemberModal = (memberData) => {
-        setMember(memberData); // Set member data to edit
-        setSelectedImage(memberData.image); // Set selected image if exists
-        setCurrentMemberId(memberData._id); // Set current member ID
-        setIsEditing(true); // Set editing state
-        setModalVisible(true); // Open modal
-    };
-
-    // Handle image selection
+    // Handle profilepic selection
     const pickImage = async () => {
         const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (permissionResult.granted === false) {
@@ -137,7 +130,6 @@ const UpdateMembersScreen = () => {
 
     // Handle deleting a member
     const handleDeleteMember = async (id) => {
-        console.log("Deleting member with ID:", id);
         try {
             const token = await AsyncStorage.getItem("authToken");
             const response = await fetch(SummaryApi.club_member_delete.url, {
@@ -150,7 +142,6 @@ const UpdateMembersScreen = () => {
             });
 
             if (response.ok) {
-                console.log("Member deleted successfully");
                 fetchExistingMembers(); // Refresh the member list
             } else {
                 const errorData = await response.json();
@@ -161,9 +152,18 @@ const UpdateMembersScreen = () => {
         }
     };
 
+    // Open modal for editing a member
+    const openEditMemberModal = (memberData) => {
+        setIsEditing(true);
+        setCurrentMemberId(memberData._id);
+        setMember(memberData); // Set member data to the selected member's data
+        setSelectedImage(memberData.profilepic); // Set the selected image to the current member's image
+        setModalVisible(true); // Open the modal
+    };
+
     return (
         <View style={{ flex: 1, padding: 20 }}>
-            <Button title="Add Member" onPress={openAddMemberModal} />
+            <Button title="Add Member" onPress={() => { setModalVisible(true); resetMemberState(); }} />
 
             {/* Modal for adding or editing a member */}
             <Modal
@@ -185,7 +185,7 @@ const UpdateMembersScreen = () => {
 
                         {/* Image Picker */}
                         <Button title="Pick an Image" onPress={pickImage} />
-                        {selectedImage && <Image source={{ uri: selectedImage }} style={styles.image} />}
+                        {selectedImage && <Image source={{ uri: selectedImage }} style={styles.profilepic} />}
                         <Button title={isEditing ? "Update Member" : "Add Member"} onPress={isEditing ? handleEditMember : handleAddMember} />
                         <Button title="Cancel" onPress={() => setModalVisible(false)} color="red" />
                     </View>
@@ -196,7 +196,14 @@ const UpdateMembersScreen = () => {
             <ScrollView>
                 {existingMembers.map((memberData) => (
                     <View key={memberData._id} style={styles.memberCard}>
-                        <ShowAllUpdatedMembers allMembers={[memberData]} />
+                        <Text>Name: {memberData.name}</Text>
+                        <Text>Role: {memberData.role}</Text>
+                        <Text>Email: {memberData.email}</Text>
+                        <Text>Instagram: {memberData.instagram}</Text>
+                        <Text>LinkedIn: {memberData.linkedin}</Text>
+                        <Text>Slogan: {memberData.slogan}</Text>
+                        <Text>Description: {memberData.description}</Text>
+                        {memberData.profilepic && <Image source={{ uri: memberData.profilepic }} style={styles.profilepic} />}
                         <View style={styles.buttonContainer}>
                             <Button title="Edit" onPress={() => openEditMemberModal(memberData)} />
                             <Button title="Delete" onPress={() => handleDeleteMember(memberData._id)} color="red" />
@@ -208,14 +215,7 @@ const UpdateMembersScreen = () => {
     );
 };
 
-// Styles for the component
 const styles = StyleSheet.create({
-    input: {
-        borderBottomWidth: 1,
-        marginBottom: 10,
-        padding: 5,
-        width: '100%',
-    },
     modalContainer: {
         flex: 1,
         justifyContent: 'center',
@@ -224,32 +224,37 @@ const styles = StyleSheet.create({
     },
     modalContent: {
         width: '80%',
+        backgroundColor: 'white',
         padding: 20,
-        backgroundColor: '#fff',
         borderRadius: 10,
     },
     modalTitle: {
-        fontSize: 18,
-        marginBottom: 10,
-        textAlign: 'center',
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 20,
     },
-    image: {
+    input: {
+        height: 40,
+        borderColor: 'gray',
+        borderWidth: 1,
+        marginBottom: 10,
+        padding: 10,
+    },
+    profilepic: {
         width: 100,
         height: 100,
+        borderRadius: 50,
         marginBottom: 10,
-        alignSelf: 'center',
     },
     memberCard: {
-        marginVertical: 10,
-        padding: 15,
-        borderWidth: 1,
-        borderColor: '#ccc',
+        padding: 10,
+        marginVertical: 5,
+        backgroundColor: '#f9f9f9',
         borderRadius: 5,
     },
     buttonContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginTop: 10,
     },
 });
 

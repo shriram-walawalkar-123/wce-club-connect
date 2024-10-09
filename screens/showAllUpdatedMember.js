@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, ScrollView } from 'react-native';
 
 const ShowAllUpdatedMembers = ({ allMembers }) => {

@@ -213,7 +213,7 @@ const UpdateClubInfoScreen = () => {
                 ) : (
                     <Text>No logo selected</Text>
                 )}
-                <Button title="Choose Logo" onPress={() => pickImage('clubLogo')} />
+                <Button title="Choose Logo" onPress={() => pickImage('clubLogo')} color="#003366"/>
 
                 <Text style={styles.label}>Motto:</Text>
                 <TextInput
@@ -257,7 +257,7 @@ const UpdateClubInfoScreen = () => {
                     </View>
                 ))}
 
-                <Button title="Add Faculty Advisor" onPress={() => setShowAdvisorModal(true)} />
+                <Button title="Add Faculty Advisor" onPress={() => setShowAdvisorModal(true)} color="#003366"/>
 
                 <Modal visible={showAdvisorModal} animationType="slide" transparent={true}>
                     <View style={styles.modalOverlay}>
@@ -276,19 +276,19 @@ const UpdateClubInfoScreen = () => {
                                 onChangeText={(text) => handleAdvisorInputChange('contactDetails', text)}
                             />
 
-                            <Button title="Pick Advisor Image" onPress={() => pickImage('advisorImage')} />
+                            <Button title="Pick Advisor Image" onPress={() => pickImage('advisorImage')  } color="#003366" />
                             {newAdvisor.image ? (
                                 <Image source={{ uri: newAdvisor.image }} style={styles.logo} />
                             ) : (
                                 <Text>No advisor image selected</Text>
                             )}
-                            <Button title="Add Advisor" onPress={addFacultyAdvisor} />
-                            <Button title="Cancel" onPress={() => setShowAdvisorModal(false)} />
+                            <Button title="Add Advisor" onPress={addFacultyAdvisor} color="#003366"  />
+                            <Button title="Cancel" onPress={() => setShowAdvisorModal(false)} color="#003366" />
                         </View>
                     </View>
                 </Modal>
 
-                <Button title="Update Club Info" onPress={handleUpdate} />
+                <Button title="Update Club Info" onPress={handleUpdate} color="#003366" />
 
                 {/* Image Modal for Viewing Larger Image */}
                 <Modal visible={showImageModal} animationType="slide" transparent={true}>
@@ -307,18 +307,30 @@ const UpdateClubInfoScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
+        padding:20,
+        
+        // backgroundColor: '#07768c',
+        backgroundColor:'#e7e7c7',
+        // 003366
+    //07768c
+        // gap:5,
+        margin:0,
+        
+        
     },
     input: {
         borderWidth: 1,
-        borderColor: '#ccc',
+        borderColor: '#003366',
         padding: 10,
         borderRadius: 5,
         marginBottom: 15,
+        
     },
     label: {
         fontWeight: 'bold',
+        color:'#07768c',
         marginBottom: 5,
+        
     },
     logo: {
         width: 100,
@@ -338,11 +350,11 @@ const styles = StyleSheet.create({
     },
     radio: {
         fontSize: 16,
-        color: '#333',
+        // color: '#003366',
     },
     selectedRadio: {
         fontSize: 16,
-        color: '#007BFF',
+        color: '#003366',
         fontWeight: 'bold',
     },
     modalOverlay: {
@@ -353,17 +365,19 @@ const styles = StyleSheet.create({
     },
     modalSmall: {
         width: '80%',
-        backgroundColor: 'white',
+        backgroundColor:'#e7e7c7',
         borderRadius: 10,
         padding: 20,
         elevation: 5,
+        gap:5,
     },
     modalImageContainer: {
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'white',
         padding: 20,
-        borderRadius: 10,
+        // borderRadius: 10,
+        // marginTop:20,
     },
     modalImage: {
         width: 300, // Adjust width for modal image

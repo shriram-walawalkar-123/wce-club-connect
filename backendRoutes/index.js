@@ -1,4 +1,4 @@
-const backend_url = "http://192.168.82.87:5000/api/v1";
+const backend_url = "http://192.168.81.40:5000/api/v1";
 
 const SummaryApi = {
     signUp: { // Changed to camelCase and used quotes for keys with hyphens

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions, ImageBackground, ScrollView } from 'react-native';
-import SummaryApi from '../backendRoutes';
+import React from 'react';
+import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, Dimensions, Platform, ImageBackground } from 'react-native';
+import { clubs } from '../ClubData'; 
 
-const { width } = Dimensions.get('window'); // Get device dimensions
+const { width, height } = Dimensions.get('window'); // Get device dimensions
 
 const Home = ({ navigation }) => {
   const [clubs, setClubs] = useState([]); // State variable to hold club data
@@ -24,9 +24,9 @@ const Home = ({ navigation }) => {
 
   return (
     <ImageBackground
-      source={{ uri: 'https://www.nikaiacours.fr/wp-content/uploads/2019/12/login-background.jpg' }}
-      style={styles.backgroundImage}
-    >
+          source={{ uri: 'https://www.nikaiacours.fr/wp-content/uploads/2019/12/login-background.jpg' }} 
+          style={styles.backgroundImage}
+        >
       <View style={styles.container}>
         <Image
           source={{ uri: 'https://th.bing.com/th?id=OIP.aP1NzCPFoFARQQVD4NrOEgAAAA&w=158&h=142&c=8&rs=1&qlt=90&o=6&dpr=1.3&pid=3.1&rm=2' }}

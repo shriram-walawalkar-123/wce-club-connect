@@ -5,7 +5,7 @@ const getClubEvent = async (req, res) => {
         const clubId = req.user.id; // Get the clubId from the authenticated user
 
         // Fetch all events associated with the clubId
-        const events = await Event.find({ clubId });
+        const events = await Event.find({ clubId }).sort({ createdAt: -1 }); // -1 for descending order
 
         // Check if any events were found
         if (events.length === 0) {

@@ -1,11 +1,11 @@
 const mongoose = require('mongoose');
 
 const EventSchema = new mongoose.Schema({
-    clubId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
+  clubId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   clubName: { type: String },
   eventName: { type: String },
   eventPoster: { type: String },
@@ -24,12 +24,15 @@ const EventSchema = new mongoose.Schema({
     venue: { type: String },
     contacts: [{
       name: { type: String },
-      phone: { type: String },
+      phone: { type: Number },
     }],
-    rulebookPDF: { type: String },
+    rulebookPDF: {
+      uri: { type: String }, // URI field for the PDF location
+      name: { type: String }, // Name field for the PDF file
+    },
     rounds: [{
       roundTime: { type: String },
-      description: { type: [String] },
+      description: { type: [String] }, // Array of strings for round descriptions
     }],
   }],
 }, { timestamps: true });

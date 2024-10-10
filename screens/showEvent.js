@@ -60,7 +60,7 @@ const ShowEvent = ({ route }) => {
           <Text className="text-base text-gray-600">{`Venue: ${subEvent.venue}`}</Text>
           <Text className="text-base text-gray-600 mb-2">{`Entry Fee: ₹${subEvent.entryFee}`}</Text>
           <Text className="text-blue-600 underline">
-            Rulebook: {subEvent.rulebookPDF}
+            Rulebook: {subEvent?.rulebookPDF?.uri}
           </Text>
         </View>
       ))}

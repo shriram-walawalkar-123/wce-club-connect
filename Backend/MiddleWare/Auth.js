@@ -3,10 +3,10 @@ require('dotenv').config();
 // Authentication Middleware
 exports.auth = (req, res, next) => {
   try {
-    console.log("req body",req);
+    // console.log("req body",req);
     const token = req?.body?.token || req?.headers?.authorization?.split(' ')[1] || req?.cookies?.authToken || req?.headers?.token;
 
-    console.log("Token:", token);
+    // console.log("Token:", token);
   //  console.log(req);
     if (!token) {
       return res.status(401).json({

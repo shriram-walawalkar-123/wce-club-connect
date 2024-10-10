@@ -1,46 +1,120 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
-import ContactInfo from './contactInfo';
-import MembersInfo from './memberInfo';
-import GalleryInfo from './galleryInfo';
-import DescriptionInfo from './DescriptionInfo';
+import ContactInfo from './contactInfo'; // Ensure this path is correct
+import GalleryInfo from './galleryInfo'; // Ensure this path is correct
+import DescriptionInfo from './DescriptionInfo'; // Ensure this path is correct
+import MembersInfo from './memberInfo'; // Ensure this path is correct
+import UpcomingEventsScreen from './UpcomingEventsScreen'; // Import UpcomingEventsScreen
+import PastEventsScreen from './PastEventsScreen'; // Import PastEventsScreen
+import { View, ActivityIndicator } from 'react-native';
+import SummaryApi from '../backendRoutes';
 
 const Tab = createMaterialTopTabNavigator();
 
 const ClubDetailsScreen = ({ route }) => {
-  const { clubId } = route.params; // Get the clubId from the previous screen
+  const { clubId } = route.params;
+  const [clubData, setClubData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [member, setMember] = useState([]); // Initialize as an empty array
+
+  const fetchClubInfo = async () => {
+    try {
+      const response = await fetch(SummaryApi.get_club_info.url, {
+        method: SummaryApi.get_club_info.method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ clubId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch club information.');
+      }
+
+      const data = await response.json();
+      setClubData(data.data); // Update the state with fetched club data
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchClubMember = async () => {
+    try {
+      const response = await fetch(SummaryApi.get_club_member_common.url, {
+        method: SummaryApi.get_club_member_common.method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ clubId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch club members.');
+      }
+
+      const data = await response.json();
+      // console.log("club member", data);
+      setMember(data.data); // Update the state with fetched member data
+      console.log("Updated member state:", data.data); // Log the updated state
+    } catch (err) {
+      console.error(err); // Log error for debugging
+    }
+  };
+  
+  // Fetch club info and members on component mount
+  useEffect(() => {
+    fetchClubInfo();
+    fetchClubMember(); // Call fetchClubMember here
+  }, []);
+
+  // Show loading indicator while fetching data
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#003366" />
+      </View>
+    );
+  }
 
   return (
-    <Tab.Navigator
-      screenOptions={{
-        tabBarLabelStyle: { fontSize: 14, fontWeight: 'bold' },
-        tabBarIndicatorStyle: { backgroundColor: '#003366' }, // Customize the active tab indicator color
-        tabBarStyle: { backgroundColor: '#f0f0f0' }, // Customize the tab bar background color
-      }}
-    >
+    <Tab.Navigator>
       <Tab.Screen 
         name="DescriptionInfo" 
         component={DescriptionInfo} 
         options={{ title: 'Description Info' }} 
-        initialParams={{ clubId }} // Pass the clubId as a param
+        initialParams={{ clubData }} // Pass clubData
       />
       <Tab.Screen 
         name="ContactInfo" 
         component={ContactInfo} 
         options={{ title: 'Contact Info' }} 
-        initialParams={{ clubId }} // Pass the clubId as a param
+        initialParams={{ clubData }} // Pass clubData
       />
       <Tab.Screen 
         name="Members" 
         component={MembersInfo} 
         options={{ title: 'Members' }} 
-        initialParams={{ clubId }} 
+        initialParams={{ member }} // Pass member
       />
       <Tab.Screen 
         name="Gallery" 
         component={GalleryInfo} 
         options={{ title: 'Gallery' }} 
-        initialParams={{ clubId }} 
+        initialParams={{ clubData }} // Pass clubData
+      />
+      <Tab.Screen 
+        name="UpcomingEvents" 
+        component={UpcomingEventsScreen} 
+        options={{ title: 'Upcoming Events' }} 
+        initialParams={{ clubId }} // Pass clubId
+      />
+      <Tab.Screen 
+        name="PastEvents" 
+        component={PastEventsScreen} 
+        options={{ title: 'Past Events' }} 
+        initialParams={{ clubId }} // Pass clubId
       />
     </Tab.Navigator>
   );

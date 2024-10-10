@@ -1,4 +1,4 @@
-const backend_url = "http://192.168.81.40:5000/api/v1";
+const backend_url = "http://192.168.82.87:5000/api/v1";
 
 const SummaryApi = {
     signUp: { // Changed to camelCase and used quotes for keys with hyphens
@@ -65,7 +65,37 @@ const SummaryApi = {
         url:`${backend_url}/get_club_event`,
         method:"get",
     },
-
     
+    // common route
+    get_all_club:{
+        url:`${backend_url}/get_all_club`,
+        method:"get",
+    },
+    get_club_info:{
+        url:`${backend_url}/get_club_info`,
+        method:"post",
+    },
+    get_club_member_common:{
+        url:`${backend_url}/get_club_member_common`,
+        method:"post",
+    },
+    get_club_upcomming_events:{
+        url:`${backend_url}/get_club_upcomming_events`,
+        method:"post",
+    },
+    get_club_past_events:{
+        url:`${backend_url}/get_club_past_events`,
+        method:"post",
+    },
+
+    // all events
+    get_all_upcomming_events:{
+        url:`${backend_url}/get_all_upcomming_events`,
+        method:"get",
+    },
+    get_all_past_events:{
+        url:`${backend_url}/get_all_past_events`,
+        method:"get",
+    },
 };
 export default SummaryApi;

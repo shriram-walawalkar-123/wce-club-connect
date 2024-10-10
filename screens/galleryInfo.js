@@ -1,23 +1,21 @@
-import React from 'react';
+import React,{useEffect} from 'react';
 import { View, Text, FlatList, Image, StyleSheet } from 'react-native';
-import { useSelector } from 'react-redux';
-import { selectGallery } from '../slices/clubSlice'; // Correct the path if necessary
 
 const GalleryInfo = ({ route }) => {
-  const { clubId } = route.params; // Get clubId from navigation params
-
-  const gallery = useSelector(selectGallery); // Get the gallery array from Redux state
+  const { clubData} = route.params; // Get clubData from navigation params
+  // console.log("clubdata gallert",clubData);
+  const gallery = clubData?.gallary; // Access the gallery array from clubData
 
   const renderImage = ({ item }) => (
     <View style={styles.imageContainer}>
-      <Image source={{ uri: item }} style={styles.image} />
+      <Image source={{ uri: item.url }} style={styles.image} />
     </View>
   );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Gallery of Club {clubId}</Text>
-      {gallery.length > 0 ? (
+      <Text style={styles.title}>Gallery of {clubData?.clubName}</Text>
+      {gallery?.length > 0 ? (
         <FlatList
           data={gallery} // Display images from the gallery
           renderItem={renderImage}
@@ -38,11 +36,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center', // Center content vertically
     alignItems: 'center', // Center content horizontally
     padding: 16,
-    
-    backgroundColor:'#e7e7c7',
+    backgroundColor: '#e7e7c7',
   },
   title: {
-    marginTop:110,
+    marginTop: 110,
     fontSize: 25,
     fontWeight: 'bold',
     marginBottom: 40,
@@ -50,13 +47,12 @@ const styles = StyleSheet.create({
     textAlign: 'center', // Center the title text
   },
   galleryContent: {
-    // justifyContent: 'center', // Center gallery content vertically
     alignItems: 'center', // Center gallery content horizontally
     flexGrow: 1, // Ensures that content takes up the available space to center properly
   },
   imageContainer: {
-    // padding: 10,
     alignItems: 'center', // Center image within its container
+    padding: 5, // Optional: Add padding around images
   },
   image: {
     width: 200,

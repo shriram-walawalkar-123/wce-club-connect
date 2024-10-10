@@ -1,50 +1,50 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Image, TouchableOpacity } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation,route} from '@react-navigation/native'; // Import useNavigation hook
 import SummaryApi from '../backendRoutes';
-import { useNavigation } from '@react-navigation/native';
 
 const AllUploadedEvents = () => {
   const [allEvent, setAllEvent] = useState([]);
-  const navigation = useNavigation(); // Use the navigation hook
+  const navigation = useNavigation();
 
   const fetchAllEvent = async () => {
     try {
-      // Get the auth token from AsyncStorage
       const token = await AsyncStorage.getItem("authToken");
+      if (!token) throw new Error("Authentication token is missing");
 
-      // Make the API call
       const response = await fetch(SummaryApi.get_club_event.url, {
         method: SummaryApi.get_club_event.method,
         headers: {
-          'Content-Type': 'application/json', // Set content type if needed
-          'Authorization': `Bearer ${token}`, // Add the token to the headers
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
       });
-
-      // Check if the response is okay (status in the range of 200-299)
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
       const data = await response.json();
-
-      // Update the state with events if the fetch is successful
       if (data.success) {
         setAllEvent(data.events);
+      } else {
+        console.error("Fetch failed: No events found");
       }
     } catch (err) {
       console.error("Error fetching events:", err);
     }
   };
 
+  // Set up navigation listener for focus event
   useEffect(() => {
-    fetchAllEvent();
-  }, []);
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchAllEvent(); // Call the fetch function when the screen is focused
+    });
+  
+    return unsubscribe; // Cleanup the listener on component unmount
+  }, [navigation, route]); // Add route as a dependency
+  
 
-  // Function to handle navigation to event details
   const handleNavigate = (item) => {
-    navigation.navigate('showEvent', { event: item }); // Assuming 'EventDetails' is a route in your navigation
+    navigation.navigate('showEvent', { event: item });
   };
 
   return (
@@ -59,12 +59,12 @@ const AllUploadedEvents = () => {
           <TouchableOpacity
             key={index}
             className="mb-4 p-4 border border-gray-300 rounded-lg"
-            onPress={() => handleNavigate(item)} // Correct the onPress to use arrow function
+            onPress={() => handleNavigate(item)}
           >
             <Image
-              source={{ uri: item.eventPoster }} // Ensure this field is present in your event data
+              source={{ uri: item.eventPoster }}
               className="h-52 rounded-lg mb-3"
-              resizeMode="cover" // Makes sure the image covers the area
+              resizeMode="cover"
             />
             <Text className="text-lg font-semibold mb-1">{item.eventName}</Text>
             <Text>{`Date: ${new Date(item.eventDate).toLocaleDateString()}`}</Text>

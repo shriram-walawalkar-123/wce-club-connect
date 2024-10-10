@@ -1,15 +1,32 @@
-import React from 'react';
-import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, Dimensions, Platform, ImageBackground } from 'react-native';
-import { clubs } from '../ClubData'; 
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions, ImageBackground, ScrollView } from 'react-native';
+import SummaryApi from '../backendRoutes';
 
-const { width, height } = Dimensions.get('window'); // Get device dimensions
+const { width } = Dimensions.get('window'); // Get device dimensions
 
-export default function Home({ navigation }) {
+const Home = ({ navigation }) => {
+  const [clubs, setClubs] = useState([]); // State variable to hold club data
+
+
+  const fetchAllClubs = async () => {
+    try {
+      const response = await fetch(SummaryApi.get_all_club.url);
+      const data = await response.json(); // Parse the response as JSON
+      // console.log("data",data);
+      setClubs(data.clubs); // Store the fetched data in the state
+    } catch (err) {
+      console.error("Error in fetchAllClubs:", err);
+    }
+  };
+  useEffect(() => {
+    fetchAllClubs(); // Fetch clubs data when the component mounts
+  }, []); // Empty dependency array to run only once
+
   return (
     <ImageBackground
-          source={{ uri: 'https://www.nikaiacours.fr/wp-content/uploads/2019/12/login-background.jpg' }} 
-          style={styles.backgroundImage}
-        >
+      source={{ uri: 'https://www.nikaiacours.fr/wp-content/uploads/2019/12/login-background.jpg' }}
+      style={styles.backgroundImage}
+    >
       <View style={styles.container}>
         <Image
           source={{ uri: 'https://th.bing.com/th?id=OIP.aP1NzCPFoFARQQVD4NrOEgAAAA&w=158&h=142&c=8&rs=1&qlt=90&o=6&dpr=1.3&pid=3.1&rm=2' }}
@@ -30,48 +47,39 @@ export default function Home({ navigation }) {
         </View>
 
         <Text style={styles.heading}>WCE COLLEGE CLUBS</Text>
-        <FlatList
-          data={clubs} 
-          key={'two-columns'}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => navigation.navigate('ClubDetailsScreen', { clubId: item.id })}> 
+
+        {/* ScrollView to contain all clubs */}
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          {clubs?.map((club) => (
+            <TouchableOpacity key={club._id} onPress={() => navigation.navigate('ClubDetailsScreen', { clubId: club._id })}>
               <View style={styles.clubCard}>
-                <Image source={{ uri: item.image }} style={styles.clubImage} />
-                <Text style={styles.clubText}>{item.name}</Text>
+                <Text style={styles.clubText}>{club.clubName}</Text>
               </View>
             </TouchableOpacity>
-          )}
-          numColumns={width > 600 ? 3 : 2} // Dynamically change the number of columns based on device width
-          columnWrapperStyle={styles.columnWrapper}
-          contentContainerStyle={styles.flatListContent}
-        />
+          ))}
+        </ScrollView>
       </View>
-      </ImageBackground>
-    
+    </ImageBackground>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0)', // To make the content stand out on the background
+    backgroundColor: 'rgba(255, 255, 255, 0)',
     padding: 16,
     alignItems: 'center',
   },
-  image:{
-    borderRadius: 10,
-  },
   backgroundImage: {
     flex: 1,
-    resizeMode: 'cover', // Ensures the image covers the entire background
+    resizeMode: 'cover',
   },
   logo: {
-    width: width * 0.4, // Adjust logo width based on device size
-    height: width * 0.4, // Maintain aspect ratio
+    width: width * 0.4,
+    height: width * 0.4,
     marginBottom: 20,
     resizeMode: 'contain',
-    borderRadius:10,
+    borderRadius: 10,
   },
   loginButton: {
     backgroundColor: '#003366',
@@ -87,7 +95,7 @@ const styles = StyleSheet.create({
   loginText: {
     color: 'white',
     fontWeight: 'bold',
-    fontSize: width > 600 ? 18 : 16, // Adjust font size for larger screens
+    fontSize: width > 600 ? 18 : 16,
   },
   navBar: {
     flexDirection: 'row',
@@ -95,52 +103,37 @@ const styles = StyleSheet.create({
   },
   navText: {
     marginHorizontal: 10,
-    fontSize: width > 600 ? 20 : 18, // Adjust font size for larger screens
+    fontSize: width > 600 ? 20 : 18,
     color: '#dedeaf',
     fontWeight: 'bold',
   },
   heading: {
-    fontSize: width > 600 ? 24 : 22, // Adjust heading size
+    fontSize: width > 600 ? 24 : 22,
     fontWeight: 'bold',
     marginBottom: 10,
     color: '#003366',
   },
-  flatListContent: {
-    justifyContent: 'space-between',
+  scrollContainer: {
     paddingBottom: 50,
-  },
-  columnWrapper: {
-    justifyContent: 'space-between',
-    marginBottom: 15,
+    alignItems: 'center',
   },
   clubCard: {
-    // boxSizing: borderBox,
     height: 150,
     backgroundColor: '#FFFFFF',
-    // backgroundColor: 'rgb(33,122,122)',
-    // backgroundColor: 'linear-gradient(90deg, rgba(33,122,122,1) 25%, rgba(205,205,187,1) 51%, rgba(107,48,95,1) 79%',
     borderRadius: 10,
     alignItems: 'center',
-    marginBottom: 1,
-    marginHorizontal: 8,
+    marginBottom: 10, // Space between cards
     paddingHorizontal: 4,
     shadowRadius: 6,
     elevation: 6,
-    width: width * 0.4, // Make the width of the club card responsive
-  },
-  clubImage: {
-    width: '80%',
-    height: '60%',
-    borderRadius: 10,
-    marginBottom: 1,
-    marginTop:7,
-    resizeMode: 'contain',
+    width: width * 0.8, // Adjust width as needed
   },
   clubText: {
-    resizeMode: 'contain',
-    fontSize: width > 600 ? 18 : 16, // Adjust text size for larger screens
+    fontSize: width > 600 ? 18 : 16,
     fontWeight: 'bold',
     color: '#333',
     textAlign: 'center',
   },
 });
+
+export default Home;

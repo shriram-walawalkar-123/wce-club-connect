@@ -25,7 +25,7 @@ const clubSocialMedia = async (req, res) => {
     club.email = email || club.email;
     club.phoneNumber = phoneNumber || club.phoneNumber;
     club.website = website || club.website;
-
+    
     await club.save(); // Save the updated club details
 
     return res.status(200).json({

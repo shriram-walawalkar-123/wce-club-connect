@@ -16,6 +16,13 @@ const getClubGallery = require('../Controller/ClubController/getClubGallary');
 const { clubEventAdd } = require('../Controller/ClubController/ClubEventAdd');
 const clubEventEdit = require('../Controller/ClubController/CLubEventEdit');
 const getClubEvent = require('../Controller/ClubController/getClubEvent');
+const getAllClub = require('../Controller/CommonController/GetAllClub');
+const getClubInto = require('../Controller/CommonController/GetClubInfo');
+const getClubMemberCommon = require('../Controller/CommonController/getClubMemberCommon');
+const { getClubPastEvent } = require('../Controller/CommonController/GetClubPastEvent');
+const getAllPastEvents = require('../Controller/CommonController/GetAllPastEvents');
+const getAllUpCommingEvents = require('../Controller/CommonController/GetAllUpCommingEvents');
+const getClubUpcomingEvent = require('../Controller/CommonController/GetClubUpCommingEvent');
 
 // user route
 router.post("/sign-up",signup);
@@ -50,5 +57,24 @@ router.post("/club_event_add",auth,isClub,clubEventAdd);
 router.post("/club_event_edit",auth,isClub,clubEventEdit);
 
 router.get("/get_club_event",auth,isClub,getClubEvent);
+
+// common route
+router.get("/get_all_club",getAllClub);
+
+router.post("/get_club_info",getClubInto);
+
+router.post("/get_club_member_common",getClubMemberCommon);
+
+// event by club
+router.post("/get_club_upcomming_events",getClubUpcomingEvent);
+
+router.post("/get_club_past_events",getClubPastEvent);
+
+// all event 
+router.get("/get_all_upcomming_events",getAllUpCommingEvents);
+
+router.get("/get_all_past_events",getAllPastEvents);
+
+
 
 module.exports=router

@@ -1,12 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
-import { useSelector } from 'react-redux';
 
-const DescriptionInfo = () => {
-    const club = useSelector((state) => state.club.clubInfo); // Access club information from Redux store
-
+const DescriptionInfo = ({ route }) => {
+    const { clubData } = route.params; // Get the clubData from route params
+    // console.log("club data",clubData);
     // Check if the club object is not null or undefined
-    if (!club) {
+    if (!clubData) {
         return (
             <View style={styles.container}>
                 <Text style={styles.title}>No club information available.</Text>
@@ -19,8 +18,8 @@ const DescriptionInfo = () => {
             {/* Club Logo */}
             <View style={styles.infoRow}>
                 <Text style={styles.label}>Club Logo:</Text>
-                {club.clubLogo ? (
-                    <Image source={{ uri: club.clubLogo }} style={styles.logo} />
+                {clubData.clubLogo ? (
+                    <Image source={{ uri: clubData.clubLogo }} style={styles.logo} />
                 ) : (
                     <Text style={styles.label}>No logo available</Text>
                 )}
@@ -28,54 +27,58 @@ const DescriptionInfo = () => {
 
             <View style={styles.infoRow}>
                 <Text style={styles.label}>Club Name:</Text>
-                <Text style={styles.infoText}>{club.clubName}</Text>
+                <Text style={styles.infoText}>{clubData.clubName}</Text>
             </View>
 
             <View style={styles.infoRow}>
                 <Text style={styles.label}>Department:</Text>
-                <Text style={styles.infoText}>{club.department}</Text>
+                <Text style={styles.infoText}>{clubData.department}</Text>
             </View>
 
             <View style={styles.infoRow}>
                 <Text style={styles.label}>Establishment Year:</Text>
-                <Text style={styles.infoText}>{club.establishmentYear}</Text>
+                <Text style={styles.infoText}>{clubData.establishmentYear}</Text>
             </View>
 
             <View style={styles.infoRow}>
                 <Text style={styles.label}>Type of Club:</Text>
-                <Text style={styles.infoText}>{club.typeOfClub}</Text>
+                <Text style={styles.infoText}>{clubData.typeOfClub}</Text>
             </View>
 
             <View style={styles.infoRow}>
                 <Text style={styles.label}>Specialization:</Text>
-                <Text style={styles.infoText}>{club.specialization}</Text>
+                <Text style={styles.infoText}>{clubData.specialization}</Text>
             </View>
 
             <View style={styles.infoRow}>
                 <Text style={styles.label}>Motto:</Text>
-                <Text style={styles.infoText}>{club.motto}</Text>
+                <Text style={styles.infoText}>{clubData.motto}</Text>
             </View>
 
             <View style={styles.infoRow}>
                 <Text style={styles.label}>Objectives:</Text>
-                <Text style={styles.infoText}>{club.objectives}</Text>
+                <Text style={styles.infoText}>{clubData.objectives}</Text>
             </View>
 
             {/* Faculty Advisors */}
             <Text style={styles.title}>Faculty Advisors:</Text>
-            {club.facultyAdvisors.map((advisor, index) => (
-                <View key={index} style={styles.infoRow}>
-                    <View style={styles.infoColumn}>
-                        <Text style={styles.label}>Advisor {index + 1} Name:</Text>
-                        <Text style={styles.infoText}>{advisor.name}</Text>
-                        <Text style={styles.label}>Contact:</Text>
-                        <Text style={styles.infoText}>{advisor.contactDetails}</Text>
-                        {advisor.image && (
-                            <Image source={{ uri: advisor.image }} style={styles.advisorImage} />
-                        )}
+            {clubData.facultyAdvisors && clubData.facultyAdvisors.length > 0 ? (
+                clubData.facultyAdvisors.map((advisor, index) => (
+                    <View key={index} style={styles.infoRow}>
+                        <View style={styles.infoColumn}>
+                            <Text style={styles.label}>Advisor {index + 1} Name:</Text>
+                            <Text style={styles.infoText}>{advisor.name}</Text>
+                            <Text style={styles.label}>Contact:</Text>
+                            <Text style={styles.infoText}>{advisor.contactDetails}</Text>
+                            {advisor.image && (
+                                <Image source={{ uri: advisor.image }} style={styles.advisorImage} />
+                            )}
+                        </View>
                     </View>
-                </View>
-            ))}
+                ))
+            ) : (
+                <Text style={styles.label}>No faculty advisors available</Text>
+            )}
         </View>
     );
 };
@@ -86,13 +89,11 @@ const styles = StyleSheet.create({
         padding: 20,
         alignItems: 'flex-start', // Align everything to the left
         backgroundColor: '#e7e7c7',
-        
     },
     infoRow: {
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 15,
-        // textAlign:'center',
     },
     infoColumn: {
         flexDirection: 'column',
@@ -110,10 +111,9 @@ const styles = StyleSheet.create({
         width: 150, // Adjust width for consistent spacing between label and info
     },
     infoText: {
-        color:'#003366',
+        color: '#003366',
         fontSize: 16,
         flexShrink: 1,
-        // textAlign:'center',
     },
     logo: {
         width: 120,

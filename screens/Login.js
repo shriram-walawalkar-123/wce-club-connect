@@ -50,7 +50,7 @@ export default function LoginScreen({ navigation }) {
       if (data.success===true) {
         // Store the token in AsyncStorage
         await AsyncStorage.setItem('authToken', data.token);
-
+        
         // Set the club ID if the role is club
         if (role === 'club' && data.clubId) { // Ensure clubId exists
           dispatch(setClubId(data.clubId)); // Dispatch action to set clubId
@@ -60,6 +60,7 @@ export default function LoginScreen({ navigation }) {
         // Dispatch authentication action
         // dispatch(setAuthentication(true));
         // // Navigate based on role
+        console.log("my role is : ",role);
         navigateToRoleScreen(role);
 
       } else {
@@ -73,7 +74,7 @@ export default function LoginScreen({ navigation }) {
   const navigateToRoleScreen = (role) => {
     if (role === 'student') {
       navigation.navigate('Home');
-    } else if (role === 'club') {
+    } else if (role === 'club' ) {
       navigation.navigate('ClubOptionsScreen');
     } else if (role === 'admin') {
       navigation.navigate('Home');
@@ -112,8 +113,8 @@ export default function LoginScreen({ navigation }) {
 
         <View style={styles.roleButtonsContainer}>
           <TouchableOpacity
-            style={[styles.roleButton, role === 'Student' && styles.selectedRoleButton]}
-            onPress={() => dispatch(setRole('Student'))}
+            style={[styles.roleButton, role === 'student' && styles.selectedRoleButton]}
+            onPress={() => dispatch(setRole('student'))}
           >
             <Text style={styles.buttonText}>Student</Text>
           </TouchableOpacity>

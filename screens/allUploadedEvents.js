@@ -1,76 +1,110 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Image, TouchableOpacity } from 'react-native';
-import SummaryApi from '../backendRoutes';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import SummaryApi from '../backendRoutes';
 
 const AllUploadedEvents = () => {
   const [allEvent, setAllEvent] = useState([]);
-  const navigation = useNavigation(); // Use the navigation hook
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const navigation = useNavigation();
 
   const fetchAllEvent = async () => {
     try {
-      // Get the auth token from AsyncStorage
+      setLoading(true);
       const token = await AsyncStorage.getItem("authToken");
+      if (!token) throw new Error("Authentication token is missing");
 
-      // Make the API call
       const response = await fetch(SummaryApi.get_club_event.url, {
         method: SummaryApi.get_club_event.method,
         headers: {
-          'Content-Type': 'application/json', // Set content type if needed
-          'Authorization': `Bearer ${token}`, // Add the token to the headers
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
       });
 
-      // Check if the response is okay (status in the range of 200-299)
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
       const data = await response.json();
 
-      // Update the state with events if the fetch is successful
       if (data.success) {
-        setAllEvent(data.events);
+        setAllEvent(data?.events);
+      } else {
+        setError("No events found.");
       }
     } catch (err) {
-      console.error("Error fetching events:", err);
+      console.error("Error in showAll event fetching events:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAllEvent();
-  }, []);
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchAllEvent();
+    });
 
-  // Function to handle navigation to event details
+    return unsubscribe;
+  }, [navigation]);
+
   const handleNavigate = (item) => {
-    navigation.navigate('showEvent', { event: item }); // Assuming 'EventDetails' is a route in your navigation
+    navigation.navigate('showEvent', { event: item });
   };
+
+  const handleEdit = (item) => {
+    navigation.navigate('EditEvent', { event: item });
+  };
+
+  if (loading) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <Text className="text-red-500">{error}</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView>
-      <View className="p-50 bg-slate-200 mb-10">
+      <View className="p-4 bg-slate-200 mb-10">
         <View>
-          <Text className="text-1xl font-bold bg-green-500 text-white p-3 text-center mb-5">
+          <Text className="text-xl font-bold bg-green-500 text-white p-3 text-center mb-5">
             Uploaded Events
           </Text>
         </View>
-        {allEvent.map((item, index) => (
-          <TouchableOpacity
-            key={index}
-            className="mb-4 p-4 border border-gray-300 rounded-lg"
-            onPress={() => handleNavigate(item)} // Correct the onPress to use arrow function
-          >
-            <Image
-              source={{ uri: item.eventPoster }} // Ensure this field is present in your event data
-              className="h-52 rounded-lg mb-3"
-              resizeMode="cover" // Makes sure the image covers the area
-            />
-            <Text className="text-lg font-semibold mb-1">{item.eventName}</Text>
-            <Text>{`Date: ${new Date(item.eventDate).toLocaleDateString()}`}</Text>
-            <Text className="text-gray-700">{item.description}</Text>
-          </TouchableOpacity>
-        ))}
+        {allEvent?.length === 0 ? (
+          <Text className="text-center text-gray-600">No events available.</Text>
+        ) : (
+          allEvent.map((item, index) => (
+            <View key={index} className="mb-4 p-4 border border-gray-300 rounded-lg shadow">
+              <TouchableOpacity onPress={() => handleNavigate(item)}>
+                <Image
+                  source={{ uri: item?.eventPoster }}
+                  className="h-52 rounded-lg mb-3"
+                  resizeMode="cover"
+                />
+                <Text className="text-lg font-semibold mb-1">{item?.eventName}</Text>
+                <Text>{`Date: ${new Date(item?.eventDate).toLocaleDateString()}`}</Text>
+                <Text className="text-gray-700">{item?.description}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={() => handleEdit(item)}
+                className="mt-2 bg-blue-500 p-2 rounded"
+              >
+                <Text className="text-white text-center">Edit Event</Text>
+              </TouchableOpacity>
+            </View>
+          ))
+        )}
       </View>
     </ScrollView>
   );

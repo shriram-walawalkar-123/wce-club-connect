@@ -18,15 +18,19 @@ const EventSchema = new mongoose.Schema({
   subEvents: [{
     subEventName: { type: String },
     entryFee: { type: Number },
+    formUrl:{tyep:String},
     description: { type: String },
     date: { type: Date },
     time: { type: String },
     venue: { type: String },
     contacts: [{
       name: { type: String },
-      phone: { type: String },
+      phone: { type: Number },
     }],
-    rulebookPDF: { type: String },
+    rulebookPDF: {
+      uri: { type: String }, // URI field for the PDF location
+      name: { type: String }, // Name field for the PDF file
+    },
     rounds: [{
       roundTime: { type: String },
       description: { type: [String] },

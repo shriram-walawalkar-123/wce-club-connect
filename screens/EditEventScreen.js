@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,37 +13,41 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SummaryApi from '../backendRoutes';
 
-const AddEvent = () => {
+const EditEvent = () => {
   const navigation = useNavigation();
-  const [formUrl, setFormUrl] = useState('');
+  const route = useRoute();
+  const eventToEdit = route.params?.event || {};
+  console.log("eventEdit data", eventToEdit);
+  const [formUrl, setFormUrl] = useState(eventToEdit.formUrl || '');
+
   const [mainEvent, setMainEvent] = useState({
-    clubName: '',
-    eventName: '',
-    eventPoster: null,
-    description: '',
-    eventDate: new Date(),
-    sponsors: [],
+    eventId: eventToEdit._id,
+    clubName: eventToEdit.clubName || '',
+    eventName: eventToEdit.eventName || '',
+    eventPoster: eventToEdit.eventPoster || null,
+    description: eventToEdit.description || '',
+    eventDate: eventToEdit.eventDate ? new Date(eventToEdit.eventDate) : new Date(),
+    sponsors: eventToEdit.sponsors || [],
   });
 
-  const [subEvents, setSubEvents] = useState([]);
+  const [subEvents, setSubEvents] = useState(eventToEdit.subEvents || []);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedSubEvent, setSelectedSubEvent] = useState(null);
   const [newSubEvent, setNewSubEvent] = useState({
     subEventName: '',
-    entryFee: '',
+    entryFee: eventToEdit.entryFee || '',
     description: '',
     date: new Date(),
     time: new Date(),
     venue: '',
     contacts: [{ name: '', phone: '' }],
-    rulebookPDF: [{name:'',uri:''}],
-    rounds: [],
+    rulebookPDF: { name: '', uri: '' },
+    rounds: eventToEdit.rounds || [],
   });
 
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -51,7 +55,6 @@ const AddEvent = () => {
   const [datePickerTarget, setDatePickerTarget] = useState(null);
   const [timePickerTarget, setTimePickerTarget] = useState(null);
 
-  // Function to open Google Form URL
   const openGoogleForm = () => {
     if (formUrl) {
       Linking.openURL(formUrl).catch((err) => console.error('Failed to open URL:', err));
@@ -135,15 +138,6 @@ const AddEvent = () => {
   const addSubEvent = () => {
     setModalVisible(true);
     setSelectedSubEvent(null);
-  };
-
-  const handleAddSubEvent = () => {
-    setSubEvents([...subEvents, newSubEvent]);
-    setModalVisible(false);
-    resetSubEventForm();
-  };
-
-  const resetSubEventForm = () => {
     setNewSubEvent({
       subEventName: '',
       entryFee: '',
@@ -152,9 +146,20 @@ const AddEvent = () => {
       time: new Date(),
       venue: '',
       contacts: [{ name: '', phone: '' }],
-      rulebookPDF: [{name:'',uri:''}],
+      rulebookPDF: { name: '', uri: '' },
       rounds: [],
     });
+  };
+
+  const handleAddSubEvent = () => {
+    if (selectedSubEvent !== null) {
+      const updatedSubEvents = [...subEvents];
+      updatedSubEvents[selectedSubEvent] = newSubEvent;
+      setSubEvents(updatedSubEvents);
+    } else {
+      setSubEvents([...subEvents, newSubEvent]);
+    }
+    setModalVisible(false);
   };
 
   const updateSubEventContact = (contactIndex, key, value) => {
@@ -175,17 +180,18 @@ const AddEvent = () => {
       type: 'application/pdf',
       copyToCacheDirectory: false,
     });
-
+  
     if (!result.canceled) {
       setNewSubEvent({
         ...newSubEvent,
         rulebookPDF: {
-          uri: result.assets[0].uri,
-          name: result.assets[0].name,
+          uri: result.uri, // Access directly from the result object
+          name: result.name, // Access directly from the result object
         },
       });
     }
   };
+  
 
   const addRound = () => {
     setNewSubEvent({
@@ -212,101 +218,77 @@ const AddEvent = () => {
     setNewSubEvent({ ...newSubEvent, rounds: updatedRounds });
   };
 
-  const handleSubmit = async() => {
-    const eventDetails = { ...mainEvent, subEvents };
-    // console.log('Event Created:', eventDetails);
-    await AddEvent();
-
-    navigation.navigate('UploadEventScreen');
+  const handleSubmit = async () => {
+    const eventDetails = { 
+      ...mainEvent, 
+      subEvents
+    };
+    await updateEvent(eventDetails);
+    navigation.goBack();
   };
 
-  const AddEvent = async () => {
+  const updateEvent = async (eventDetails) => {
     try {
-      // Get the auth token from AsyncStorage
       const token = await AsyncStorage.getItem("authToken");
-     
-      // Combine mainEvent and subEvents into a single object
-      // console.log("checking main event",mainEvent);
-      const eventData = {
-        ...mainEvent, // Assuming mainEvent is a state variable
-        subEvents, // Assuming subEvents is a state variable
-      };
-      // console.log("whole data",eventData);
-      const response = await fetch(SummaryApi.club_event_add.url, {
-        method: SummaryApi.club_event_add.method,
+      const response = await fetch(SummaryApi.club_event_edit.url, {
+        method: SummaryApi.club_event_edit.method,
         headers: {
           'Content-Type': 'application/json', // Set content type
           'Authorization': `Bearer ${token}`, // Add the token to the headers
         },
-        body: JSON.stringify(eventData), // Convert the combined object to JSON string
+        body: JSON.stringify(eventDetails), // Convert the combined object to JSON string
       });
-     
-      // Check if the response is okay (status in the range of 200-299)
-      if (!response.ok) {
-        throw new Error(`HTTP error in add event.js ! Status: ${response.status}`);
-      }
       const data = await response?.json();
-      // console.log("data",data);
+      console.log("data", data);
       // if (data.success) {
       //   setAllEvent(data.events);
       // }
     } catch (err) {
-      console.error("Error fetching events in add event.js:", err);
+      console.error("Error fetching events in edit event.js:", err);
     }
   };
-  
 
-  const openSubEventModal = (subEvent) => {
-    setSelectedSubEvent(subEvent);
+  const openSubEventModal = (index) => {
+    setSelectedSubEvent(index);
+    setNewSubEvent(subEvents[index]);
     setModalVisible(true);
   };
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Create a New Event</Text>
+      <Text style={styles.title}>Edit Event</Text>
 
       <TextInput
         style={styles.input}
         placeholder="Club Name"
         value={mainEvent.clubName}
-        onChangeText={(text) =>
-          setMainEvent({ ...mainEvent, clubName: text })
-        }
+        onChangeText={(text) => setMainEvent({ ...mainEvent, clubName: text })}
       />
       <TextInput
         style={styles.input}
         placeholder="Event Name"
         value={mainEvent.eventName}
-        onChangeText={(text) =>
-          setMainEvent({ ...mainEvent, eventName: text })
-        }
+        onChangeText={(text) => setMainEvent({ ...mainEvent, eventName: text })}
       />
       <TextInput
         style={styles.input}
         placeholder="Event Description"
         value={mainEvent.description}
-        onChangeText={(text) =>
-          setMainEvent({ ...mainEvent, description: text })
-        }
+        onChangeText={(text) => setMainEvent({ ...mainEvent, description: text })}
         multiline
       />
       <TouchableOpacity
         style={[styles.input, styles.datePicker]}
         onPress={() => showDatePickerModal('mainEvent')}
       >
-        <Text>
-          {mainEvent.eventDate.toDateString()}
-        </Text>
+        <Text style={styles.dateText}>{mainEvent.eventDate.toDateString()}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={pickEventPoster} style={styles.imagePicker}>
         {mainEvent.eventPoster ? (
-          <Image
-            source={{ uri: mainEvent.eventPoster }}
-            style={styles.image}
-          />
+          <Image source={{ uri: mainEvent.eventPoster }} style={styles.image} />
         ) : (
-          <Text>Select Event Poster</Text>
+          <Text style={styles.imagePickerText}>Select Event Poster</Text>
         )}
       </TouchableOpacity>
 
@@ -319,33 +301,52 @@ const AddEvent = () => {
             value={sponsor.sponsorType}
             onChangeText={(text) => updateSponsor(index, 'sponsorType', text)}
           />
-          <TouchableOpacity onPress={addSponsor} style={styles.imagePicker}>
+          <TouchableOpacity onPress={() => addSponsor()} style={styles.imagePicker}>
             {sponsor.image ? (
               <Image source={{ uri: sponsor.image }} style={styles.image} />
             ) : (
-              <Text>Select Sponsor Image</Text>
+              <Text style={styles.imagePickerText}>Select Sponsor Image</Text>
             )}
           </TouchableOpacity>
         </View>
       ))}
 
+      <TextInput
+        style={styles.input}
+        placeholder="Enter Google Form URL"
+        value={formUrl}
+        onChangeText={setFormUrl}
+      />
+
+      <TouchableOpacity style={styles.button} onPress={openGoogleForm}>
+        <Text style={styles.buttonText}>Open Registration Form</Text>
+      </TouchableOpacity>
+
       <View style={styles.buttonContainer}>
-        <Button title="Add Sub Event" onPress={addSubEvent} />
-        <Button title="Add Sponsor" onPress={addSponsor} />
-        <Button title="Submit Event" onPress={handleSubmit} />
+        <TouchableOpacity style={styles.secondaryButton} onPress={addSubEvent}>
+          <Text style={styles.secondaryButtonText}>Add Sub Event</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.secondaryButton} onPress={addSponsor}>
+          <Text style={styles.secondaryButtonText}>Add Sponsor</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.primaryButton} onPress={handleSubmit}>
+          <Text style={styles.primaryButtonText}>Update Event</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.subEventList}>
         <Text style={styles.subtitle}>Sub Events</Text>
         {subEvents.map((subEvent, index) => (
-          <View key={index} style={styles.subEventContainer}>
-            <Text style={styles.subEventTitle}>{subEvent.subEventName}</Text>
-            <Text>{`Entry Fee: ${subEvent.entryFee}`}</Text>
-            <Text>{`Description: ${subEvent.description}`}</Text>
-            <Text>{`Date: ${subEvent.date.toDateString()}`}</Text>
-            <Text>{`Time: ${subEvent.time.toLocaleTimeString()}`}</Text>
-            <Text>{`Venue: ${subEvent.venue}`}</Text>
-          </View>
+          <TouchableOpacity key={index} onPress={() => openSubEventModal(index)}>
+            <View style={styles.subEventContainer}>
+              <Text style={styles.subEventTitle}>{subEvent.subEventName}</Text>
+              <Text>{`Entry Fee: ${subEvent.entryFee}`}</Text>
+              <Text>{`Description: ${subEvent.description}`}</Text>
+              <Text>{`Date: ${new Date(subEvent.date).toDateString()}`}</Text>
+              <Text>{`Time: ${new Date(subEvent.time).toLocaleTimeString()}`}</Text>
+              <Text>{`Venue: ${subEvent.venue}`}</Text>
+            </View>
+          </TouchableOpacity>
         ))}
       </View>
 
@@ -359,80 +360,54 @@ const AddEvent = () => {
           <View style={styles.modalContent}>
             <ScrollView contentContainerStyle={styles.scrollView}>
               <Text style={styles.modalTitle}>
-                {selectedSubEvent ? 'Edit Sub Event' : 'Add Sub Event'}
+                {selectedSubEvent !== null ? 'Edit Sub Event' : 'Add Sub Event'}
               </Text>
               <TextInput
                 style={styles.input}
                 placeholder="Sub Event Name"
                 value={newSubEvent.subEventName}
-                onChangeText={(text) =>
-                  setNewSubEvent({ ...newSubEvent, subEventName: text })
-                }
+                onChangeText={(text) => setNewSubEvent({ ...newSubEvent, subEventName: text })}
               />
-      <View style={styles.container}>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Google Form URL"
-        value={formUrl}
-        onChangeText={setFormUrl}
-      />
-
-      {/* Button to register for the event */}
-      <TouchableOpacity style={styles.button} onPress={openGoogleForm}>
-        <Text style={styles.buttonText}>Register for the Event</Text>
-      </TouchableOpacity>
-    </View>
               <TextInput
                 style={styles.input}
                 placeholder="Entry Fee"
                 value={newSubEvent.entryFee}
-                onChangeText={(text) =>
-                  setNewSubEvent({ ...newSubEvent, entryFee: text })
-                }
+                onChangeText={(text) => setNewSubEvent({ ...newSubEvent, entryFee: text })}
               />
               <TextInput
                 style={styles.input}
                 placeholder="Sub Event Description"
                 value={newSubEvent.description}
-                onChangeText={(text) =>
-                  setNewSubEvent({ ...newSubEvent, description: text })
-                }
+                onChangeText={(text) => setNewSubEvent({ ...newSubEvent, description: text })}
                 multiline
               />
               <TouchableOpacity
                 style={[styles.input, styles.datePicker]}
                 onPress={() => showDatePickerModal('subEvent')}
               >
-                <Text>
-                  {newSubEvent.date.toDateString()}
-                </Text>
+                <Text style={styles.dateText}>{new Date(newSubEvent.date).toDateString()}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.input, styles.timePicker]}
                 onPress={() => showTimePickerModal('subEvent')}
               >
-                <Text>
-                  {newSubEvent.time.toLocaleTimeString()}
-                </Text>
+                <Text style={styles.dateText}>{new Date(newSubEvent.time).toLocaleTimeString()}</Text>
               </TouchableOpacity>
               <TextInput
                 style={styles.input}
                 placeholder="Venue"
                 value={newSubEvent.venue}
-                onChangeText={(text) =>
-                  setNewSubEvent({ ...newSubEvent, venue: text })
-                }
+                onChangeText={(text) => setNewSubEvent({ ...newSubEvent, venue: text })}
               />
 
               <View style={styles.pdfContainer}>
-                <Button title="Upload Rulebook PDF" onPress={pickRulebookPDF} />
-                {newSubEvent.rulebookPDF && (
+                <TouchableOpacity style={styles.button} onPress={pickRulebookPDF}>
+                  <Text style={styles.buttonText}>Upload Rulebook PDF</Text>
+                </TouchableOpacity>
+                {newSubEvent.rulebookPDF && newSubEvent.rulebookPDF.name && (
                   <Text style={styles.pdfName}>{newSubEvent.rulebookPDF.name}</Text>
                 )}
               </View>
-
-              {/* add google form link */}
 
               {newSubEvent.contacts.map((contact, index) => (
                 <View key={index} style={styles.contactContainer}>
@@ -440,57 +415,57 @@ const AddEvent = () => {
                     style={styles.input}
                     placeholder="Contact Name"
                     value={contact.name}
-                    onChangeText={(text) =>
-                      updateSubEventContact(index, 'name', text)
-                    }
+                    onChangeText={(text) => updateSubEventContact(index, 'name', text)}
                   />
                   <TextInput
                     style={styles.input}
                     placeholder="Contact Phone"
                     value={contact.phone}
-                    onChangeText={(text) =>
-                      updateSubEventContact(index, 'phone', text)
-                    }
+                    onChangeText={(text) => updateSubEventContact(index, 'phone', text)}
+                    keyboardType="phone-pad"
                   />
                 </View>
               ))}
-              
-              <Button title="Add Contact" onPress={addSubEventContact} />
+              <TouchableOpacity style={styles.button} onPress={addSubEventContact}>
+                <Text style={styles.buttonText}>Add Contact</Text>
+              </TouchableOpacity>
+
+              <Text style={styles.subtitle}>Rounds</Text>
               {newSubEvent.rounds.map((round, roundIndex) => (
                 <View key={roundIndex} style={styles.roundContainer}>
-                  <Text style={styles.roundTitle}>Round {roundIndex + 1}</Text>
                   <TouchableOpacity
                     style={[styles.input, styles.timePicker]}
-                    onPress={() => showTimePickerModal(round-`${roundIndex}`)}
+                    onPress={() => showTimePickerModal(`round-${roundIndex}`)}
                   >
-                    <Text>
-                      {round.roundTime.toLocaleTimeString()}
-                    </Text>
+                    <Text style={styles.dateText}>{new Date(round.roundTime).toLocaleTimeString()}</Text>
                   </TouchableOpacity>
                   {round.description.map((desc, descIndex) => (
                     <TextInput
                       key={descIndex}
                       style={styles.input}
-                      placeholder={`Description Point ${descIndex + 1}`}
+                      placeholder={`Round ${roundIndex + 1} Description ${descIndex + 1}`}
                       value={desc}
                       onChangeText={(text) => updateRoundDescription(roundIndex, descIndex, text)}
+                      multiline
                     />
-                    
-                  ))
-                  }
-                  
-                  <Button
-                    title="Add Description Point"
-                    onPress={() => addRoundDescriptionPoint(roundIndex)}
-                  />
-                  
+                  ))}
+                  <TouchableOpacity style={styles.button} onPress={() => addRoundDescriptionPoint(roundIndex)}>
+                    <Text style={styles.buttonText}>Add Description Point</Text>
+                  </TouchableOpacity>
                 </View>
-                
-              )
-            )
-              }
-              <Button title="Add Round" onPress={addRound} />
-              <Button title="Save Sub Event" onPress={handleAddSubEvent} />
+              ))}
+              <TouchableOpacity style={styles.button} onPress={addRound}>
+                <Text style={styles.buttonText}>Add Round</Text>
+              </TouchableOpacity>
+
+              <View style={styles.modalButtonContainer}>
+                <TouchableOpacity style={styles.primaryButton} onPress={handleAddSubEvent}>
+                  <Text style={styles.primaryButtonText}>Save Sub Event</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.secondaryButton} onPress={() => setModalVisible(false)}>
+                  <Text style={styles.secondaryButtonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
             </ScrollView>
           </View>
         </View>
@@ -503,122 +478,111 @@ const AddEvent = () => {
           display="default"
           onChange={handleDateChange}
         />
-      )
-      }
+      )}
 
-       {showTimePicker && (
+      {showTimePicker && (
         <DateTimePicker
-          value={
-            timePickerTarget === 'subEvent'
-              ? newSubEvent.time
-              : newSubEvent.rounds[parseInt(timePickerTarget.split('-')[1])].roundTime
-          }
+          value={timePickerTarget === 'subEvent' ? newSubEvent.time : newSubEvent.rounds[parseInt(timePickerTarget.split('-')[1])].roundTime}
           mode="time"
           display="default"
           onChange={handleTimeChange}
         />
       )}
-
-      </ScrollView>
+    </ScrollView>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-  },
-  pdfName: {
-    fontSize: 14,
-    color: 'gray',
+    padding: 20,
+    backgroundColor: '#f7f9fc',
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-  },
-  button: {
-    backgroundColor: '#007BFF',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
+    marginBottom: 20,
+    color: '#2c3e50',
   },
   subtitle: {
-    fontSize: 18,
-    marginVertical: 10,
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 10,
+    color: '#2980b9',
   },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
-    padding: 10,
-    marginBottom: 10,
     borderRadius: 5,
-  },
-  timePicker: {
-    padding: 10,
-    marginBottom: 12,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
+    padding: 15,
+    marginBottom: 10,
+    backgroundColor: '#ffffff',
+    fontSize: 16,
   },
   imagePicker: {
-    padding: 10,
-    marginBottom: 12,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
     alignItems: 'center',
-  },
-  datePicker: {
-    padding: 10,
-    marginBottom: 12,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-  },
-  image: {
-    width: 100,
-    height: 100,
-  },
-  sponsorContainer: {
-    marginBottom: 10,
-  },
-  modalContainer: {
-    flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 10,
-    width: '90%',
-    maxHeight: '90%',
-  },
-  scrollView: {
-    paddingBottom: 20,
-  },
-  contactContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  roundContainer: {
-    marginBottom: 10,
+    height: 200,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 5,
-    padding: 10,
+    marginBottom: 10,
+    backgroundColor: '#ecf0f1',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+    borderRadius: 5,
+  },
+  button: {
+    backgroundColor: '#3498db',
+    padding: 15,
+    borderRadius: 5,
+    marginVertical: 10,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+  },
+  primaryButton: {
+    backgroundColor: '#27ae60',
+    padding: 15,
+    borderRadius: 5,
+    marginVertical: 10,
+    alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  primaryButtonText: {
+    color: 'white',
+    fontSize: 18,
+  },
+  secondaryButton: {
+    backgroundColor: '#e74c3c',
+    padding: 15,
+    borderRadius: 5,
+    marginVertical: 10,
+    alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  secondaryButtonText: {
+    color: 'white',
+    fontSize: 18,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 20,
+    marginBottom: 20,
+  },
+  sponsorContainer: {
+    marginBottom: 10,
   },
   subEventList: {
-    marginVertical: 20,
+    marginTop: 20,
   },
   subEventContainer: {
     borderWidth: 1,
@@ -626,21 +590,67 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 10,
     marginBottom: 10,
+    backgroundColor: '#ffffff',
   },
   subEventTitle: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#2c3e50',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    width: '90%',
+    maxHeight: '80%',
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#2980b9',
+  },
+  scrollView: {
+    flexGrow: 1,
+  },
+  pdfContainer: {
     marginBottom: 10,
   },
-  roundTitle: {
+  pdfName: {
+    marginTop: 5,
+    color: '#7f8c8d',
+  },
+  contactContainer: {
+    marginBottom: 10,
+  },
+  roundContainer: {
+    marginBottom: 20,
+  },
+  modalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 20,
+  },
+  datePicker: {
+    justifyContent: 'center',
+  },
+  timePicker: {
+    justifyContent: 'center',
+  },
+  dateText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 5,
-},
+    color: '#34495e',
+  },
+  imagePickerText: {
+    color: '#2980b9',
+    fontSize: 16,
+  },
 });
 
-export default AddEvent;
+export default EditEvent;

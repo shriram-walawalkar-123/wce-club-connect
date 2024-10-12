@@ -21,6 +21,8 @@ import UploadEventScreen from './screens/UploadEvent';
 import UpcomingEventsScreen from './screens/UpcomingEvents';
 import AddEvent from './screens/addEvent';
 import ShowEvent from './screens/showEvent';
+import EditEvent from './screens/EditEventScreen';
+
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -47,6 +49,7 @@ export default function App() {
           <Stack.Screen name="UpcomingEventsScreen" component={UpcomingEventsScreen}/>
           <Stack.Screen name="AddEvent" component={AddEvent}/>
           <Stack.Screen name="showEvent" component={ShowEvent}></Stack.Screen>
+          <Stack.Screen name="EditEvent" component={EditEvent}/>
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

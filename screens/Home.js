@@ -1,31 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Dimensions, ImageBackground, ActivityIndicator } from 'react-native';
-import SummaryApi from '../backendRoutes';
+import React from 'react';
+import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, Dimensions, Platform, ImageBackground } from 'react-native';
+import { clubs } from '../ClubData'; 
 
 const { width, height } = Dimensions.get('window');
 
-const Home = ({ navigation, route }) => {
-  const [clubs, setClubs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [profileData, setProfileData] = useState({
-    username: '',
-    profileImage: 'https://via.placeholder.com/150',
-    role: '',
-  });
+const Home = ({ navigation }) => {
+  const [clubs, setClubs] = useState([]); // State variable to hold club data
 
-  const { data } = route.params || {};
-
-  useEffect(() => {
-    if (data) {
-      setLoggedIn(true);
-      setProfileData({
-        username: data.username,
-        profileImage: data.profileImage || 'https://via.placeholder.com/150',
-        role: data.role,
-      });
-    }
-  }, [data]);
 
   const fetchAllClubs = useCallback(async () => {
     try {
@@ -37,25 +18,10 @@ const Home = ({ navigation, route }) => {
     } finally {
       setLoading(false);
     }
-  }, []);
-
+  };
   useEffect(() => {
-    fetchAllClubs();
-  }, [fetchAllClubs]);
-
-  const handleLogout = useCallback(() => {
-    setLoggedIn(false);
-    setProfileData({
-      username: '',
-      profileImage: 'https://via.placeholder.com/150',
-      role: '',
-    });
-    setClubs([]);
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Home' }],
-    });
-  }, [navigation]);
+    fetchAllClubs(); // Fetch clubs data when the component mounts
+  }, []); // Empty dependency array to run only once
 
   return (
     <ImageBackground

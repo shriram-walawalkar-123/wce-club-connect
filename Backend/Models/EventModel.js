@@ -18,6 +18,7 @@ const EventSchema = new mongoose.Schema({
   subEvents: [{
     subEventName: { type: String },
     entryFee: { type: Number },
+    formUrl:{tyep:String},
     description: { type: String },
     date: { type: Date },
     time: { type: String },

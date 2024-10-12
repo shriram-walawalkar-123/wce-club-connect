@@ -1,14 +1,14 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-  isStudentSignup: true,
+  isStudentSignup: false,
   name: '',
   clubName: '',
   email: '',
   password: '',
   collegeName: '',
   clubId: '',
-  role: 'student', // Default role
+  role: '', // Default role
 };
 
 const authSlice = createSlice({

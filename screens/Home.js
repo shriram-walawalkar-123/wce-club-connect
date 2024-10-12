@@ -1,12 +1,13 @@
-import React from 'react';
-import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, Dimensions, Platform, ImageBackground } from 'react-native';
+import React,{useState,useEffect} from 'react';
+import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, Dimensions, Platform, ImageBackground ,ScrollView} from 'react-native';
 import { clubs } from '../ClubData'; 
+import SummaryApi from '../backendRoutes';
 
 const { width, height } = Dimensions.get('window'); // Get device dimensions
 
 const Home = ({ navigation }) => {
   const [clubs, setClubs] = useState([]); // State variable to hold club data
-
+   
 
   const fetchAllClubs = async () => {
     try {
@@ -18,9 +19,14 @@ const Home = ({ navigation }) => {
       console.error("Error in fetchAllClubs:", err);
     }
   };
-  useEffect(() => {
-    fetchAllClubs(); // Fetch clubs data when the component mounts
-  }, []); // Empty dependency array to run only once
+    // Set up navigation listener for focus event
+    useEffect(() => {
+      const unsubscribe = navigation.addListener('focus', () => {
+        fetchAllClubs(); // Call the fetch function when the screen is focused
+      });
+    
+      return unsubscribe; // Cleanup the listener on component unmount
+    }, [navigation]); // Add route as a dependency
 
   return (
     <ImageBackground

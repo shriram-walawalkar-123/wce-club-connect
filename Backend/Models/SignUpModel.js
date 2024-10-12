@@ -26,8 +26,7 @@ const userSignUpSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true,
-        minlength: 6 // Ensures password is at least 6 characters long
+        required: false, // Password is not required for Google users
     },
     role: {
         type: String,

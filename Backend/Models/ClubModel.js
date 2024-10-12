@@ -19,7 +19,6 @@ const clubSchema = new mongoose.Schema({
     },
     typeOfClub: {
         type: String,
-        enum: ['Tech', 'Non-Tech'],
         required: true
     },
     specialization: {

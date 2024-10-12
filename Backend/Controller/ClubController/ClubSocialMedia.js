@@ -4,7 +4,7 @@ const clubSocialMedia = async (req, res) => {
   try {
     const { linkedin, twitter, github, instagram, facebook, youtube, email, phoneNumber, website } = req.body;
     const clubId = req.user.id; // Assuming the user object contains the club's ID
-    console.log("clubId",clubId);
+    console.log("clubId deepak",clubId);
     // Check if the club exists in the database
     let club = await Club.findOne({clubId });
     if (!club) {

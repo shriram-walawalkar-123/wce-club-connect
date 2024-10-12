@@ -37,11 +37,6 @@ const signup = async (req, res) => {
                     message: "College name is required for general role",
                 });
             }
-        } else {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid role provided",
-            });
         }
 
         // Check if the user already exists

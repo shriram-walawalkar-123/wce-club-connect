@@ -1,142 +1,316 @@
-import React, { useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import { updateContactInfo, selectContactInfo } from '../slices/clubSlice';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Modal, ScrollView, Linking } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import SummaryApi from '../backendRoutes';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Clipboard from 'expo-clipboard'; // Change this line
 
 const ContactInfoScreen = () => {
-    const dispatch = useDispatch();
-    const contactInfo = useSelector(selectContactInfo); // Get existing contact info from Redux state
+    const [contact, setContact] = useState({
+        linkedin: "",
+        twitter: "",
+        github: "",
+        instagram: "",
+        facebook: "",
+        youtube: "",
+        email: "",
+        phoneNumber: "",
+        website: "",
+    });
 
-    // Function to handle the update of contact information
-    const handleUpdateContactInfo = () => {
-        // Prepare payload for update; only non-empty fields will be sent
-        const updatedContactInfo = {};
-        if (contactInfo.phone) updatedContactInfo.phone = contactInfo.phone;
-        if (contactInfo.linkedin) updatedContactInfo.linkedin = contactInfo.linkedin;
-        if (contactInfo.twitter) updatedContactInfo.twitter = contactInfo.twitter;
-        if (contactInfo.facebook) updatedContactInfo.facebook = contactInfo.facebook;
-        if (contactInfo.instagram) updatedContactInfo.instagram = contactInfo.instagram;
-        if (contactInfo.github) updatedContactInfo.github = contactInfo.github;
-        if (contactInfo.email) updatedContactInfo.email = contactInfo.email;
-        // If all fields are empty, show an error
-        if (Object.keys(updatedContactInfo).length === 0) {
-            Alert.alert('Error', 'Please enter at least one field to update.');
-            return;
+    const [modalVisible, setModalVisible] = useState(false);
+    const [tempContact, setTempContact] = useState({ ...contact });
+
+    const FetchContactInfo = async () => {
+        try {
+            const token = await AsyncStorage.getItem("authToken");
+            const response = await fetch(SummaryApi.get_club.url, {
+                method: SummaryApi.get_club.method,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+            });
+            const data = await response.json();
+            if (data.success === true) {
+                setContact(data.club);
+                setTempContact(data.club); // Initialize tempContact with fetched data
+            }
+        } catch (error) {
+            console.error('Error fetching contact info:', error);
         }
-        // Dispatch updateContactInfo with updated contact details
-        dispatch(updateContactInfo(updatedContactInfo));
-        Alert.alert('Success', 'Contact information updated successfully!');
-        updateData();
-        
     };
+
     const updateData = async () => {
         try {
             const token = await AsyncStorage.getItem("authToken");
-            // console.log("token",token);
             const response = await fetch(SummaryApi.club_social_media.url, {
                 method: SummaryApi.club_social_media.method,
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body:JSON.stringify(contactInfo)
-
+                body: JSON.stringify(tempContact)
             });
-            const data = await response.json();    
-            // console.log("socail media",data);
-
+            const data = await response.json();
+            if (data.success) {
+                setContact(tempContact);
+                Alert.alert('Success', 'Contact information updated successfully!');
+            } else {
+                Alert.alert('Error', 'Failed to update contact information');
+            }
         } catch (error) {
-            console.error('Error fetching data:', error);
+            console.error('Error updating contact data:', error);
         }
     };
 
-    return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Update Club Contact Information</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Contact Number"
-                value={contactInfo.phone} // Directly use Redux state
-                onChangeText={(text) => dispatch(updateContactInfo({ field: 'phone', value: text }))} // Update Redux state
-                keyboardType="phone-pad"
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="LinkedIn Link"
-                value={contactInfo.linkedin} // Directly use Redux state
-                onChangeText={(text) => dispatch(updateContactInfo({ field: 'linkedin', value: text }))} // Update Redux state
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Instagram Link"
-                value={contactInfo.instagram} // Directly use Redux state
-                onChangeText={(text) => dispatch(updateContactInfo({ field: 'instagram', value: text }))} // Update Redux state
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Email Address"
-                value={contactInfo.email} // Directly use Redux state
-                onChangeText={(text) => dispatch(updateContactInfo({ field: 'email', value: text }))} // Update Redux state
-                keyboardType="email-address"
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Twitter link"
-                value={contactInfo.twitter} // Directly use Redux state
-                onChangeText={(text) => dispatch(updateContactInfo({ field: 'twitter', value: text }))} // Update Redux state
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="facebook link"
-                value={contactInfo.facebook} // Directly use Redux state
-                onChangeText={(text) => dispatch(updateContactInfo({ field: 'facebook', value: text }))} // Update Redux state
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="GitHub link"
-                value={contactInfo.github} // Directly use Redux state
-                onChangeText={(text) => dispatch(updateContactInfo({ field: 'github', value: text }))} // Update Redux state
-            />
-            <TouchableOpacity style={styles.button} onPress={handleUpdateContactInfo}>
-                <Text style={styles.buttonText}>Update Contact Info</Text>
-            </TouchableOpacity>
+    useEffect(() => {
+        FetchContactInfo();
+    }, []);
+
+    const handleUpdatePress = async () => {
+        await updateData();
+        setModalVisible(false);
+        FetchContactInfo();
+    };
+
+    const copyToClipboard = async (value) => {
+        await Clipboard.setStringAsync(value); // Update this line
+        Alert.alert('Copied to Clipboard', value);
+    };
+
+    const openLink = (url) => {
+        Linking.openURL(url).catch((err) => console.error('Error opening link:', err));
+    };
+
+    const renderContactItem = (icon, label, value, url) => (
+        <View style={styles.contactItem}>
+            <Feather name={icon} size={24} color="#4A5568" style={styles.icon} />
+            <View style={styles.contactInfo}>
+                <Text style={styles.label}>{label}</Text>
+                <Text style={styles.value}>{value || 'Not provided'}</Text>
+            </View>
+            <View style={styles.actions}>
+                <TouchableOpacity onPress={() => copyToClipboard(value)}>
+                    <Feather name="copy" size={24} color="#4A5568" style={styles.actionIcon} />
+                </TouchableOpacity>
+                {url && (
+                    <TouchableOpacity onPress={() => openLink(url)}>
+                        <Feather name="external-link" size={24} color="#4A5568" style={styles.actionIcon} />
+                    </TouchableOpacity>
+                )}
+            </View>
         </View>
+    );
+
+    return (
+        <ScrollView style={styles.container}>
+            <View style={styles.header}>
+                <Text style={styles.title}>Club Contact Information</Text>
+            </View>
+
+            <View style={styles.contactList}>
+                {renderContactItem('linkedin', 'LinkedIn', contact.linkedin, contact.linkedin)}
+                {renderContactItem('twitter', 'Twitter', contact.twitter, contact.twitter)}
+                {renderContactItem('github', 'GitHub', contact.github, contact.github)}
+                {renderContactItem('instagram', 'Instagram', contact.instagram, contact.instagram)}
+                {renderContactItem('facebook', 'Facebook', contact.facebook, contact.facebook)}
+                {renderContactItem('youtube', 'YouTube', contact.youtube, contact.youtube)}
+                {renderContactItem('mail', 'Email', contact.email, `mailto:${contact.email}`)}
+                {renderContactItem('phone', 'Phone Number', contact.phoneNumber, `tel:${contact.phoneNumber}`)}
+                {renderContactItem('globe', 'Website', contact.website, contact.website)}
+            </View>
+
+            <TouchableOpacity 
+                style={styles.editButton}
+                onPress={() => {
+                    setTempContact({ ...contact }); // Set tempContact to current contact data
+                    setModalVisible(true);
+                }}
+            >
+                <Feather name="edit-2" size={24} color="white" style={styles.editIcon} />
+                <Text style={styles.editButtonText}>Edit Contact Info</Text>
+            </TouchableOpacity>
+
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={modalVisible}
+                onRequestClose={() => setModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <ScrollView>
+                            <Text style={styles.modalTitle}>Edit Contact Information</Text>
+                            {['linkedin', 'twitter', 'github', 'instagram', 'facebook', 'youtube', 'email', 'phoneNumber', 'website'].map((key) => (
+                                <View key={key} style={styles.inputContainer}>
+                                    <Text style={styles.inputLabel}>
+                                        {key.charAt(0).toUpperCase() + key.slice(1)}
+                                    </Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder={`Enter ${key}`}
+                                        value={tempContact[key]}
+                                        onChangeText={(text) => setTempContact({ ...tempContact, [key]: text })}
+                                        keyboardType={key === 'email' ? 'email-address' : key === 'phoneNumber' ? 'phone-pad' : 'default'}
+                                    />
+                                </View>
+                            ))}
+                            
+                            <TouchableOpacity 
+                                style={styles.updateButton}
+                                onPress={handleUpdatePress}
+                            >
+                                <Feather name="check" size={24} color="white" style={styles.updateIcon} />
+                                <Text style={styles.updateButtonText}>Update</Text>
+                            </TouchableOpacity>
+                            
+                            <TouchableOpacity 
+                                style={styles.cancelButton}
+                                onPress={() => setModalVisible(false)}
+                            >
+                                <Feather name="x" size={24} color="white" style={styles.cancelIcon} />
+                                <Text style={styles.cancelButtonText}>Cancel</Text>
+                            </TouchableOpacity>
+                        </ScrollView>
+                    </View>
+                </View>
+            </Modal>
+        </ScrollView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: '#f7f7f7',
+    },
+    header: {
         padding: 20,
-        backgroundColor: '#e7e7c7',
+        backgroundColor: '#003366',
+        borderBottomLeftRadius: 30,
+        borderBottomRightRadius: 30,
     },
     title: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#ffffff',
+    },
+    contactList: {
+        padding: 16,
+    },
+    contactItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#ffffff',
+        padding: 15,
+        borderRadius: 10,
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 3,
+        marginBottom: 10,
+        justifyContent: 'space-between',
+    },
+    icon: {
+        marginRight: 15,
+    },
+    contactInfo: {
+        flex: 1,
+    },
+    label: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#333333',
+    },
+    value: {
+        fontSize: 14,
+        color: '#777777',
+    },
+    actions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    actionIcon: {
+        marginLeft: 10,
+    },
+    editButton: {
+        backgroundColor: '#00509E',
+        paddingVertical: 15,
+        borderRadius: 25,
+        margin: 20,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    editButtonText: {
+        color: '#ffffff',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'flex-end',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        backgroundColor: '#ffffff',
+        borderTopLeftRadius: 30,
+        borderTopRightRadius: 30,
+        padding: 20,
+        height: '70%',
+    },
+    modalTitle: {
         fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 20,
-        color:'#003366',
+    },
+    inputContainer: {
+        marginBottom: 15,
+    },
+    inputLabel: {
+        fontSize: 16,
+        fontWeight: '500',
     },
     input: {
-        height: 50,
-        borderColor: '#003366',
         borderWidth: 1,
-        borderRadius: 5,
-        paddingHorizontal: 10,
-        marginBottom: 15,
-        backgroundColor: '#fff',
+        borderColor: '#cccccc',
+        borderRadius: 10,
+        padding: 10,
+        fontSize: 16,
     },
-    button: {
-        backgroundColor: '#003366',
+    updateButton: {
+        backgroundColor: '#28a745',
         padding: 15,
-        borderRadius: 5,
+        borderRadius: 25,
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    updateButtonText: {
+        color: '#ffffff',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    cancelButton: {
+        backgroundColor: '#dc3545',
+        padding: 15,
+        borderRadius: 25,
+        flexDirection: 'row',
+        justifyContent: 'center',
         alignItems: 'center',
     },
-    buttonText: {
-        color: '#fff',
-        fontSize: 16,
+    cancelButtonText: {
+        color: '#ffffff',
+        fontSize: 18,
         fontWeight: 'bold',
+    },
+    updateIcon: {
+        marginRight: 10,
+    },
+    cancelIcon: {
+        marginRight: 10,
     },
 });
 

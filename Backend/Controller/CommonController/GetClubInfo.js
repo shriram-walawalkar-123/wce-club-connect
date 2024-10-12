@@ -1,5 +1,5 @@
 const Club = require("../../Models/ClubModel"); // Import the Club model
-const getClubInto = async (req, res) => {
+const getClubInfo = async (req, res) => {
     try {
         const { clubId } = req.body; // Destructure clubId from the request body
         console.log("clubId",clubId);
@@ -39,4 +39,4 @@ const getClubInto = async (req, res) => {
     }
 };
 
-module.exports=getClubInto;
+module.exports=getClubInfo;

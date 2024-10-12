@@ -1,30 +1,13 @@
-// src/components/UpdateClubInfoScreen.js
-import React, { useEffect, useState } from 'react';
-import {
-    View,
-    TextInput,
-    Button,
-    Text,
-    StyleSheet,
-    ScrollView,
-    Alert,
-    TouchableOpacity,
-    Image,
-    Modal,
-    KeyboardAvoidingView,
-    ToastAndroid,
-} from 'react-native';
-import { useDispatch, useSelector } from 'react-redux';
-import * as ImagePicker from 'expo-image-picker';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { updateClubInfo } from '../slices/clubSlice'; // Adjust the path as necessary
-import uploadImage from '../helper/uploadImage';
+// src/screens/UpdateClubInfoScreen.js
+import React, { useState, useEffect } from 'react';
+import { View, Text, Button, StyleSheet, ScrollView, Alert, Image, TouchableOpacity } from 'react-native';
+import ClubInfoFormModal from './ClubInfoFormModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SummaryApi from '../backendRoutes';
+import { Ionicons } from '@expo/vector-icons';
 
 const UpdateClubInfoScreen = () => {
-    const dispatch = useDispatch();
-    const club = useSelector((state) => state.club.clubInfo); // Fetch club info from Redux store
+    const [modalVisible, setModalVisible] = useState(false);
     const [formState, setFormState] = useState({
         clubName: '',
         department: '',
@@ -34,356 +17,199 @@ const UpdateClubInfoScreen = () => {
         clubLogo: '',
         motto: '',
         objectives: '',
-        facultyAdvisors: [],
+        facultyAdvisor: [],
     });
 
-    const updateData = async () => {
+    const fetchClubInfo = async () => {
         try {
             const token = await AsyncStorage.getItem("authToken");
-            // console.log("token",token);
-            const response = await fetch(SummaryApi.club_description.url, {
-                method: SummaryApi.club_description.method,
+            const response = await fetch(SummaryApi.get_club.url, {
+                method: SummaryApi.get_club.method,
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body:JSON.stringify(formState)
             });
-            const data = await response.json();        
-        } catch (error) {
-            console.error('Error fetching data:', error);
-        }
-    };
-    const [showDatePicker, setShowDatePicker] = useState(false);
-    const [showAdvisorModal, setShowAdvisorModal] = useState(false);
-    const [showImageModal, setShowImageModal] = useState(false); // New state for image modal
-    const [selectedImage, setSelectedImage] = useState(''); // State to store the selected image URI
-    const [newAdvisor, setNewAdvisor] = useState({ name: '', contactDetails: '', image: '' });
-    const [uploading, setUploading] = useState(false);  // State to handle loading state during image upload
-    useEffect(() => {
-        if (club) {
-            setFormState(club); // Set the form state from Redux store
-        }
-    }, [club]);
-
-    const pickImage = async (key) => {
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 1,
-        });
-
-        if (!result.canceled && result.assets && result.assets.length > 0) {
-            const selectedImageUri = result.assets[0].uri;
-            if (key === 'advisorImage') {
-                try {
-                    setUploading(true);
-                    // Pass the full URI to the uploadImage function
-                    const dataResponse = await uploadImage(selectedImageUri);  // Pass full URI
-                    // console.log("dataResponse:", dataResponse);
-                  } catch (error) {
-                    console.error("Image upload failed:", error);
-                    alert("Failed to upload image. Please try again.");
-                  } finally {
-                    setUploading(false);  // Stop uploading state
-                  }
-                handleAdvisorInputChange('image', result.assets[0].uri); // Use the first asset's uri for advisor image
+            const data = await response.json();
+            if (data.success) {
+                setFormState(data.club);
             } else {
-                try {
-                    setUploading(true);
-                    // Pass the full URI to the uploadImage function
-                    const dataResponse = await uploadImage(selectedImageUri);  // Pass full URI
-                    // console.log("dataResponse:", dataResponse);
-                  } catch (error) {
-                    console.error("Image upload failed:", error);
-                    alert("Failed to upload image. Please try again.");
-                  } finally {
-                    setUploading(false);  // Stop uploading state
-                  }
-                handleInputChange(key, result.assets[0].uri); // Use the first asset's uri for club logo
+                Alert.alert('Error', data.message || 'Failed to fetch club info.');
             }
-        } else {
-            console.log('Image picker was cancelled or no image selected');
+        } catch (error) {
+            console.error('Error fetching club info:', error);
+            Alert.alert('Error', 'Failed to fetch club info. Please try again.');
         }
     };
 
-    const handleDateChange = (event, selectedDate) => {
-        setShowDatePicker(false);
-        const currentDate = selectedDate || formState.establishmentYear;
-        handleInputChange('establishmentYear', currentDate.toISOString().split('T')[0]);
-    };
-
-    const handleInputChange = (name, value) => {
-        setFormState({ ...formState, [name]: value });
-    };
-
-    const handleAdvisorInputChange = (name, value) => {
-        setNewAdvisor({ ...newAdvisor, [name]: value });
-    };
-
-    const addFacultyAdvisor = () => {
-        setFormState({
-            ...formState,
-            facultyAdvisors: [...formState.facultyAdvisors, newAdvisor],
-        });
-        setShowAdvisorModal(false);
-        setNewAdvisor({ name: '', contactDetails: '', image: '' });
-    };
-
-    const handleUpdate = () => {
-        dispatch(updateClubInfo(formState)); // Dispatch update action
-        updateData();
-        Alert.alert('Success', 'Club information updated successfully');
-    };
-
-    const openImageModal = (imageUri) => {
-        setSelectedImage(imageUri); // Set the selected image for the modal
-        setShowImageModal(true); // Show the image modal
-    };
-
-    const closeImageModal = () => {
-        setShowImageModal(false); // Close the image modal
-        setSelectedImage(''); // Clear the selected image URI
-    };
+    useEffect(() => {
+        fetchClubInfo();
+    }, []);
 
     return (
-        <KeyboardAvoidingView style={styles.container} behavior="padding">
-            <ScrollView>
-                <Text style={styles.label}>Club Name:</Text>
-                <TextInput
-                    style={styles.input}
-                    value={formState.clubName}
-                    onChangeText={(text) => handleInputChange('clubName', text)}
-                />
-
-                <Text style={styles.label}>Department:</Text>
-                <TextInput
-                    style={styles.input}
-                    value={formState.department}
-                    onChangeText={(text) => handleInputChange('department', text)}
-                />
-
-                <Text style={styles.label}>Establishment Year:</Text>
-                <TouchableOpacity onPress={() => setShowDatePicker(true)}>
-                    <TextInput
-                        style={styles.input}
-                        value={formState.establishmentYear}
-                        editable={false}
-                        placeholder="Select Establishment Year"
+        <View style={styles.container}>
+            <ScrollView contentContainerStyle={styles.scrollContainer}>
+                {formState.clubLogo ? (
+                    <Image
+                        source={{ uri: formState.clubLogo }}
+                        style={styles.logo}
+                        resizeMode="contain"
                     />
-                </TouchableOpacity>
-                {showDatePicker && (
-                    <DateTimePicker
-                        value={new Date(formState.establishmentYear || Date.now())}
-                        mode="date"
-                        display="default"
-                        onChange={handleDateChange}
-                    />
+                ) : (
+                    <View style={styles.logoPlaceholder}>
+                        <Text style={styles.logoPlaceholderText}>No Club Logo Available</Text>
+                    </View>
                 )}
+                <Text style={styles.title}>Current Club Information</Text>
 
-                <Text style={styles.label}>Type of Club:</Text>
-                <View style={styles.radioContainer}>
-                    <TouchableOpacity
-                        style={styles.radioOption}
-                        onPress={() => handleInputChange('typeOfClub', 'Tech')}
-                    >
-                        <Text style={formState.typeOfClub === 'Tech' ? styles.selectedRadio : styles.radio}>Tech</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={styles.radioOption}
-                        onPress={() => handleInputChange('typeOfClub', 'Non-Tech')}
-                    >
-                        <Text style={formState.typeOfClub === 'Non-Tech' ? styles.selectedRadio : styles.radio}>Non-Tech</Text>
-                    </TouchableOpacity>
+                {/* Club Information Section */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Club Details</Text>
+                    {renderInfoRow("people-outline", "Club Name", formState.clubName)}
+                    {renderInfoRow("school-outline", "Department", formState.department)}
+                    {renderInfoRow("calendar-outline", "Establishment Year", formState.establishmentYear)}
+                    {renderInfoRow("construct-outline", "Type of Club", formState.typeOfClub)}
+                    {renderInfoRow("code-slash", "Specialization", formState.specialization)}
                 </View>
 
-                <Text style={styles.label}>Specialization:</Text>
-                <TextInput
-                    style={styles.input}
-                    value={formState.specialization}
-                    onChangeText={(text) => handleInputChange('specialization', text)}
-                />
+                {/* Motto and Objectives Section */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Motto & Objectives</Text>
+                    {renderInfoRow("flag-outline", "Motto", formState.motto)}
+                    {renderInfoRow("document-text-outline", "Objectives", formState.objectives)}
+                </View>
 
-                <Text style={styles.label}>Club Logo:</Text>
-                {formState.clubLogo ? (
-                    <TouchableOpacity onPress={() => openImageModal(formState.clubLogo)}>
-                        <Image source={{ uri: formState.clubLogo }} style={styles.logo} />
-                    </TouchableOpacity>
-                ) : (
-                    <Text>No logo selected</Text>
-                )}
-                <Button title="Choose Logo" onPress={() => pickImage('clubLogo')} color="#003366"/>
+                {/* Faculty Advisors Section */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle} >Faculty Advisors</Text>
 
-                <Text style={styles.label}>Motto:</Text>
-                <TextInput
-                    style={styles.input}
-                    value={formState.motto}
-                    onChangeText={(text) => handleInputChange('motto', text)}
-                />
-
-                <Text style={styles.label}>Objectives:</Text>
-                <TextInput
-                    style={styles.input}
-                    value={formState.objectives}
-                    onChangeText={(text) => handleInputChange('objectives', text)}
-                    multiline
-                />
-
-                {formState.facultyAdvisors.map((advisor, index) => (
-                    <View key={index}>
-                        <Text style={styles.label}>Faculty Advisor {index + 1} Name:</Text>
-                        <TextInput
-                            style={styles.input}
-                            value={advisor.name}
-                            editable={false} // Existing advisors can't be edited here
-                        />
-
-                        <Text style={styles.label}>Faculty Advisor {index + 1} Contact:</Text>
-                        <TextInput
-                            style={styles.input}
-                            value={advisor.contactDetails}
-                            editable={false}
-                        />
-
-                        <Text style={styles.label}>Faculty Advisor {index + 1} Image:</Text>
-                        {advisor.image ? (
-                            <TouchableOpacity onPress={() => openImageModal(advisor.image)}>
-                                <Image source={{ uri: advisor.image }} style={styles.logo} />
-                            </TouchableOpacity>
-                        ) : (
-                            <Text>No image available</Text>
-                        )}
-                    </View>
-                ))}
-
-                <Button title="Add Faculty Advisor" onPress={() => setShowAdvisorModal(true)} color="#003366"/>
-
-                <Modal visible={showAdvisorModal} animationType="slide" transparent={true}>
-                    <View style={styles.modalOverlay}>
-                        <View style={styles.modalSmall}>
-                            <Text style={styles.label}>Faculty Advisor Name:</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={newAdvisor.name}
-                                onChangeText={(text) => handleAdvisorInputChange('name', text)}
+                    {formState.facultyAdvisor?.map((advisor, index) => (
+                        <View key={index} style={styles.advisorContainer}>
+                            <Image
+                                source={typeof advisor.image === 'string' ? { uri: advisor.image } : advisor.image}  // Check if image is remote or local
+                                style={{ height: 96, width: 96}}  // Replace `clubName` with proper style
                             />
-
-                            <Text style={styles.label}>Faculty Advisor Contact:</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={newAdvisor.contactDetails}
-                                onChangeText={(text) => handleAdvisorInputChange('contactDetails', text)}
-                            />
-
-                            <Button title="Pick Advisor Image" onPress={() => pickImage('advisorImage')  } color="#003366" />
-                            {newAdvisor.image ? (
-                                <Image source={{ uri: newAdvisor.image }} style={styles.logo} />
-                            ) : (
-                                <Text>No advisor image selected</Text>
-                            )}
-                            <Button title="Add Advisor" onPress={addFacultyAdvisor} color="#003366"  />
-                            <Button title="Cancel" onPress={() => setShowAdvisorModal(false)} color="#003366" />
+                            <Text style={styles.value}>
+                                - {advisor.name ? advisor.name : 'Unknown'} ({advisor.contactDetails ? advisor.contactDetails : 'No contact details'})
+                            </Text>
                         </View>
-                    </View>
-                </Modal>
+                    ))}
+                </View>
 
-                <Button title="Update Club Info" onPress={handleUpdate} color="#003366" />
 
-                {/* Image Modal for Viewing Larger Image */}
-                <Modal visible={showImageModal} animationType="slide" transparent={true}>
-                    <View style={styles.modalOverlay}>
-                        <View style={styles.modalImageContainer}>
-                            <Image source={{ uri: selectedImage }} style={styles.modalImage} />
-                            <Button title="Close" onPress={closeImageModal} />
-                        </View>
-                    </View>
-                </Modal>
+                <TouchableOpacity style={styles.button} onPress={() => setModalVisible(true)}>
+                    <Text style={styles.buttonText}>Update Club Info</Text>
+                </TouchableOpacity>
             </ScrollView>
-        </KeyboardAvoidingView>
+            <ClubInfoFormModal
+                visible={modalVisible}
+                onClose={() => setModalVisible(false)}
+                formData={formState}
+                fetchClubInfo={fetchClubInfo}
+            />
+        </View>
     );
 };
+
+const renderInfoRow = (iconName, label, value) => (
+    <View style={styles.infoRow}>
+        <View style={styles.iconContainer}>
+            <Ionicons name={iconName} size={24} color="#fff" />
+        </View>
+        <Text style={styles.label}>{label}: <Text style={styles.value}>{value || 'N/A'}</Text></Text>
+    </View>
+);
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding:20,
-        
-        // backgroundColor: '#07768c',
-        backgroundColor:'#e7e7c7',
-        // 003366
-    //07768c
-        // gap:5,
-        margin:0,
-        
-        
+        padding: 20,
+        backgroundColor: '#ffffff',
     },
-    input: {
-        borderWidth: 1,
-        borderColor: '#003366',
-        padding: 10,
-        borderRadius: 5,
-        marginBottom: 15,
-        
-    },
-    label: {
-        fontWeight: 'bold',
-        color:'#07768c',
-        marginBottom: 5,
-        
+    scrollContainer: {
+        paddingBottom: 20,
     },
     logo: {
-        width: 100,
-        height: 100,
-        marginBottom: 10,
-        borderRadius: 10,
-        resizeMode: 'contain', // Ensures the image fits within the square
+        width: '100%',
+        height: 200,
+        marginBottom: 20,
+        borderRadius: 8,
+        overflow: 'hidden',
     },
-    radioContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        marginBottom: 15,
-    },
-    radioOption: {
-        flex: 1,
+    logoPlaceholder: {
+        width: '100%',
+        height: 200,
+        marginBottom: 20,
+        justifyContent: 'center',
         alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 8,
+        backgroundColor: '#f9f9f9',
     },
-    radio: {
+    logoPlaceholderText: {
+        color: '#888',
         fontSize: 16,
-        // color: '#003366',
     },
-    selectedRadio: {
-        fontSize: 16,
-        color: '#003366',
+    title: {
+        fontSize: 24,
         fontWeight: 'bold',
+        marginBottom: 20,
+        textAlign: 'center',
     },
-    modalOverlay: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    section: {
+        marginBottom: 20,
+        padding: 10,
+        borderRadius: 8,
+        backgroundColor: '#f9f9f9',
+        borderWidth: 1,
+        borderColor: '#ddd',
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.3,
+        shadowRadius: 2,
     },
-    modalSmall: {
-        width: '80%',
-        backgroundColor:'#e7e7c7',
-        borderRadius: 10,
-        padding: 20,
-        elevation: 5,
-        gap:5,
-    },
-    modalImageContainer: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'white',
-        padding: 20,
-        // borderRadius: 10,
-        // marginTop:20,
-    },
-    modalImage: {
-        width: 300, // Adjust width for modal image
-        height: 300, // Adjust height for modal image to be square
-        resizeMode: 'contain',
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
         marginBottom: 10,
+    },
+    infoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    label: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginLeft: 8,
+        flex: 1,
+    },
+    value: {
+        fontSize: 16,
+        fontWeight: '400',
+        color: '#555',
+    },
+    iconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#4CAF50',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    button: {
+        backgroundColor: '#FF9800',
+        padding: 15,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginTop: 20,
+    },
+    buttonText: {
+        color: '#ffffff',
+        fontSize: 18,
+        fontWeight: 'bold',
     },
 });
 

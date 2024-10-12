@@ -35,7 +35,12 @@ const login = async (req, res) => {
                 message: "User doesn't exist. Please sign up.",
             });
         }
-
+        if(user.role!=role){
+            return res.status(400).json({
+                success: false,
+                message: "you are not a valid user, please check role",
+            });
+        }
         // Compare the provided password with the hashed password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {

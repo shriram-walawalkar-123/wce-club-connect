@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, Modal, StyleSheet, Image, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Modal, Image, ScrollView, FlatList, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
-import uploadImage from '../helper/uploadImage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { MaterialIcons, FontAwesome5, Ionicons } from '@expo/vector-icons';
+import uploadImage from '../helper/uploadImage';
 import SummaryApi from '../backendRoutes';
 
 const UpdateMembersScreen = () => {
@@ -22,7 +24,12 @@ const UpdateMembersScreen = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [currentMemberId, setCurrentMemberId] = useState(null);
 
-    // Fetch existing members from the backend
+    const navigation = useNavigation();
+
+    useEffect(() => {
+        fetchExistingMembers();
+    }, []);
+
     const fetchExistingMembers = async () => {
         try {
             const token = await AsyncStorage.getItem("authToken");
@@ -40,17 +47,10 @@ const UpdateMembersScreen = () => {
         }
     };
 
-    // Fetch existing members when component mounts
-    useEffect(() => {
-        fetchExistingMembers();
-    }, []);
-
-    // Handle input change
     const handleInputChange = (name, value) => {
         setMember((prevMember) => ({ ...prevMember, [name]: value }));
     };
 
-    // Handle adding a member
     const handleAddMember = async () => {
         const newMember = { ...member, profilepic: selectedImage };
         await updateData(newMember);
@@ -58,7 +58,6 @@ const UpdateMembersScreen = () => {
         resetMemberState();
     };
 
-    // Handle editing a member
     const handleEditMember = async () => {
         const updatedMember = { 
             ...member, 
@@ -89,13 +88,12 @@ const UpdateMembersScreen = () => {
             }
     
             const data = await response.json();
-            fetchExistingMembers(); // Refresh the member list after update
+            fetchExistingMembers();
         } catch (error) {
             console.error('Error updating member data:', error); 
         }
     };
 
-    // Reset member state for new member
     const resetMemberState = () => {
         setMember({
             name: '',
@@ -112,7 +110,6 @@ const UpdateMembersScreen = () => {
         setCurrentMemberId(null);
     };
 
-    // Handle profilepic selection
     const pickImage = async () => {
         const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (permissionResult.granted === false) {
@@ -128,7 +125,6 @@ const UpdateMembersScreen = () => {
         }
     };
 
-    // Handle deleting a member
     const handleDeleteMember = async (id) => {
         try {
             const token = await AsyncStorage.getItem("authToken");
@@ -142,7 +138,7 @@ const UpdateMembersScreen = () => {
             });
 
             if (response.ok) {
-                fetchExistingMembers(); // Refresh the member list
+                fetchExistingMembers();
             } else {
                 const errorData = await response.json();
                 console.error("Failed to delete member:", errorData.message);
@@ -152,110 +148,305 @@ const UpdateMembersScreen = () => {
         }
     };
 
-    // Open modal for editing a member
     const openEditMemberModal = (memberData) => {
         setIsEditing(true);
         setCurrentMemberId(memberData._id);
-        setMember(memberData); // Set member data to the selected member's data
-        setSelectedImage(memberData.profilepic); // Set the selected image to the current member's image
-        setModalVisible(true); // Open the modal
+        setMember(memberData);
+        setSelectedImage(memberData.profilepic);
+        setModalVisible(true);
     };
 
-    return (
-        <View style={{ flex: 1, padding: 20 }}>
-            <Button title="Add Member" onPress={() => { setModalVisible(true); resetMemberState(); }} />
+    const renderMemberItem = ({ item }) => (
+        <View style={styles.memberItem}>
+            <View style={styles.memberHeader}>
+                <Image source={{ uri: item.profilepic }} style={styles.memberImage} />
+                <View>
+                    <Text style={styles.memberName}>{item.name}</Text>
+                    <Text style={styles.memberRole}>{item.role}</Text>
+                </View>
+            </View>
+            <View style={styles.memberInfo}>
+                <Text style={styles.memberText}><Ionicons name="mail" size={16} color="#4B5563" /> {item.email}</Text>
+                <Text style={styles.memberText}><FontAwesome5 name="instagram" size={16} color="#4B5563" /> {item.instagram}</Text>
+                <Text style={styles.memberText}><FontAwesome5 name="linkedin" size={16} color="#4B5563" /> {item.linkedin}</Text>
+            </View>
+            <Text style={styles.memberSlogan}>"{item.slogan}"</Text>
+            <Text style={styles.memberDescription}>{item.description}</Text>
+            <View style={styles.memberActions}>
+                <TouchableOpacity onPress={() => openEditMemberModal(item)} style={styles.editButton}>
+                    <Text style={styles.buttonText}>Edit</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDeleteMember(item._id)} style={styles.deleteButton}>
+                    <Text style={styles.buttonText}>Delete</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
 
-            {/* Modal for adding or editing a member */}
+    return (
+        <View style={styles.container}>
+            <View style={styles.addButtonContainer}>
+                <TouchableOpacity 
+                    onPress={() => { setModalVisible(true); resetMemberState(); }}
+                    style={styles.addButton}
+                >
+                    <Ionicons name="add-circle-outline" size={24} color="white" />
+                    <Text style={styles.addButtonText}>Add Member</Text>
+                </TouchableOpacity>
+            </View>
+
+            <FlatList
+                data={existingMembers}
+                renderItem={renderMemberItem}
+                keyExtractor={item => item._id}
+                contentContainerStyle={styles.flatListContainer}
+            />
+
             <Modal
                 visible={modalVisible}
                 animationType="slide"
                 transparent={true}
                 onRequestClose={() => setModalVisible(false)}
             >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
+                <View style={styles.modalBackground}>
+                    <View style={styles.modalContainer}>
                         <Text style={styles.modalTitle}>{isEditing ? "Edit Member" : "Add New Member"}</Text>
-                        <TextInput placeholder="Member Name" value={member.name} onChangeText={(text) => handleInputChange('name', text)} style={styles.input} />
-                        <TextInput placeholder="Role" value={member.role} onChangeText={(text) => handleInputChange('role', text)} style={styles.input} />
-                        <TextInput placeholder="Email" value={member.email} onChangeText={(text) => handleInputChange('email', text)} style={styles.input} />
-                        <TextInput placeholder="Instagram" value={member.instagram} onChangeText={(text) => handleInputChange('instagram', text)} style={styles.input} />
-                        <TextInput placeholder="LinkedIn" value={member.linkedin} onChangeText={(text) => handleInputChange('linkedin', text)} style={styles.input} />
-                        <TextInput placeholder="Slogan" value={member.slogan} onChangeText={(text) => handleInputChange('slogan', text)} style={styles.input} />
-                        <TextInput placeholder="Brief Description" value={member.description} onChangeText={(text) => handleInputChange('description', text)} style={styles.input} />
+                        <ScrollView>
+                            {['name', 'role', 'email', 'instagram', 'linkedin', 'slogan', 'description'].map((field, index) => (
+                                <View style={styles.inputContainer} key={index}>
+                                    <Text style={styles.inputLabel}>{field.charAt(0).toUpperCase() + field.slice(1)}</Text>
+                                    <View style={styles.inputWrapper}>
+                                        {field === 'description' ? (
+                                            <TextInput
+                                                placeholder={`Brief ${field.charAt(0).toUpperCase() + field.slice(1)}`}
+                                                value={member[field]}
+                                                onChangeText={(text) => handleInputChange(field, text)}
+                                                multiline
+                                                numberOfLines={4}
+                                                style={styles.textArea}
+                                            />
+                                        ) : (
+                                            <TextInput
+                                                placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+                                                value={member[field]}
+                                                onChangeText={(text) => handleInputChange(field, text)}
+                                                style={styles.textInput}
+                                            />
+                                        )}
+                                    </View>
+                                </View>
+                            ))}
+                            
+                            <TouchableOpacity onPress={pickImage} style={styles.pickImageButton}>
+                                <MaterialIcons name="add-photo-alternate" size={24} color="white" />
+                                <Text style={styles.buttonText}>Pick an Image</Text>
+                            </TouchableOpacity>
 
-                        {/* Image Picker */}
-                        <Button title="Pick an Image" onPress={pickImage} />
-                        {selectedImage && <Image source={{ uri: selectedImage }} style={styles.profilepic} />}
-                        <Button title={isEditing ? "Update Member" : "Add Member"} onPress={isEditing ? handleEditMember : handleAddMember} />
-                        <Button title="Cancel" onPress={() => setModalVisible(false)} color="red" />
+                            {selectedImage && (
+                                <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
+                            )}
+
+                            <TouchableOpacity 
+                                onPress={isEditing ? handleEditMember : handleAddMember}
+                                style={styles.saveButton}
+                            >
+                                <Text style={styles.buttonText}>{isEditing ? "Update Member" : "Save Member"}</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.cancelButton}>
+                                <Text style={styles.buttonText}>Cancel</Text>
+                            </TouchableOpacity>
+                        </ScrollView>
                     </View>
                 </View>
             </Modal>
-
-            {/* Display all updated members */}
-            <ScrollView>
-                {existingMembers.map((memberData) => (
-                    <View key={memberData._id} style={styles.memberCard}>
-                        <Text>Name: {memberData.name}</Text>
-                        <Text>Role: {memberData.role}</Text>
-                        <Text>Email: {memberData.email}</Text>
-                        <Text>Instagram: {memberData.instagram}</Text>
-                        <Text>LinkedIn: {memberData.linkedin}</Text>
-                        <Text>Slogan: {memberData.slogan}</Text>
-                        <Text>Description: {memberData.description}</Text>
-                        {memberData.profilepic && <Image source={{ uri: memberData.profilepic }} style={styles.profilepic} />}
-                        <View style={styles.buttonContainer}>
-                            <Button title="Edit" onPress={() => openEditMemberModal(memberData)} />
-                            <Button title="Delete" onPress={() => handleDeleteMember(memberData._id)} color="red" />
-                        </View>
-                    </View>
-                ))}
-            </ScrollView>
         </View>
     );
 };
-
 const styles = StyleSheet.create({
-    modalContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    container: {
+      flex: 1,
+      backgroundColor: '#F3F4F6',
+      padding: 16,
     },
-    modalContent: {
-        width: '80%',
-        backgroundColor: 'white',
-        padding: 20,
-        borderRadius: 10,
+    addButtonContainer: {
+      alignItems: 'flex-end',
+      marginBottom: 20,
+    },
+    addButton: {
+      backgroundColor: '#4F46E5',
+      padding: 12,
+      borderRadius: 25,
+      flexDirection: 'row',
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    addButtonText: {
+      color: 'white',
+      marginLeft: 8,
+      fontWeight: 'bold',
+      fontSize: 16,
+    },
+    flatListContainer: {
+      paddingBottom: 100,
+    },
+    memberItem: {
+      backgroundColor: 'white',
+      borderRadius: 12,
+      padding: 20,
+      marginBottom: 16,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    memberHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    memberImage: {
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      marginRight: 16,
+    },
+    memberName: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: '#1F2937',
+    },
+    memberRole: {
+      fontSize: 16,
+      color: '#4B5563',
+      marginTop: 4,
+    },
+    memberInfo: {
+      marginVertical: 12,
+    },
+    memberText: {
+      fontSize: 16,
+      color: '#4B5563',
+      marginBottom: 8,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    memberSlogan: {
+      fontStyle: 'italic',
+      color: '#6B7280',
+      marginVertical: 8,
+      fontSize: 16,
+    },
+    memberDescription: {
+      color: '#374151',
+      marginVertical: 8,
+      fontSize: 16,
+      lineHeight: 24,
+    },
+    memberActions: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: 16,
+    },
+    editButton: {
+      backgroundColor: '#4F46E5',
+      padding: 12,
+      borderRadius: 8,
+      width: '48%',
+      alignItems: 'center',
+    },
+    deleteButton: {
+      backgroundColor: '#DC2626',
+      padding: 12,
+      borderRadius: 8,
+      width: '48%',
+      alignItems: 'center',
+    },
+    buttonText: {
+      color: 'white',
+      fontWeight: 'bold',
+      fontSize: 16,
+    },
+    modalBackground: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContainer: {
+      backgroundColor: 'white',
+      borderRadius: 16,
+      padding: 24,
+      width: '90%',
+      maxHeight: '90%',
     },
     modalTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 20,
+      fontSize: 24,
+      fontWeight: 'bold',
+      marginBottom: 20,
+      color: '#1F2937',
     },
-    input: {
-        height: 40,
-        borderColor: 'gray',
-        borderWidth: 1,
-        marginBottom: 10,
-        padding: 10,
+    inputContainer: {
+      marginBottom: 16,
     },
-    profilepic: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        marginBottom: 10,
+    inputLabel: {
+      fontWeight: 'bold',
+      marginBottom: 8,
+      fontSize: 16,
+      color: '#4B5563',
     },
-    memberCard: {
-        padding: 10,
-        marginVertical: 5,
-        backgroundColor: '#f9f9f9',
-        borderRadius: 5,
+    inputWrapper: {
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+      borderRadius: 8,
+      backgroundColor: '#F9FAFB',
     },
-    buttonContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+    textInput: {
+      padding: 12,
+      height: 48,
+      fontSize: 16,
     },
-});
+    textArea: {
+      padding: 12,
+      height: 100,
+      fontSize: 16,
+      textAlignVertical: 'top',
+    },
+    pickImageButton: {
+      flexDirection: 'row',
+      backgroundColor: '#4F46E5',
+      padding: 14,
+      borderRadius: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginVertical: 16,
+    },
+    imagePreview: {
+      width: 120,
+      height: 120,
+      borderRadius: 12,
+      marginVertical: 12,
+      alignSelf: 'center',
+    },
+    saveButton: {
+      backgroundColor: '#4F46E5',
+      padding: 16,
+      borderRadius: 8,
+      alignItems: 'center',
+      marginTop: 20,
+    },
+    cancelButton: {
+      backgroundColor: '#EF4444',
+      padding: 16,
+      borderRadius: 8,
+      alignItems: 'center',
+      marginTop: 12,
+    },
+  });
 
 export default UpdateMembersScreen;

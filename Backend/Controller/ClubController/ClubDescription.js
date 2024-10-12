@@ -16,9 +16,9 @@ const clubDescription = async (req, res) => {
             facultyAdvisor
         } = req?.body;
         const id=req?.user?.id;
-        // console.log(req?.user);
+        console.log("facultyAdvisor",req.body);
         const clubId = mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : id;
-        console.log("clubId",clubId);
+        // console.log("clubId",clubId);
 
         // console.log("user ",req?.user);
         let club = await Club.findOne({ clubId });

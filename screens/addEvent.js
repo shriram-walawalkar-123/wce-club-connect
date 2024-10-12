@@ -14,10 +14,6 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { useNavigation } from '@react-navigation/native';
-import DateTimePicker from '@react-native-community/datetimepicker';
-
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import SummaryApi from '../backendRoutes';
 
 const AddEvent = () => {
   const navigation = useNavigation();
@@ -30,7 +26,10 @@ const AddEvent = () => {
     eventDate: new Date(),
     sponsors: [],
   });
+  // const [allData, setAllData] = useState([]); // Initialize state with an empty array
 
+  // // Assuming mainEvent and subEvents are defined somewhere in your component
+  // setAllData([mainEvent, ...subEvents]); // Update state with an array containing mainEvent and subEvents
   const [subEvents, setSubEvents] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedSubEvent, setSelectedSubEvent] = useState(null);
@@ -214,47 +213,9 @@ const AddEvent = () => {
 
   const handleSubmit = async() => {
     const eventDetails = { ...mainEvent, subEvents };
-    // console.log('Event Created:', eventDetails);
-    await AddEvent();
-
+    console.log('Event Created:', eventDetails);
     navigation.navigate('UploadEventScreen');
   };
-
-  const AddEvent = async () => {
-    try {
-      // Get the auth token from AsyncStorage
-      const token = await AsyncStorage.getItem("authToken");
-     
-      // Combine mainEvent and subEvents into a single object
-      // console.log("checking main event",mainEvent);
-      const eventData = {
-        ...mainEvent, // Assuming mainEvent is a state variable
-        subEvents, // Assuming subEvents is a state variable
-      };
-      // console.log("whole data",eventData);
-      const response = await fetch(SummaryApi.club_event_add.url, {
-        method: SummaryApi.club_event_add.method,
-        headers: {
-          'Content-Type': 'application/json', // Set content type
-          'Authorization': `Bearer ${token}`, // Add the token to the headers
-        },
-        body: JSON.stringify(eventData), // Convert the combined object to JSON string
-      });
-     
-      // Check if the response is okay (status in the range of 200-299)
-      if (!response.ok) {
-        throw new Error(`HTTP error in add event.js ! Status: ${response.status}`);
-      }
-      const data = await response?.json();
-      // console.log("data",data);
-      // if (data.success) {
-      //   setAllEvent(data.events);
-      // }
-    } catch (err) {
-      console.error("Error fetching events in add event.js:", err);
-    }
-  };
-  
 
   const openSubEventModal = (subEvent) => {
     setSelectedSubEvent(subEvent);

@@ -71,6 +71,7 @@ const ShowEvent = ({ route }) => {
 
       {/* Sub Events */}
       <Text className="text-2xl font-bold text-blue-900 mt-6 mb-4">Sub Events</Text>
+
       {event.subEvents && event.subEvents.length > 0 ? (
         event.subEvents.map((subEvent, index) => (
           <View key={index} className="bg-white p-6 rounded-lg mb-6 shadow-lg border border-gray-200">
@@ -87,6 +88,7 @@ Time: ${subEvent.time || "N/A"}`}
 
             {/* Venue */}
             <Text className="text-base text-gray-700 mb-2">{`Venue: ${subEvent.venue || "Venue not available"}`}</Text>
+
 
             {/* Entry Fee */}
             <Text className="text-base text-gray-700 mb-2">{`Entry Fee: ₹${subEvent.entryFee || "N/A"}`}</Text>

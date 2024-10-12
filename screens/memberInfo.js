@@ -1,57 +1,59 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, FlatList } from 'react-native';
-import { useSelector } from 'react-redux';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-const MemberInfo = () => {
-    const members = useSelector(state => state.club.members); // Get all members from Redux store
+const MemberInfo = ({ route }) => {
+    const { member } = route.params; // Extracting member data from route params
+    // console.log("member", member); // Log the received member data
 
-    const renderItem = ({ item }) => (
-        <View style={styles.memberCard}>
-            <Text style={styles.title}>{item.name}</Text>
-            <View style={styles.row}>
-                <Text style={styles.label}>Role</Text>
-                <Text style={styles.colon}>:</Text>
-                <Text style={styles.value}>{item.role}</Text>
-            </View>
-            <View style={styles.row}>
-                <Text style={styles.label}>Email</Text>
-                <Text style={styles.colon}>:</Text>
-                <Text style={styles.value}>{item.email}</Text>
-            </View>
-            <View style={styles.row}>
-                <Text style={styles.label}>Instagram</Text>
-                <Text style={styles.colon}>:</Text>
-                <Text style={styles.value}>{item.instagram}</Text>
-            </View>
-            <View style={styles.row}>
-                <Text style={styles.label}>LinkedIn</Text>
-                <Text style={styles.colon}>:</Text>
-                <Text style={styles.value}>{item.linkedin}</Text>
-            </View>
-            <View style={styles.row}>
-                <Text style={styles.label}>Slogan</Text>
-                <Text style={styles.colon}>:</Text>
-                <Text style={styles.value}>{item.slogan}</Text>
-            </View>
-            <View style={styles.row}>
-                <Text style={styles.label}>Description</Text>
-                <Text style={styles.colon}>:</Text>
-                <Text style={styles.value}>{item.description}</Text>
-            </View>
-            {item.image && <Image source={{ uri: item.image }} style={styles.image} />}
-        </View>
-    );
+    // Handle case when member is null or empty
+    if (!member || member.length === 0) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <Text style={styles.header}>No Members Available</Text>
+            </SafeAreaView>
+        );
+    }
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <Text style={styles.header}>Club Members</Text>
             <FlatList
-                data={members}
-                renderItem={renderItem}
-                keyExtractor={item => item.id}
+                data={member} // Use member passed from params
+                keyExtractor={item => item._id.toString()} // Ensure id is a string
                 contentContainerStyle={{ padding: 20 }}
+                renderItem={({ item }) => (
+                    <View style={styles.memberCard}>
+                        <Image source={{ uri: item.profilepic }} style={styles.image} />
+                        <Text style={styles.title}>{item.name}</Text>
+                        <View style={styles.row}>
+                            <Text style={styles.label}>Role:</Text>
+                            <Text style={styles.value}>{item.role}</Text>
+                        </View>
+                        <View style={styles.row}>
+                            <Text style={styles.label}>Email:</Text>
+                            <Text style={styles.value}>{item.email}</Text>
+                        </View>
+                        <View style={styles.row}>
+                            <Text style={styles.label}>Instagram:</Text>
+                            <Text style={styles.value}>{item.instagram}</Text>
+                        </View>
+                        <View style={styles.row}>
+                            <Text style={styles.label}>LinkedIn:</Text>
+                            <Text style={styles.value}>{item.linkedin}</Text>
+                        </View>
+                        <View style={styles.row}>
+                            <Text style={styles.label}>Slogan:</Text>
+                            <Text style={styles.value}>{item.slogan}</Text>
+                        </View>
+                        <View style={styles.row}>
+                            <Text style={styles.label}>Description:</Text>
+                            <Text style={styles.value}>{item.description}</Text>
+                        </View>
+                    </View>
+                )}
             />
-        </View>
+        </SafeAreaView>
     );
 };
 
@@ -59,10 +61,10 @@ const MemberInfo = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor:'#e7e7c7',
+        backgroundColor: '#e7e7c7',
     },
     header: {
-        marginTop: 90,
+        marginTop: 20,
         fontSize: 24,
         fontWeight: 'bold',
         textAlign: 'center',
@@ -70,7 +72,6 @@ const styles = StyleSheet.create({
         color: '#003366',
     },
     memberCard: {
-        
         marginBottom: 20,
         padding: 15,
         backgroundColor: '#07768c',
@@ -86,7 +87,6 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     row: {
-        
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 5,
@@ -95,24 +95,14 @@ const styles = StyleSheet.create({
     label: {
         color: 'lightblue',
         flex: 1,
-        textAlign: 'center', // Align the label to the right
-        // paddingRight: 5, // Add some space between the label and the colon
+        textAlign: 'left', // Align the label to the left
         fontWeight: 'bold',
-        // marginLeft:100,
-    },
-    colon: {
-        marginRight:-40,
-        marginLeft:-40,
-        color: 'lightblue',
-        width: 10, // Fixed width for the colon
-        textAlign: 'center',
-        // marginLeft:-60,
     },
     value: {
         color: 'lightblue',
-        flex: 1,
-        textAlign: 'center', // Align the value to the left
-        paddingLeft: 5, // Add some space between the colon and the value
+        flex: 2,
+        textAlign: 'left', // Align the value to the left
+        paddingLeft: 5,
         fontWeight: 'bold',
     },
     image: {

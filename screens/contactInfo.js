@@ -1,23 +1,23 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useSelector } from 'react-redux';
-import { selectContactInfo } from '../slices/clubSlice'; // Import the selector
 
 const ContactInfo = ({ route }) => {
-  const { clubId } = route.params;
-  const contactInfo = useSelector(selectContactInfo); // Get contact info from Redux
-
+  // Extract clubData from route params
+  const { clubData } = route.params;
+  // console.log("clubData",clubData);
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Contact Info for Club {clubId}</Text>
+      <Text style={styles.title}>Contact Info for {clubData?.clubName}</Text>
       <View style={styles.card}>
-        <Text style={styles.info}>Phone: {contactInfo.phone}</Text>
-        <Text style={styles.info}>Email: {contactInfo.email}</Text>
-        <Text style={styles.info}>Instagram: {contactInfo.instagram}</Text>
-        <Text style={styles.info}>LinkedIn: {contactInfo.linkedin}</Text>
-        <Text style={styles.info}>Twitter: {contactInfo.twitter}</Text>
-        <Text style={styles.info}>GitHub: {contactInfo.github}</Text>
-        <Text style={styles.info}>Facebook: {contactInfo.facebook}</Text>
+        <Text style={styles.info}>Phone: {clubData?.phoneNumber}</Text>
+        <Text style={styles.info}>Email: {clubData?.email}</Text>
+        <Text style={styles.info}>Website: {clubData?.website}</Text>
+        <Text style={styles.info}>LinkedIn: {clubData?.linkedin}</Text>
+        <Text style={styles.info}>Twitter: {clubData?.twitter}</Text>
+        <Text style={styles.info}>GitHub: {clubData?.github}</Text>
+        <Text style={styles.info}>Instagram: {clubData?.instagram}</Text>
+        <Text style={styles.info}>Facebook: {clubData?.facebook}</Text>
+        <Text style={styles.info}>YouTube: {clubData?.youtube}</Text>
       </View>
     </View>
   );
@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#e7e7c7',
   },
   title: {
-    marginTop: 140,
+    marginTop: 20,
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 20,
@@ -42,20 +42,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#07768c',
     borderRadius: 10,
     padding: 20,
-    // shadowColor: '#000',
-    // shadowOffset: { width: 0, height: 2 },
-    // shadowOpacity: 0.3,
-    // shadowRadius: 4,
     elevation: 5, // Shadow effect for Android
-    alignItems: 'center',
-    justifyContent:'space-between',
+    alignItems: 'flex-start',
   },
   info: {
     color: 'lightblue',
     fontSize: 16,
     marginBottom: 10,
     fontWeight: 'bold',
-    // textAlign:'center',
   },
 });
 

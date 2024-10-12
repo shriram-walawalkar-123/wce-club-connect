@@ -1,11 +1,11 @@
 const mongoose = require('mongoose');
 
 const EventSchema = new mongoose.Schema({
-    clubId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
+  clubId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   clubName: { type: String },
   eventName: { type: String },
   eventPoster: { type: String },
@@ -33,7 +33,7 @@ const EventSchema = new mongoose.Schema({
     },
     rounds: [{
       roundTime: { type: String },
-      description: { type: [String] },
+      description: { type: [String] }, // Array of strings for round descriptions
     }],
   }],
 }, { timestamps: true });

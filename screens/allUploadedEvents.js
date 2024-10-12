@@ -13,6 +13,7 @@ const AllUploadedEvents = () => {
   const fetchAllEvent = async () => {
     try {
       setLoading(true);
+
       const token = await AsyncStorage.getItem("authToken");
       if (!token) throw new Error("Authentication token is missing");
 
@@ -32,6 +33,7 @@ const AllUploadedEvents = () => {
         setAllEvent(data?.events);
       } else {
         setError("No events found.");
+
       }
     } catch (err) {
       console.error("Error in showAll event fetching events:", err);
@@ -41,6 +43,7 @@ const AllUploadedEvents = () => {
     }
   };
 
+  // Set up navigation listener for focus event
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       fetchAllEvent();
@@ -48,6 +51,7 @@ const AllUploadedEvents = () => {
 
     return unsubscribe;
   }, [navigation]);
+
 
   const handleNavigate = (item) => {
     navigation.navigate('showEvent', { event: item });

@@ -60,7 +60,7 @@ export default function LoginScreen({ navigation }) {
         // Dispatch authentication action
         // dispatch(setAuthentication(true));
         // // Navigate based on role
-        navigateToRoleScreen(role);
+        navigateToRoleScreen(data);
 
       } else {
         Alert.alert('Error', data.message || 'Login failed');
@@ -70,14 +70,9 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
-  const navigateToRoleScreen = (role) => {
-    if (role === 'student') {
-      navigation.navigate('Home');
-    } else if (role === 'club') {
-      navigation.navigate('ClubOptionsScreen');
-    } else if (role === 'admin') {
-      navigation.navigate('Home');
-    }
+  const navigateToRoleScreen = (data) => {
+      navigation.navigate('Home',{data:data});
+
   };
 
   return (

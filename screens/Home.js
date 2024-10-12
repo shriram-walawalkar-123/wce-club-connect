@@ -1,12 +1,31 @@
-import React from 'react';
-import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, Dimensions, Platform, ImageBackground } from 'react-native';
-import { clubs } from '../ClubData'; 
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, Image, ScrollView, TouchableOpacity, StyleSheet, Dimensions, ImageBackground, ActivityIndicator } from 'react-native';
+import SummaryApi from '../backendRoutes';
 
 const { width, height } = Dimensions.get('window');
 
-const Home = ({ navigation }) => {
-  const [clubs, setClubs] = useState([]); // State variable to hold club data
+const Home = ({ navigation, route }) => {
+  const [clubs, setClubs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [profileData, setProfileData] = useState({
+    username: '',
+    profileImage: 'https://via.placeholder.com/150',
+    role: '',
+  });
 
+  const { data } = route.params || {};
+
+  useEffect(() => {
+    if (data) {
+      setLoggedIn(true);
+      setProfileData({
+        username: data.username,
+        profileImage: data.profileImage || 'https://via.placeholder.com/150',
+        role: data.role,
+      });
+    }
+  }, [data]);
 
   const fetchAllClubs = useCallback(async () => {
     try {
@@ -18,10 +37,25 @@ const Home = ({ navigation }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
   useEffect(() => {
-    fetchAllClubs(); // Fetch clubs data when the component mounts
-  }, []); // Empty dependency array to run only once
+    fetchAllClubs();
+  }, [fetchAllClubs]);
+
+  const handleLogout = useCallback(() => {
+    setLoggedIn(false);
+    setProfileData({
+      username: '',
+      profileImage: 'https://via.placeholder.com/150',
+      role: '',
+    });
+    setClubs([]);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Home' }],
+    });
+  }, [navigation]);
 
   return (
     <ImageBackground
@@ -43,7 +77,7 @@ const Home = ({ navigation }) => {
                 <Text style={styles.buttonText}>Logout</Text>
               </TouchableOpacity>
               {profileData.role === 'club' && (
-                <TouchableOpacity style={styles.headerButton} onPress={() => navigation.navigate('ClubOptionsScreen')}>
+                <TouchableOpacity style={styles.headerButton} onPress={() => navigation.navigate("ClubOptionsScreen")}>
                   <Text style={styles.buttonText}>Club Page</Text>
                 </TouchableOpacity>
               )}
@@ -97,7 +131,6 @@ const Home = ({ navigation }) => {
   );
 };
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -114,9 +147,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    backgroundColor: '#003366', // Add background to header
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#003366',
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     marginBottom: 20,
@@ -126,28 +159,39 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 5,
   },
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   logo: {
-    width: 40, // Adjust logo size for better fit
-    height: 40,
+    width: 50, // Reduce size for better alignment
+    height: 50,
     resizeMode: 'contain',
     borderRadius: 10,
+  },
+  profileContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    margin:10,
   },
   profileImage: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    marginRight: 10,
+    marginRight: 8,
   },
   username: {
-    color: 'white', // Make text white for contrast
+    color: 'white',
     fontWeight: 'bold',
-    marginRight: 10,
     fontSize: 16,
+    marginRight: 16,
   },
   headerButton: {
-    backgroundColor: '#FF3B30', // Change the button color if necessary
-    padding: 8,
+    backgroundColor: '#FF3B30',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     borderRadius: 5,
+    marginLeft: 8, // Add margin to space out buttons
   },
   buttonText: {
     color: 'white',
@@ -159,7 +203,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
     color: '#003366',
-    marginTop: 20, // Add space between header and heading
+    marginTop: 20,
   },
   navBar: {
     flexDirection: 'row',
@@ -168,7 +212,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   navButton: {
-    backgroundColor: '#0055FF', // Differentiate nav buttons from header
+    backgroundColor: '#0055FF',
     padding: 10,
     borderRadius: 10,
   },
@@ -186,7 +230,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
     alignItems: 'center',
-    justifyContent: 'center', // Center text inside the club card
+    justifyContent: 'center',
     marginBottom: 10,
     paddingHorizontal: 4,
     shadowRadius: 6,

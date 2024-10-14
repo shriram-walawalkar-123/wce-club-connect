@@ -4,29 +4,30 @@ import * as ImagePicker from 'expo-image-picker';
 import uploadImage from '../helper/uploadImage'; // Function to upload image
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SummaryApi from '../backendRoutes'; // Backend API routes
+import { MaterialIcons } from '@expo/vector-icons'; // Import MaterialIcons for delete button
 
 export default function GalleryScreen() {
-  const [selectedImage, setSelectedImage] = useState(null); // State to handle selected image for viewing in modal
-  const [isModalVisible, setModalVisible] = useState(false); // State to control modal visibility
-  const [uploading, setUploading] = useState(false); // State to handle loading state during image upload
-  const [gallery, setGallery] = useState([]); // State to hold gallery data from the backend
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [gallery, setGallery] = useState([]);
 
   // Function to send a single image URL to the backend
   const sendImageToBackend = async (imageUrl) => {
     try {
       const token = await AsyncStorage.getItem("authToken");
       const response = await fetch(SummaryApi.club_gallery.url, {
-        method: SummaryApi.club_gallery.method, // Assuming POST method for sending the image
+        method: SummaryApi.club_gallery.method,
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ eventPhoto: [imageUrl] }), // Send only the newly uploaded image URL
+        body: JSON.stringify({ eventPhoto: [imageUrl] }),
       });
 
       const data = await response.json();
       if (data.success) {
-        fetchAllGallery(); // Fetch gallery after successful upload
+        fetchAllGallery();
       } else {
         console.error("Failed to send image:", data.message);
       }
@@ -37,21 +38,19 @@ export default function GalleryScreen() {
 
   // Function to delete an image from the backend
   const deleteImageFromBackend = async (imageId) => {
-    console.log("imageId",imageId);
     try {
       const token = await AsyncStorage.getItem("authToken");
       const response = await fetch(SummaryApi.club_gallery_detele.url, {
-        method: SummaryApi.club_gallery_detele.method, // Assuming DELETE method for image deletion
+        method: SummaryApi.club_gallery_detele.method,
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body:JSON.stringify({imageId})
+        body: JSON.stringify({ imageId }),
       });
 
       const data = await response.json();
       if (data.success) {
-        // Remove the image from the gallery state after successful deletion
         fetchAllGallery();
       } else {
         console.error("Failed to delete image:", data.message);
@@ -74,10 +73,8 @@ export default function GalleryScreen() {
       });
 
       const data = await response.json();
-      console.log("API Response:", data);
-
       if (data && data.success) {
-        setGallery(data.gallery || []); // Ensure data.gallery exists
+        setGallery(data.gallery || []);
       } else {
         console.error("Failed to fetch images:", data ? data.message : "No data");
       }
@@ -86,7 +83,6 @@ export default function GalleryScreen() {
     }
   };
 
-  // Upload photo function
   const uploadPhoto = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
@@ -105,10 +101,10 @@ export default function GalleryScreen() {
 
       try {
         setUploading(true);
-        const dataResponse = await uploadImage(selectedImageUri); // Upload image
+        const dataResponse = await uploadImage(selectedImageUri);
 
         if (dataResponse.url) {
-          await sendImageToBackend(dataResponse.url); // Send the newly uploaded image URL to the backend
+          await sendImageToBackend(dataResponse.url);
         }
       } catch (error) {
         console.error("Image upload failed:", error);
@@ -120,40 +116,44 @@ export default function GalleryScreen() {
   };
 
   useEffect(() => {
-    fetchAllGallery(); // Call the function to fetch images when screen loads
+    fetchAllGallery();
   }, []);
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Upload a New Photo</Text>
 
-      {/* Upload Photo Button */}
       <TouchableOpacity style={styles.uploadButton} onPress={uploadPhoto} disabled={uploading}>
         <Text style={styles.uploadButtonText}>{uploading ? "Uploading..." : "Upload Photo"}</Text>
       </TouchableOpacity>
 
       <ScrollView style={styles.galleryContainer}>
         {gallery.length > 0 ? (
-          gallery.map((image, index) => (  // Use 'image' to represent each gallery item
-            <View key={index} style={styles.imageWrapper}>
-              <TouchableOpacity onPress={() => { 
-                setSelectedImage(image.url); // Set the URL for the selected image
-                setModalVisible(true); 
-              }}>
-                <Image source={{ uri: image.url }} style={styles.galleryImage} />
-              </TouchableOpacity>
-              {/* Delete Button */}
-              <TouchableOpacity style={styles.deleteButton} onPress={() => deleteImageFromBackend(image._id)}>
-                <Text style={styles.deleteButtonText}>Delete</Text>
-              </TouchableOpacity>
-            </View>
-          ))
+          <View style={styles.imageGrid}>
+            {gallery.map((image, index) => (
+              <View key={index} style={styles.imageWrapper}>
+                <TouchableOpacity onPress={() => {
+                  setSelectedImage(image.url);
+                  setModalVisible(true);
+                }}>
+                  <Image source={{ uri: image.url }} style={styles.galleryImage} />
+                </TouchableOpacity>
+
+                {/* Delete Button with Icon */}
+                <TouchableOpacity
+                  style={styles.deleteButton}
+                  onPress={() => deleteImageFromBackend(image._id)}
+                >
+                  <MaterialIcons name="delete" size={28} color="#FF0000" />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
         ) : (
           <Text style={styles.noImagesText}>No images to display</Text>
         )}
       </ScrollView>
 
-      {/* Modal to show full-screen image */}
       <Modal
         visible={isModalVisible}
         transparent={true}
@@ -175,40 +175,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#e7e7c7',
-    // backgroundColor: '#f5f5f5',
+    backgroundColor: '#f7f7f7',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 20,
-    color:'#003366',
-  },
-  imageContainer: {
-    position: 'relative',
-    marginRight: 10,
-  },
-  image: {
-    width: 150,
-    height: 150,
-    borderRadius: 10,
-    borderColor: '#ddd',
-    borderWidth: 1,
-  },
-  deleteButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: '#ff4444',
-    padding: 5,
-    borderRadius: 5,
-  },
-  deleteButtonText: {
-    color: '#fff',
-    fontSize: 12,
+    color: '#2E86C1',
   },
   uploadButton: {
-    backgroundColor: '#003366',
+    backgroundColor: '#2980B9',
     padding: 15,
     borderRadius: 5,
     marginTop: 20,
@@ -222,28 +198,27 @@ const styles = StyleSheet.create({
     marginTop: 20,
     width: '100%',
   },
+  imageGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
   imageWrapper: {
-    position: 'relative',
-    marginBottom: 10,
+    width: '48%',
+    marginBottom: 20,
   },
   galleryImage: {
     width: '100%',
-    height: 200,
+    height: 150,
     borderRadius: 10,
     resizeMode: 'cover',
   },
   deleteButton: {
-    position: 'absolute',
-    right: 10,
-    bottom: 10,
-    backgroundColor: '#ff6666',
-    padding: 8,
+    marginTop: 8, // Adds space below the image
+    alignItems: 'center',
+    paddingVertical: 6,
+    backgroundColor: '#DCDCDC',
     borderRadius: 5,
-  },
-  deleteButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
   },
   noImagesText: {
     fontSize: 16,

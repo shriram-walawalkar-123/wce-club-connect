@@ -1,58 +1,149 @@
-import React from 'react';
-import { View, Text, Image, FlatList } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
+import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
+import SummaryApi from '../backendRoutes';
+import { useNavigation } from '@react-navigation/native';
 
-const UpcomingEventsScreen = () => {
-  // Demo data for upcoming events
-  const upcomingEvents = [
-    {
-      eventImage: 'https://example.com/event1.jpg',
-      eventName: 'Tech Fest 2024',
-      date: '2024-12-01',
-      venue: 'Auditorium A',
-      time: '10:00 AM',
-      rulebook: 'https://example.com/rulebook1.pdf',
-      rounds: '3',
-    },
-    {
-      eventImage: 'https://example.com/event2.jpg',
-      eventName: 'Cultural Night',
-      date: '2024-12-05',
-      venue: 'Main Hall',
-      time: '6:00 PM',
-      rulebook: 'https://example.com/rulebook2.pdf',
-      rounds: '2',
-    },
-    {
-      eventImage: 'https://example.com/event3.jpg',
-      eventName: 'Sports Meet 2024',
-      date: '2024-12-10',
-      venue: 'Sports Ground',
-      time: '8:00 AM',
-      rulebook: 'https://example.com/rulebook3.pdf',
-      rounds: '5',
-    },
-  ];
+const UpcomingEventsScreen = ({ route }) => {
+  const { clubId } = route.params;
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
+
+  const fetchUpcomingEvents = async () => {
+    try {
+      const response = await fetch(SummaryApi.get_club_upcomming_events.url, {
+        method: SummaryApi.get_club_upcomming_events.method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ clubId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch upcoming events of the club.');
+      }
+
+      const data = await response.json();
+      setUpcomingEvents(data.data); // Update the state with fetched events
+    } catch (err) {
+      console.error(err); // Log error for debugging
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUpcomingEvents();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#003366" />
+      </View>
+    );
+  }
+
+  if (upcomingEvents.length === 0) {
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyText}>No upcoming events available</Text>
+      </View>
+    );
+  }
 
   const renderItem = ({ item }) => (
-    <View style={{ margin: 20, backgroundColor: '#f9f9f9', padding: 10, borderRadius: 8, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 5 }}>
-      <Image source={{ uri: item.eventImage }} style={{ width: 200, height: 200, borderRadius: 10 }} />
-      <Text style={{ fontWeight: 'bold', fontSize: 18, marginVertical: 5 }}>{item.eventName}</Text>
-      <Text>Date: {new Date(item.date).toLocaleDateString()}</Text>
-      <Text>Venue: {item.venue}</Text>
-      <Text>Time: {item.time}</Text>
-      <Text>Rulebook: <Text style={{ color: 'blue' }}>{item.rulebook}</Text></Text>
-      <Text>Rounds: {item.rounds}</Text>
-    </View>
+    <TouchableOpacity
+      style={styles.eventContainer}
+      onPress={() => navigation.navigate('showEvent', { event: item })}
+    >
+      <Image source={{ uri: item?.eventPoster }} style={styles.eventImage} />
+      <View style={styles.eventContent}>
+        <Text style={styles.eventName}>{item.eventName}</Text>
+        <View style={styles.eventDetailsRow}>
+          <FontAwesome5 name="calendar-alt" size={16} color="#555" style={styles.icon} />
+          <Text style={styles.eventDetails}>{new Date(item.eventDate).toLocaleDateString()}</Text>
+        </View>
+        <View style={styles.eventDetailsRow}>
+          <MaterialIcons name="description" size={16} color="#555" style={styles.icon} />
+          <Text style={styles.eventDetails}>{item.description}</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
   );
 
   return (
     <FlatList
       data={upcomingEvents}
-      keyExtractor={(item, index) => index.toString()}
+      keyExtractor={(item) => item._id} // Assuming each event has a unique _id
       renderItem={renderItem}
-      contentContainerStyle={{ paddingBottom: 20 }} // Extra padding for bottom
+      contentContainerStyle={styles.listContent}
     />
   );
 };
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f3f4f6',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f3f4f6',
+  },
+  emptyText: {
+    fontSize: 18,
+    color: '#4b5563',
+  },
+  eventContainer: {
+    marginBottom: 16,
+    padding: 16,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 2,         // Thickness of the border
+    borderColor: 'black',
+  },
+  eventImage: {
+    height: 160,
+    width: '100%',
+    borderRadius: 8,
+    borderWidth: 2,         // Thickness of the border
+    borderColor: 'black',
+  },
+  eventContent: {
+    paddingTop: 12,
+  },
+  eventDetailsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  icon: {
+    marginRight: 8,
+  },
+  eventDetails: {
+    fontSize: 14,
+    color: '#555',
+  },
+  eventName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1d4ed8',
+    marginBottom: 4,
+  },
+  listContent: {
+    padding: 20,
+  },
+});
 
 export default UpcomingEventsScreen;

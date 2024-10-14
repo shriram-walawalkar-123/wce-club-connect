@@ -1,7 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-  isStudentSignup: false,
+  isStudentSignup: true,
   name: '',
   clubName: '',
   email: '',

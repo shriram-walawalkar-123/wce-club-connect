@@ -17,6 +17,7 @@ const Home = ({ navigation, route }) => {
     role: '',
     email: ''
   });
+
   const [modalVisible, setModalVisible] = useState(false);
   const { data } = route.params || {};
 
@@ -36,6 +37,7 @@ const Home = ({ navigation, route }) => {
     try {
       const response = await fetch(SummaryApi.get_all_club.url);
       const data = await response.json();
+      console.log("club dekho ",data);
       setClubs(data.clubs);
     } catch (err) {
       console.error("Error in fetchAllClubs:", err);

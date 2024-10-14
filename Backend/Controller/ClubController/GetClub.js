@@ -4,7 +4,6 @@ const getClub = async (req, res) => {
   try {
     const clubId = req?.user?.id; // Assuming the user object contains the club's ID
     // Find the club by its ID
-    console.log("errr",clubId);
     let club = await Club.findOne({ clubId });
     if (!club) {
       return res.status(404).json({

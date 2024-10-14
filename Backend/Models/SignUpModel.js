@@ -2,6 +2,9 @@ const mongoose = require('mongoose');
 
 // User signup schema with timestamps
 const userSignUpSchema = new mongoose.Schema({
+    profilepic: {
+        type: String, // URL or file path for the profile picture
+    },
     name: {
         type: String,
         required: true,

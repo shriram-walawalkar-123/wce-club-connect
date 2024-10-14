@@ -2,18 +2,21 @@ import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // For local storage
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { setEmail, setPassword, setRole, setAuthentication, setUser, setClubId } from '../slices/authSlice';
-import { View, Text, TextInput, Button, TouchableOpacity, StyleSheet, Alert, Image, Dimensions, ImageBackground } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, Dimensions, ImageBackground, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import SummaryApi from '../backendRoutes';
-import Home from './Home';
+
+const { width, height } = Dimensions.get('window');
 
 WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen({ navigation }) {
   const dispatch = useDispatch();
   const { email, password, role } = useSelector((state) => state.auth);
-  console.log("this is user data", email, password, role);
+
   const [request, response, promptAsync] = Google.useAuthRequest({
     expoClientId: 'YOUR_EXPO_CLIENT_ID',
     androidClientId: 'YOUR_ANDROID_CLIENT_ID',
@@ -36,7 +39,6 @@ export default function LoginScreen({ navigation }) {
       return;
     }
     try {
-      // Make a POST request to your backend API for login
       const response = await fetch(SummaryApi.logIn.url, {
         method: SummaryApi.logIn.method,
         headers: {
@@ -46,22 +48,14 @@ export default function LoginScreen({ navigation }) {
       });
 
       const data = await response.json();
-      // console.log("user data",data);
-      if (data.success===true) {
-        // Store the token in AsyncStorage
+      if (data.success === true) {
         await AsyncStorage.setItem('authToken', data.token);
         
-        // Set the club ID if the role is club
-        if (role === 'club' && data.clubId) { // Ensure clubId exists
-          dispatch(setClubId(data.clubId)); // Dispatch action to set clubId
+        if (role === 'club' && data.clubId) {
+          dispatch(setClubId(data.clubId));
         }
 
-        console.log("login success", data.clubId);
-        // Dispatch authentication action
-        // dispatch(setAuthentication(true));
-        // // Navigate based on role
         navigateToRoleScreen(data);
-
       } else {
         Alert.alert('Error', data.message || 'Login failed');
       }
@@ -71,8 +65,7 @@ export default function LoginScreen({ navigation }) {
   };
 
   const navigateToRoleScreen = (data) => {
-      navigation.navigate('Home',{data:data});
-
+    navigation.navigate('Home', { data: data });
   };
 
   return (
@@ -80,164 +73,219 @@ export default function LoginScreen({ navigation }) {
       source={{ uri: 'https://www.nikaiacours.fr/wp-content/uploads/2019/12/login-background.jpg' }} 
       style={styles.backgroundImage}
     >
-      <View style={styles.container}>
-
-        {/* Add the top image here */}
-        <Image
-          source={{ uri: 'https://th.bing.com/th?id=OIP.aP1NzCPFoFARQQVD4NrOEgAAAA&w=158&h=142&c=8&rs=1&qlt=90&o=6&dpr=1.3&pid=3.1&rm=2' }}
-          style={styles.logoImage}
-        />
-
-        <Text style={styles.title}>Login</Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={(text) => dispatch(setEmail(text))}
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={(text) => dispatch(setPassword(text))}
-          secureTextEntry
-        />
-
-        <View style={styles.roleButtonsContainer}>
-          <TouchableOpacity
-            style={[styles.roleButton, role === 'student' && styles.selectedRoleButton]}
-            onPress={() => dispatch(setRole('student'))}
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+      >
+        <ScrollView contentContainerStyle={styles.scrollViewContent}>
+          <LinearGradient
+            colors={['rgba(255,255,255,0.8)', 'rgba(255,255,255,0.6)']}
+            style={styles.formContainer}
           >
-            <Text style={styles.buttonText}>Student</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.roleButton, role === 'club' && styles.selectedRoleButton]}
-            onPress={() => dispatch(setRole('club'))}
-          >
-            <Text style={styles.buttonText}>Club</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.roleButton, role === 'admin' && styles.selectedRoleButton]}
-            onPress={() => dispatch(setRole('admin'))}
-          >
-            <Text style={styles.buttonText}>Admin</Text>
-          </TouchableOpacity>
-        </View>
+            <Image
+              source={{ uri: 'https://th.bing.com/th?id=OIP.aP1NzCPFoFARQQVD4NrOEgAAAA&w=158&h=142&c=8&rs=1&qlt=90&o=6&dpr=1.3&pid=3.1&rm=2' }}
+              style={styles.logoImage}
+            />
 
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Login</Text>
-        </TouchableOpacity>
+            <Text style={styles.title}>Login</Text>
 
-        {/* Google login button with logo */}
-        <TouchableOpacity
-          style={[styles.button, styles.googleButton]}
-          onPress={() => promptAsync()}
-          disabled={!request}
-        >
-          <Image
-            source={{ uri: 'http://pluspng.com/img-png/google-logo-png-revised-google-logo-1600.png' }}
-            style={styles.googleLogo}
-          />
-          <Text style={styles.buttonText}>Login with Google</Text>
-        </TouchableOpacity>
+            <View style={styles.inputContainer}>
+              <Ionicons name="mail-outline" size={24} color="#333333" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                value={email}
+                onChangeText={(text) => dispatch(setEmail(text))}
+                placeholderTextColor="#666666"
+              />
+            </View>
 
-        <View style={styles.footerLinks}>
-          <Text style={styles.footerText}>Don't have an account?</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-            <Text style={styles.signupLink}>Sign Up</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+            <View style={styles.inputContainer}>
+              <Ionicons name="lock-closed-outline" size={24} color="#333333" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                value={password}
+                onChangeText={(text) => dispatch(setPassword(text))}
+                secureTextEntry
+                placeholderTextColor="#666666"
+              />
+            </View>
+
+            <View style={styles.roleButtonsContainer}>
+              <TouchableOpacity
+                style={[styles.roleButton, role === 'student' && styles.selectedRoleButton]}
+                onPress={() => dispatch(setRole('student'))}
+              >
+                <Ionicons name="school-outline" size={24} color={role === 'student' ? "#ffffff" : "#333333"} />
+                <Text style={[styles.roleButtonText, role === 'student' && styles.selectedRoleButtonText]}>Student</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.roleButton, role === 'club' && styles.selectedRoleButton]}
+                onPress={() => dispatch(setRole('club'))}
+              >
+                <Ionicons name="people-outline" size={24} color={role === 'club' ? "#ffffff" : "#333333"} />
+                <Text style={[styles.roleButtonText, role === 'club' && styles.selectedRoleButtonText]}>Club</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.roleButton, role === 'admin' && styles.selectedRoleButton]}
+                onPress={() => dispatch(setRole('admin'))}
+              >
+                <Ionicons name="settings-outline" size={24} color={role === 'admin' ? "#ffffff" : "#333333"} />
+                <Text style={[styles.roleButtonText, role === 'admin' && styles.selectedRoleButtonText]}>Admin</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+              <Text style={styles.buttonText}>Login</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.googleButton}
+              onPress={() => promptAsync()}
+              disabled={!request}
+            >
+              <Image
+                source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg' }}
+                style={styles.googleLogo}
+              />
+              <Text style={styles.googleButtonText}>Login with Google</Text>
+            </TouchableOpacity>
+
+            <View style={styles.footerLinks}>
+              <Text style={styles.footerText}>Don't have an account?</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+                <Text style={styles.signupLink}>Sign Up</Text>
+              </TouchableOpacity>
+            </View>
+          </LinearGradient>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    padding: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0)',
-  },
   backgroundImage: {
     flex: 1,
-    resizeMode: 'cover', // Ensures the image covers the entire background
+    resizeMode: 'cover',
+  },
+  container: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    padding: width * 0.05,
+  },
+  formContainer: {
+    padding: width * 0.05,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
   },
   logoImage: {
-    width: 107,
-    height: 100,
+    width: width * 0.3,
+    height: width * 0.3,
     alignSelf: 'center',
-    marginBottom: 40, // Adjust for spacing
-    marginTop: -60,
-    borderRadius:20,
+    marginBottom: height * 0.04,
+    borderRadius: width * 0.15,
   },
   title: {
-    fontSize: 24,
-    marginBottom: 20,
+    fontSize: width * 0.08,
+    marginBottom: height * 0.03,
     textAlign: 'center',
     fontWeight: 'bold',
+    color: '#333333',
   },
-  input: {
-    width: '100%',
-    height: 50,
-    backgroundColor: '#fff',
-    borderColor: '#ddd',
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    marginBottom: 20,
-  },
-  button: {
-    backgroundColor: '#003366',
-    padding: 15,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  googleButton: {
-    backgroundColor: '#07768c',
+  inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    
+    marginBottom: height * 0.02,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 5,
   },
-  googleLogo: {
-    width: 25,
-    height: 23,
-    marginRight: 10,
-    borderRadius:20,
+  inputIcon: {
+    padding: width * 0.03,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: height * 0.015,
+    paddingRight: width * 0.03,
+    fontSize: width * 0.04,
+    color: '#333333',
   },
   roleButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: height * 0.03,
   },
   roleButton: {
     flex: 1,
-    backgroundColor: '#ddd',
-    padding: 10,
-    margin: 5,
-    borderRadius: 5,
+    flexDirection: 'column',
     alignItems: 'center',
+    justifyContent: 'center',
+    padding: width * 0.02,
+    margin: width * 0.01,
+    borderRadius: 5,
+    backgroundColor: '#f0f0f0',
   },
   selectedRoleButton: {
-    backgroundColor: '#07768c',
+    backgroundColor: '#4a90e2',
+  },
+  roleButtonText: {
+    marginTop: height * 0.01,
+    fontSize: width * 0.03,
+    color: '#333333',
+  },
+  selectedRoleButtonText: {
+    color: '#ffffff',
+  },
+  loginButton: {
+    backgroundColor: '#4a90e2',
+    padding: height * 0.02,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginBottom: height * 0.02,
+  },
+  buttonText: {
+    color: '#ffffff',
+    fontSize: width * 0.04,
+    fontWeight: 'bold',
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#ffffff',
+    padding: height * 0.02,
+    borderRadius: 5,
+    marginBottom: height * 0.02,
+    borderWidth: 1,
+    borderColor: '#dddddd',
+  },
+  googleLogo: {
+    width: width * 0.06,
+    height: width * 0.06,
+    marginRight: width * 0.02,
+  },
+  googleButtonText: {
+    color: '#333333',
+    fontSize: width * 0.04,
+    fontWeight: 'bold',
   },
   footerLinks: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  footerText: {
+    color: '#333333',
+    fontSize: width * 0.035,
   },
   signupLink: {
-    color: '#003366',
-    fontSize: 16,
-    textDecorationLine: 'underline',
+    color: '#4a90e2',
+    fontSize: width * 0.035,
+    fontWeight: 'bold',
+    marginLeft: width * 0.02,
   },
 });

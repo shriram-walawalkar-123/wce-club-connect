@@ -101,5 +101,15 @@ const SummaryApi = {
         url:`${backend_url}/get_all_past_events`,
         method:"get",
     },
+
+    // admin route get_all_club_id
+    club_id_create:{
+        url:`${backend_url}/club_id_create`,
+        method:"post",
+    },
+    get_all_club_id:{
+        url:`${backend_url}/get_all_club_id`,
+        method:"get",
+    },
 };
 export default SummaryApi;

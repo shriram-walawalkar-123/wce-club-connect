@@ -24,6 +24,8 @@ const getClubInfo = require('../Controller/CommonController/GetClubInfo');
 const signup = require('../Controller/SignUp');
 const login = require('../Controller/LogIn');
 const getClubMemberCommon = require('../Controller/CommonController/getClubMemberCommon');
+const { clubIdCreate } = require('../Controller/AdminController/ClubIdCreate');
+const  getAllClubId = require('../Controller/AdminController/GetAllClubId');
 
 // user route
 router.post("/sign-up",signup);
@@ -77,6 +79,9 @@ router.get("/get_all_upcomming_events",getAllUpCommingEvents);
 
 router.get("/get_all_past_events",getAllPastEvents);
 
+// admin route
+router.post("/club_id_create",auth,isAdmin,clubIdCreate)
 
+router.get("/get_all_club_id",auth,isAdmin,getAllClubId);
 
 module.exports=router

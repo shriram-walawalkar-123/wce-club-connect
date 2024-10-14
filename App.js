@@ -22,6 +22,7 @@ import UpcomingEventsScreen from './screens/UpcomingEvents';
 import AddEvent from './screens/addEvent';
 import ShowEvent from './screens/showEvent';
 import EditEvent from './screens/EditEventScreen';
+import AdminScreen from './screens/AdminScreen';
 
 const Stack = createStackNavigator();
 
@@ -31,7 +32,7 @@ export default function App() {
     <Provider store={store}>
       <NavigationContainer>
         <Stack.Navigator initialRouteName="Home">
-          <Stack.Screen name="Home" component={Home} />
+          <Stack.Screen name="Home" component={Home}  />
           <Stack.Screen name="Login" component={Login} />
           <Stack.Screen name="Signup" component={Signup} />
           <Stack.Screen name="PastEvents" component={PastEvents} />
@@ -50,8 +51,11 @@ export default function App() {
           <Stack.Screen name="AddEvent" component={AddEvent}/>
           <Stack.Screen name="showEvent" component={ShowEvent}></Stack.Screen>
           <Stack.Screen name="EditEvent" component={EditEvent}/>
+          <Stack.Screen name="AdminScreen" component={AdminScreen}/>
+
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>
   );
+  // AdminScreen
 }

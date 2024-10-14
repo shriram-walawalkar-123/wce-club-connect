@@ -53,9 +53,8 @@ const login = async (req, res) => {
         // Create JWT payload including role
         const payload = {
             email: user.email,
-            id: user._id,
             role: user.role,
-            clubId:user.clubId
+            profilepic:user.profilepic
         };
         // console.log("userId",user.clubId);
         const token = jwt.sign(payload, process.env.JWT_TOKEN, { expiresIn: "1d" });
@@ -65,9 +64,10 @@ const login = async (req, res) => {
             success: true,
             message: "Login Successful",
             token: token, // Include token in response
-            role: user.role, // Optionally include role in response
-            clubId:user.clubId,
-            id: user._id,
+            email: user.email,
+            role: user.role,
+            profilepic:user.profilepic,
+            name:user.name,
             error: false,
         });
         

@@ -1,30 +1,28 @@
-import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Dimensions, Image, ImageBackground, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
-import { setName, setClubName, setEmail, setPassword, setCollegeName, setClubId, toggleSignupMode } from '../slices/authSlice';
-import { View, Text, TextInput, Button, TouchableOpacity, StyleSheet, Alert, Dimensions, Image, ImageBackground } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { useNavigation } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import SummaryApi from '../backendRoutes';
+import uploadImage from '../helper/uploadImage';
 
 const { width, height } = Dimensions.get('window');
 
 WebBrowser.maybeCompleteAuthSession();
 
 const Signup = () => {
-  const dispatch = useDispatch();
-  const {
-    isStudentSignup,
-    name,
-    clubName,
-    email,
-    password,
-    collegeName,
-    clubId,
-    role,
-  } = useSelector((state) => state.auth);
-  
-  const data = useSelector((state) => state.auth);
-  console.log("data" , data);
+  const navigation = useNavigation();
+  const [isStudentSignup, setIsStudentSignup] = useState(true);
+  const [name, setName] = useState('');
+  const [clubName, setClubName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [collegeName, setCollegeName] = useState('');
+  const [clubId, setClubId] = useState('');
+  const [profileImage, setProfileImage] = useState(null);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     expoClientId: 'YOUR_EXPO_CLIENT_ID',
@@ -40,21 +38,56 @@ const Signup = () => {
     }
   }, [response]);
 
+  const handleImagePicker = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (permissionResult.granted === false) {
+      Alert.alert('Permission to access camera roll is required!');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setProfileImage(result.assets[0].uri);
+    }
+  };
+
   const handleSignup = async () => {
     try {
+      let uploadedImageUrl = null;
+
+      if (profileImage) {
+        uploadedImageUrl = await uploadImage(profileImage);
+      }
+
       const response = await fetch(SummaryApi.signUp.url, {
         method: SummaryApi.signUp.method,
         credentials: "include",
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, clubName, email, password, collegeName, clubId, role }),
+        body: JSON.stringify({ 
+          name, 
+          clubName, 
+          email, 
+          password, 
+          collegeName, 
+          clubId, 
+          role: isStudentSignup ? "student" : "club", 
+          profilepic: uploadedImageUrl?.url 
+        }),
       });
-
       const result = await response.json();
 
       if (response.ok) {
         Alert.alert('Success', 'Signup successful!');
+        navigation.navigate('Login');
       } else {
         Alert.alert('Error', result.message || 'Signup failed. Please try again.');
       }
@@ -69,82 +102,132 @@ const Signup = () => {
       source={{ uri: 'https://www.nikaiacours.fr/wp-content/uploads/2019/12/login-background.jpg' }} 
       style={styles.backgroundImage}
     >
-      <View style={styles.container}>
-        {/* Signup Mode Toggle */}
-        <View style={styles.toggleContainer}>
-          <TouchableOpacity onPress={() => dispatch(toggleSignupMode(true))}>
-            <Text style={[styles.toggleButton, isStudentSignup && styles.selectedButton]}>Student Signup</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => dispatch(toggleSignupMode(false))}>
-            <Text style={[styles.toggleButton, !isStudentSignup && styles.selectedButton]}>Admin Signup</Text>
-          </TouchableOpacity>
-        </View>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+      >
+        <ScrollView contentContainerStyle={styles.scrollViewContent}>
+          <LinearGradient
+            colors={['rgba(255,255,255,0.8)', 'rgba(255,255,255,0.6)']}
+            style={styles.formContainer}
+          >
+            <Text style={styles.title}>Sign Up</Text>
+            
+            <View style={styles.toggleContainer}>
+              <TouchableOpacity 
+                style={[styles.toggleButton, isStudentSignup && styles.activeToggle]} 
+                onPress={() => setIsStudentSignup(true)}
+              >
+                <Ionicons name="school-outline" size={24} color={isStudentSignup ? "#ffffff" : "#333333"} />
+                <Text style={[styles.toggleText, isStudentSignup && styles.activeToggleText]}>Student</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.toggleButton, !isStudentSignup && styles.activeToggle]} 
+                onPress={() => setIsStudentSignup(false)}
+              >
+                <Ionicons name="business-outline" size={24} color={!isStudentSignup ? "#ffffff" : "#333333"} />
+                <Text style={[styles.toggleText, !isStudentSignup && styles.activeToggleText]}>Admin</Text>
+              </TouchableOpacity>
+            </View>
 
-        <Text style={styles.title}>{isStudentSignup ? 'Student Signup' : 'Admin Signup'}</Text>
+            <View style={styles.inputContainer}>
+              <Ionicons name="person-outline" size={24} color="#333333" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Full Name"
+                value={name}
+                onChangeText={setName}
+                placeholderTextColor="#666666"
+              />
+            </View>
 
-        {/* Common fields for both Student and Admin */}
-        <TextInput
-          style={styles.input}
-          placeholder="Full Name"
-          value={name}
-          onChangeText={(text) => dispatch(setName(text))}
-        />
+            {!isStudentSignup && (
+              <>
+                <View style={styles.inputContainer}>
+                  <Ionicons name="business-outline" size={24} color="#333333" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Club Name"
+                    value={clubName}
+                    onChangeText={setClubName}
+                    placeholderTextColor="#666666"
+                  />
+                </View>
+                <View style={styles.inputContainer}>
+                  <Ionicons name="card-outline" size={24} color="#333333" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Club ID"
+                    value={clubId}
+                    onChangeText={setClubId}
+                    placeholderTextColor="#666666"
+                  />
+                </View>
+              </>
+            )}
 
-        {!isStudentSignup && (
-          <>
-            <TextInput
-              style={styles.input}
-              placeholder="Club Name"
-              value={clubName}
-              onChangeText={(text) => dispatch(setClubName(text))}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Club ID"
-              value={clubId}
-              onChangeText={(text) => dispatch(setClubId(text))}
-            />
-          </>
-        )}
+            {isStudentSignup && (
+              <View style={styles.inputContainer}>
+                <Ionicons name="school-outline" size={24} color="#333333" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Name of College"
+                  value={collegeName}
+                  onChangeText={setCollegeName}
+                  placeholderTextColor="#666666"
+                />
+              </View>
+            )}
 
-        {isStudentSignup && (
-          <TextInput
-            style={styles.input}
-            placeholder="Name of College"
-            value={collegeName}
-            onChangeText={(text) => dispatch(setCollegeName(text))}
-          />
-        )}
+            <View style={styles.inputContainer}>
+              <Ionicons name="mail-outline" size={24} color="#333333" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                placeholderTextColor="#666666"
+              />
+            </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={(text) => dispatch(setEmail(text))}
-          keyboardType="email-address"
-        />
+            <View style={styles.inputContainer}>
+              <Ionicons name="lock-closed-outline" size={24} color="#333333" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                placeholderTextColor="#666666"
+              />
+            </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={(text) => dispatch(setPassword(text))}
-          secureTextEntry
-        />
+            <TouchableOpacity onPress={handleImagePicker} style={styles.imagePickerButton}>
+              <Ionicons name="camera-outline" size={24} color="#ffffff" />
+              <Text style={styles.imagePickerButtonText}>Upload Profile Image</Text>
+            </TouchableOpacity>
 
-        <Button title="Signup" onPress={handleSignup} />
+            {profileImage && (
+              <Image source={{ uri: profileImage }} style={styles.imagePreview} />
+            )}
 
-        {/* Google Signup only for students */}
-        {isStudentSignup && (
-          <TouchableOpacity style={styles.googleButton} onPress={() => promptAsync()}>
-            <Image 
-              source={{ uri: 'http://pluspng.com/img-png/google-logo-png-revised-google-logo-1600.png' }} 
-              style={styles.googleLogo} 
-            />
-            <Text style={styles.googleButtonText}>Signup with Google</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+            <TouchableOpacity style={styles.signupButton} onPress={handleSignup}>
+              <Text style={styles.signupButtonText}>Sign Up</Text>
+            </TouchableOpacity>
+
+            {isStudentSignup && (
+              <TouchableOpacity style={styles.googleButton} onPress={() => promptAsync()}>
+                <Image 
+                  source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg' }} 
+                  style={styles.googleLogo} 
+                />
+                <Text style={styles.googleButtonText}>Sign up with Google</Text>
+              </TouchableOpacity>
+            )}
+          </LinearGradient>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </ImageBackground>
   );
 };
@@ -156,63 +239,122 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
     justifyContent: 'center',
     padding: width * 0.05,
-    backgroundColor: 'rgba(255, 255, 255, 0)', // Make transparent
-    
+  },
+  formContainer: {
+    padding: width * 0.05,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
   },
   title: {
-    fontSize: width * 0.06,
-    marginBottom: height * 0.02,
+    fontSize: width * 0.08,
+    marginBottom: height * 0.03,
     textAlign: 'center',
-    fontStyle:'italic',
-  },
-  input: {
-    borderWidth: 1,
-    padding: width * 0.03,
-    marginBottom: height * 0.02,
-    borderRadius: 5,
-    backgroundColor: '#fff',
-    
+    fontWeight: 'bold',
+    color: '#333333',
   },
   toggleContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: height * 0.02,
-    
+    justifyContent: 'space-between',
+    marginBottom: height * 0.03,
   },
   toggleButton: {
-    fontSize: width * 0.045,
-    marginHorizontal: width * 0.05,
-    padding: width * 0.02,
-    borderBottomWidth: 2,
-    borderColor: 'transparent',
-    
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: height * 0.015,
+    paddingHorizontal: width * 0.05,
+    borderRadius: 25,
+    backgroundColor: '#f0f0f0',
+    flex: 1,
+    marginHorizontal: width * 0.02,
   },
-  selectedButton: {
-    color:'#1e90ff',
-    borderColor: '#dedeaf',
+  activeToggle: {
+    backgroundColor: '#4a90e2',
+  },
+  toggleText: {
+    marginLeft: width * 0.02,
+    fontSize: width * 0.04,
     fontWeight: 'bold',
-    fontStyle:'italic',
+    color: '#333333',
   },
-  googleButton: {
+  activeToggleText: {
+    color: '#ffffff',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: height * 0.02,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 5,
+  },
+  inputIcon: {
+    padding: width * 0.03,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: height * 0.015,
+    paddingRight: width * 0.03,
+    fontSize: width * 0.04,
+    color: '#333333',
+  },
+  imagePickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: height * 0.02,
+    padding: width * 0.04,
+    backgroundColor: '#4a90e2',
+    borderRadius: 5,
+  },
+  imagePickerButtonText: {
+    color: '#ffffff',
+    fontSize: width * 0.04,
+    fontWeight: 'bold',
+    marginLeft: width * 0.02,
+  },
+  imagePreview: {
+    width: width * 0.3,
+    height: width * 0.3,
+    marginTop: height * 0.02,
+    borderRadius: width * 0.15,
+    alignSelf: 'center',
+  },
+  signupButton: {
     marginTop: height * 0.03,
     padding: width * 0.04,
-    backgroundColor: '#07768c',
+    backgroundColor: '#4a90e2',
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  signupButtonText: {
+    color: '#ffffff',
+    fontSize: width * 0.045,
+    fontWeight: 'bold',
+  },
+  googleButton: {
+    marginTop: height * 0.02,
+    padding: width * 0.04,
+    backgroundColor: '#ffffff',
     borderRadius: 5,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#dddddd',
   },
   googleLogo: {
-    width: 25,
-    height: 23,
+    width: width * 0.06,
+    height: width * 0.06,
     marginRight: width * 0.02,
-    borderRadius:20,
   },
   googleButtonText: {
-    color: '#fff',
-    fontSize: width * 0.045,
+    color: '#333333',
+    fontSize: width * 0.04,
     fontWeight: 'bold',
   },
 });

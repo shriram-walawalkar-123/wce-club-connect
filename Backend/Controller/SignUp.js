@@ -4,7 +4,8 @@ const User = require("../Models/SignUpModel");
 const signup = async (req, res) => {
     try {
         // Extract the fields from the request body
-        const { name, email, clubName, collegeName, clubId, password, role } = req?.body;
+        const { name, email, clubName, collegeName, clubId, password, role,profilepic} = req?.body;
+        // console.log("profileImage",profileImage);
         console.log(req?.body);
         
         // Basic input validation
@@ -69,6 +70,7 @@ const signup = async (req, res) => {
             clubId: role === "club" ? clubId : undefined,
             collegeName: role === "general" || role === "Student" ? collegeName : undefined, // Fixed case
             password: hashPassword,
+            profilepic,
             role,
         });
 

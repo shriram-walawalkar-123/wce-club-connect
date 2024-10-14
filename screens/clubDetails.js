@@ -6,7 +6,7 @@ import DescriptionInfo from './DescriptionInfo'; // Ensure this path is correct
 import MembersInfo from './memberInfo'; // Ensure this path is correct
 import UpcomingEventsScreen from './UpcomingEventsScreen'; // Import UpcomingEventsScreen
 import PastEventsScreen from './PastEventsScreen'; // Import PastEventsScreen
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import SummaryApi from '../backendRoutes';
 
 const Tab = createMaterialTopTabNavigator();
@@ -55,7 +55,6 @@ const ClubDetailsScreen = ({ route }) => {
       }
 
       const data = await response.json();
-      // console.log("club member", data);
       setMember(data.data); // Update the state with fetched member data
       console.log("Updated member state:", data.data); // Log the updated state
     } catch (err) {
@@ -79,7 +78,13 @@ const ClubDetailsScreen = ({ route }) => {
   }
 
   return (
-    <Tab.Navigator>
+    <Tab.Navigator
+      screenOptions={{
+        tabBarScrollEnabled: true, // Ensure tabs don't get squashed into columns
+        tabBarLabelStyle: styles.tabLabelStyle, // Add bold text to tab labels
+        tabBarIndicatorStyle: styles.tabIndicatorStyle, // Customize the indicator
+      }}
+    >
       <Tab.Screen 
         name="DescriptionInfo" 
         component={DescriptionInfo} 
@@ -119,5 +124,18 @@ const ClubDetailsScreen = ({ route }) => {
     </Tab.Navigator>
   );
 };
+
+// Add custom styles
+const styles = StyleSheet.create({
+  tabLabelStyle: {
+    fontSize: 14,
+    fontWeight: 'bold', // Make the tab titles bold
+    textTransform: 'none', // Disable auto capitalization of tab titles
+  },
+  tabIndicatorStyle: {
+    backgroundColor: '#003366', // Customize the indicator color
+    height: 3, // Increase the height of the indicator for better visibility
+  },
+});
 
 export default ClubDetailsScreen;

@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Text, View, Image, FlatList, ActivityIndicator } from 'react-native';
+import { Text, View, Image, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
 import SummaryApi from '../backendRoutes';
 
-// Ensure NativeWind is properly set up before using className
 export default function PastEvents() {
   const [pastEvents, setPastEvents] = useState([]); // State to hold past events
   const [loading, setLoading] = useState(true); // Loading state
@@ -42,12 +41,16 @@ export default function PastEvents() {
   }, []);
 
   const renderItem = ({ item }) => (
-    <View className="mb-5 px-4">
-      <Text className="text-xl font-bold text-blue-800 mb-2">{item.eventName}</Text>
-      <View className="bg-white rounded-lg overflow-hidden shadow-md">
-        <Image source={{ uri: item.eventPoster }} className="w-full h-44 rounded-t-lg" />
-        <View className="p-3">
-          <Text className="text-gray-700">{item.description}</Text>
+    <View style={styles.eventCard}>
+      {/* Event Name */}
+      <Text style={styles.eventName}>{item.eventName}</Text>
+
+      {/* Event Card with Poster and Details */}
+      <View style={styles.card}>
+        <Image source={{ uri: item.eventPoster }} style={styles.eventImage} />
+        <View style={styles.eventDetails}>
+          <Text style={styles.clubName}>{item.clubName}</Text>
+          <Text style={styles.eventDescription}>{item.description}</Text>
         </View>
       </View>
     </View>
@@ -55,7 +58,7 @@ export default function PastEvents() {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-100">
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#003366" />
       </View>
     );
@@ -64,8 +67,8 @@ export default function PastEvents() {
   // Check if there are no past events to display
   if (pastEvents.length === 0) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-100">
-        <Text className="text-lg text-gray-700">No past events found.</Text>
+      <View style={styles.loadingContainer}>
+        <Text style={styles.noEventsText}>No past events found.</Text>
       </View>
     );
   }
@@ -75,7 +78,63 @@ export default function PastEvents() {
       data={pastEvents}
       keyExtractor={(item, index) => index.toString()}
       renderItem={renderItem}
-      contentContainerStyle={{ paddingBottom: 20 }}
+      contentContainerStyle={styles.listContent}
     />
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  noEventsText: {
+    fontSize: 18,
+    color: '#666',
+  },
+  listContent: {
+    paddingBottom: 20,
+    paddingTop: 10,
+  },
+  eventCard: {
+    marginBottom: 20,
+    paddingHorizontal: 16,
+  },
+  eventName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#003366',
+    marginBottom: 8,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+    borderWidth: 2,         // Thickness of the border
+    borderColor: 'black',
+  },
+  eventImage: {
+    width: '100%',
+    height: 180,
+  },
+  eventDetails: {
+    padding: 16,
+  },
+  clubName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  eventDescription: {
+    fontSize: 14,
+    color: '#555',
+  },
+});

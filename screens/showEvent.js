@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, Image, ScrollView, Linking, Alert } from 'react-native';
+import { View, Text, Image, ScrollView, Linking, Alert, TouchableOpacity, StyleSheet } from 'react-native';
+import { FontAwesome5, MaterialIcons, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 const ShowEvent = ({ route }) => {
   const { event } = route.params;
@@ -12,139 +13,365 @@ const ShowEvent = ({ route }) => {
     }
   };
 
+  // Array of pastel colors for sub-event cards
+  const cardColors = [
+    '#7EB5BA', 
+  ];
+
   return (
-    <ScrollView className="bg-gray-100 p-4">
-      {/* Club Name */}
-      <Text className="text-xl font-semibold text-gray-800 mb-2">
-        Organized by: {event.clubName || "N/A"}
-      </Text>
-
-      {/* Event Poster */}
-      {event.eventPoster ? (
-        <Image
-          source={{ uri: event.eventPoster }}
-          className="w-full h-64 rounded-lg mb-4 shadow-lg"
-          resizeMode="cover"
-        />
-      ) : (
-        <Text className="text-center text-red-500">No Event Poster Available</Text>
-      )}
-
-      {/* Event Name and Description */}
-      <Text className="text-3xl font-extrabold text-center text-blue-900 mb-3">
-        {event.eventName || "Unnamed Event"}
-      </Text>
-      <Text className="text-lg text-gray-700 text-center mb-6">
-        {event.description || "No description available."}
-      </Text>
-
-      {/* Event Date */}
-      <View className="flex-row justify-center items-center mb-4">
-        <Text className="text-lg font-semibold">Event Date: </Text>
-        <Text className="text-lg text-gray-700">
-          {event.eventDate ? new Date(event.eventDate).toLocaleString() : "Date not available"}
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.clubName}>
+          <FontAwesome5 name="chess-queen" size={24} color="#ffd700" /> {event.clubName || "N/A"}
         </Text>
+
+        {event.eventPoster ? (
+          <Image
+            source={{ uri: event.eventPoster }}
+            style={styles.eventPoster}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={styles.noPosterContainer}>
+            <MaterialIcons name="broken-image" size={60} color="#ecf0f1" />
+            <Text style={styles.noPosterText}>No Event Poster Available</Text>
+          </View>
+        )}
+
+        <Text style={styles.eventName}>
+          {event.eventName || "Unnamed Event"}
+        </Text>
+        <Text style={styles.eventDescription}>
+          {event.description || "No description available."}
+        </Text>
+
+        <View style={styles.dateContainer}>
+          <Ionicons name="calendar" size={24} color="#ffd700" />
+          <Text style={styles.dateText}>
+            {event.eventDate ? new Date(event.eventDate).toLocaleString() : "Date not available"}
+          </Text>
+        </View>
       </View>
 
-      {/* Sponsors */}
-      <Text className="text-2xl font-bold text-blue-900 mt-4 mb-2">Sponsors</Text>
-      {event.sponsors && event.sponsors.length > 0 ? (
-        event.sponsors.map((sponsor, index) => (
-          <View key={index} className="flex-row items-center mb-4 p-3 bg-white rounded-lg shadow-sm">
-            {sponsor.image ? (
-              <Image
-                source={{ uri: sponsor.image }}
-                className="w-12 h-12 rounded-lg mr-3 shadow-md"
-                resizeMode="cover"
-              />
-            ) : (
-              <Text>No Image</Text>
-            )}
-            <Text className="text-base text-gray-800 font-medium">
-              {sponsor.sponsorType || "Sponsor"} Sponsor
-            </Text>
-          </View>
-        ))
-      ) : (
-        <Text>No sponsors available.</Text>
-      )}
-
-      {/* Sub Events */}
-      <Text className="text-2xl font-bold text-blue-900 mt-6 mb-4">Sub Events</Text>
-
-      {event.subEvents && event.subEvents.length > 0 ? (
-        event.subEvents.map((subEvent, index) => (
-          <View key={index} className="bg-white p-6 rounded-lg mb-6 shadow-lg border border-gray-200">
-            <Text className="text-xl font-bold text-gray-800 mb-2">
-              {subEvent.subEventName || "Unnamed Sub Event"}
-            </Text>
-            <Text className="text-base text-gray-700 mb-4">{subEvent.description || "No description available."}</Text>
-
-            {/* Event Date and Time */}
-            <Text className="text-base text-gray-700 mb-2">
-              {`Date: ${subEvent.date ? new Date(subEvent.date).toLocaleDateString() : "N/A"} 
-Time: ${subEvent.time || "N/A"}`}
-            </Text>
-
-            {/* Venue */}
-            <Text className="text-base text-gray-700 mb-2">{`Venue: ${subEvent.venue || "Venue not available"}`}</Text>
-
-
-            {/* Entry Fee */}
-            <Text className="text-base text-gray-700 mb-2">{`Entry Fee: ₹${subEvent.entryFee || "N/A"}`}</Text>
-
-            {/* Rulebook Link */}
-            <Text>Rulebook : </Text> 
-            <Text
-              className="text-base text-blue-600  mb-4"
-              onPress={() => openURL(subEvent.rulebookPDF?.uri)}
-            >
-               {subEvent.rulebookPDF?.uri || "No rulebook available"}
-            </Text>
-
-            {/* Contact Information */}
-            <Text className="text-lg font-semibold text-gray-800 mb-2">Contacts:</Text>
-            {subEvent.contacts && subEvent.contacts.length > 0 ? (
-              subEvent.contacts.map((contact, index) => (
-                <View key={index} className="flex-row items-center mb-2">
-                  <Text className="text-base text-gray-800 font-medium mr-2">{contact.name}:</Text>
-                  <Text className="text-blue-600 underline" onPress={() => openURL(`tel:${contact.phone}`)}>
-                    {contact.phone}
-                  </Text>
+      <View style={styles.contentContainer}>
+        <Text style={styles.sectionTitle}>
+          <FontAwesome5 name="handshake" size={24} color="#3498db" /> Sponsors
+        </Text>
+        {event.sponsors && event.sponsors.length > 0 ? (
+          event.sponsors.map((sponsor, index) => (
+            <View key={index} style={styles.sponsorCard}>
+              {sponsor.image ? (
+                <Image
+                  source={{ uri: sponsor.image }}
+                  style={styles.sponsorImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={styles.noSponsorImage}>
+                  <FontAwesome5 name="building" size={24} color="#bdc3c7" />
                 </View>
-              ))
-            ) : (
-              <Text>No contacts available.</Text>
-            )}
+              )}
+              <Text style={styles.sponsorText}>
+                {sponsor.sponsorType || "Sponsor"} Sponsor
+              </Text>
+            </View>
+          ))
+        ) : (
+          <Text style={styles.noDataText}>No sponsors available.</Text>
+        )}
 
-            {/* Event Rounds */}
-            {subEvent.rounds && subEvent.rounds.length > 0 && (
-              <>
-                <Text className="text-lg font-semibold text-gray-800 mt-4 mb-2">Rounds:</Text>
-                {subEvent.rounds.map((round, index) => (
-                  <View key={index} className="mb-4">
-                    <Text className="text-base text-gray-800 font-semibold mb-1">{`Round ${index + 1}`}</Text>
-                    <Text className="text-base text-gray-700 mb-2">Time : {round.roundTime || "N/A"}</Text>
-                    {round.description && round.description.length > 0 ? (
-                      round.description.map((desc, i) => (
-                        <Text key={i} className="text-base text-gray-600 mb-1">
-                          {i+1} : {desc}
-                        </Text>
-                      ))
-                    ) : (
-                      <Text>No round description available.</Text>
-                    )}
-                  </View>
-                ))}
-              </>
-            )}
-          </View>
-        ))
-      ) : (
-        <Text>No sub-events available.</Text>
-      )}
+        <Text style={[styles.sectionTitle, styles.subEventsTitle]}>
+          <MaterialIcons name="event" size={24} color="#e74c3c" /> Sub Events
+        </Text>
+
+        {event.subEvents && event.subEvents.length > 0 ? (
+          event.subEvents.map((subEvent, index) => (
+            <View key={index} style={[styles.subEventCard, { backgroundColor: cardColors[index % cardColors.length] }]}>
+              <Text style={styles.subEventName}>
+                {subEvent.subEventName || "Unnamed Sub Event"}
+              </Text>
+              <Text style={styles.subEventDescription}>{subEvent.description || "No description available."}</Text>
+
+              <View style={styles.infoRow}>
+                <Ionicons name="time-outline" size={20} color="#0B3995" />
+                <Text style={styles.infoText}>
+                  {`${subEvent.date ? new Date(subEvent.date).toLocaleDateString() : "N/A"} at ${subEvent.time || "N/A"}`}
+                </Text>
+              </View>
+
+              <View style={styles.infoRow}>
+                <Ionicons name="location-outline" size={20} color="#e74c3c" />
+                <Text style={styles.infoText}>{subEvent.venue || "Venue not available"}</Text>
+              </View>
+
+              <View style={styles.infoRow}>
+                <FontAwesome5 name="money-bill-wave" size={20} color="#0F8200" />
+                <Text style={styles.infoText}>{`Entry Fee: ₹${subEvent.entryFee || "N/A"}`}</Text>
+              </View>
+
+              <TouchableOpacity
+                onPress={() => openURL(subEvent.rulebookPDF?.uri)}
+                style={styles.rulebookButton}
+              >
+                <FontAwesome5 name="file-pdf" size={20} color="#fff" />
+                <Text style={styles.rulebookButtonText}>View Rulebook</Text>
+              </TouchableOpacity>
+
+              <Text style={styles.contactsTitle}>Contacts:</Text>
+              {subEvent.contacts && subEvent.contacts.length > 0 ? (
+                subEvent.contacts.map((contact, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => openURL(`tel:${contact.phone}`)}
+                    style={styles.contactRow}
+                  >
+                    <Ionicons name="call-outline" size={20} color="#0F8200" />
+                    <Text style={styles.contactText}>{`${contact.name}: ${contact.phone}`}</Text>
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <Text style={styles.noDataText}>No contacts available.</Text>
+              )}
+
+              {subEvent.rounds && subEvent.rounds.length > 0 && (
+                <View style={styles.roundsContainer}>
+                  <Text style={styles.roundsTitle}>Rounds:</Text>
+                  {subEvent.rounds.map((round, index) => (
+                    <View key={index} style={styles.roundItem}>
+                      <Text style={styles.roundName}>{`Round ${index + 1}`}</Text>
+                      <View style={styles.roundTimeContainer}>
+                        <MaterialCommunityIcons name="clock-outline" size={18} color="#0B3995" />
+                        <Text style={styles.roundTime}>Time: {round.roundTime || "N/A"}</Text>
+                      </View>
+                      {round.description && round.description.length > 0 ? (
+                        round.description.map((desc, i) => (
+                          <Text key={i} style={styles.roundDescription}>
+                            • {desc}
+                          </Text>
+                        ))
+                      ) : (
+                        <Text style={styles.noDataText}>No round description available.</Text>
+                      )}
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+          ))
+        ) : (
+          <Text style={styles.noDataText}>No sub-events available.</Text>
+        )}
+      </View>
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f0f4f8',
+  },
+  header: {
+    backgroundColor: '#BB9AB1',
+    padding: 20,
+    margin:20,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+  },
+  clubName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 10,
+  },
+  eventPoster: {
+    width: '100%',
+    height: 200,
+    borderRadius: 15,
+    marginBottom: 20,
+  },
+  noPosterContainer: {
+    backgroundColor: '#2c3e50',
+    padding: 20,
+    borderRadius: 15,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  noPosterText: {
+    color: '#ecf0f1',
+    textAlign: 'center',
+    marginTop: 10,
+  },
+  eventName: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  eventDescription: {
+    fontSize: 16,
+    color: '#e0e0e0',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  dateContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  dateText: {
+    fontSize: 16,
+    color: '#fff',
+    marginLeft: 10,
+  },
+  contentContainer: {
+    padding: 20,
+  },
+  sectionTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+    marginBottom: 15,
+  },
+  sponsorCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  sponsorImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 15,
+  },
+  noSponsorImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#ecf0f1',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  sponsorText: {
+    fontSize: 16,
+    color: '#34495e',
+    fontWeight: '500',
+  },
+  subEventsTitle: {
+    marginTop: 30,
+  },
+  subEventCard: {
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  subEventName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+    marginBottom: 10,
+  },
+  subEventDescription: {
+    fontSize: 16,
+    color: '#34495e',
+    marginBottom: 15,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  infoText: {
+    fontSize: 16,
+    color: '#34495e',
+    marginLeft: 10,
+  },
+  rulebookButton: {
+    backgroundColor: '#3498db',
+    borderRadius: 8,
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 15,
+  },
+  rulebookButtonText: {
+    color: '#fff',
+    marginLeft: 10,
+    fontWeight: '500',
+  },
+  contactsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#2c3e50',
+    marginBottom: 10,
+  },
+  contactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  contactText: {
+    fontSize: 16,
+    color: '#34495e',
+    marginLeft: 10,
+  },
+  roundsContainer: {
+    marginTop: 15,
+  },
+  roundsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#2c3e50',
+    marginBottom: 10,
+  },
+  roundItem: {
+    marginBottom: 15,
+  },
+  roundName: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#34495e',
+    marginBottom: 5,
+  },
+  roundTimeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  roundTime: {
+    fontSize: 15,
+    color: '#34495e',
+    marginLeft: 5,
+  },
+  roundDescription: {
+    fontSize: 14,
+    color: '#34495e',
+    marginLeft: 10,
+    marginBottom: 3,
+  },
+  noDataText: {
+    color: '#34495e',
+    fontStyle: 'italic',
+  },
+});
 
 export default ShowEvent;

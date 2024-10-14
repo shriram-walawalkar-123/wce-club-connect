@@ -9,13 +9,15 @@ import {
   Image,
   TouchableOpacity,
   Modal,
-  Linking
+  Linking,
+  Alert
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { useNavigation } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-
+import * as FileSystem from 'expo-file-system';
+import * as MediaLibrary from 'expo-media-library';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SummaryApi from '../backendRoutes';
 
@@ -31,6 +33,7 @@ const AddEvent = () => {
     sponsors: [],
   });
 
+  const [pdfUri, setPdfUri] = useState(null);
   const [subEvents, setSubEvents] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedSubEvent, setSelectedSubEvent] = useState(null);
@@ -102,19 +105,35 @@ const AddEvent = () => {
     }
   };
 
+  // const handleTimeChange = (event, selectedTime) => {
+  //   const currentTime = selectedTime || new Date();
+  //   setShowTimePicker(false);
+
+  //   if (timePickerTarget === 'subEvent') {
+  //     setNewSubEvent({ ...newSubEvent, time: currentTime });
+  //   } else if (timePickerTarget.startsWith('round-')) {
+  //     const roundIndex = parseInt(timePickerTarget.split('-')[1]);
+  //     const updatedRounds = [...newSubEvent.rounds];
+  //     updatedRounds[roundIndex].roundTime = currentTime;
+  //     setNewSubEvent({ ...newSubEvent, rounds: updatedRounds });
+  //   }
+  // };
   const handleTimeChange = (event, selectedTime) => {
     const currentTime = selectedTime || new Date();
     setShowTimePicker(false);
-
+  
     if (timePickerTarget === 'subEvent') {
       setNewSubEvent({ ...newSubEvent, time: currentTime });
-    } else if (timePickerTarget.startsWith('round-')) {
-      const roundIndex = parseInt(timePickerTarget.split('-')[1]);
-      const updatedRounds = [...newSubEvent.rounds];
-      updatedRounds[roundIndex].roundTime = currentTime;
-      setNewSubEvent({ ...newSubEvent, rounds: updatedRounds });
+    } else if (timePickerTarget && timePickerTarget.startsWith('round-')) {
+      const roundIndex = parseInt(timePickerTarget.split('-')[1], 10);
+      if (!isNaN(roundIndex)) {
+        const updatedRounds = [...newSubEvent.rounds];
+        updatedRounds[roundIndex].roundTime = currentTime;
+        setNewSubEvent({ ...newSubEvent, rounds: updatedRounds });
+      }
     }
   };
+  
 
   const showDatePickerModal = (target) => {
     setDatePickerTarget(target);
@@ -171,21 +190,76 @@ const AddEvent = () => {
   };
 
   const pickRulebookPDF = async () => {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: 'application/pdf',
-      copyToCacheDirectory: false,
-    });
-
-    if (!result.canceled) {
-      setNewSubEvent({
-        ...newSubEvent,
-        rulebookPDF: {
-          uri: result.assets[0].uri,
-          name: result.assets[0].name,
-        },
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        mimeType: 'application/pdf',
+        copyToCacheDirectory: false,
       });
+  
+      console.log("get a pdf: ", result);
+  
+      if (!result.canceled) {
+        const fileUri = await getFileUri(result.assets[0].uri); // Get the file URI
+        console.log("lets see bhai ", fileUri);
+        
+        // Set the PDF info to state
+        setNewSubEvent({
+          ...newSubEvent,
+          rulebookPDF: { name: result.assets[0].name, uri: fileUri },
+        });
+  
+        // Open PDF after selecting
+        openPDF(fileUri); 
+      } else {
+        Alert.alert('Document picking cancelled.');
+      }
+    } catch (error) {
+      Alert.alert('Error picking document:', error.message);
     }
   };
+  
+  const getFileUri = async (uri) => {
+    // Check if the URI starts with 'content://'
+    console.log("show me uri : ",uri);
+    if (uri.startsWith('content://')) {
+      try {
+        await MediaLibrary.requestPermissionsAsync();
+        const { status } = await MediaLibrary.requestPermissionsAsync();
+        console.log("show me status : ",status);
+if (status !== 'granted') {
+  Alert.alert('Permission to access media was denied');
+}
+
+        const asset = await MediaLibrary.getAssetInfoAsync(uri);
+        console.log("show me asset : ",asset);
+        try {
+          const asset = await MediaLibrary.getAssetInfoAsync(uri);
+          console.log("Asset info:", asset);
+      } catch (error) {
+          console.error('Error retrieving asset info:', error);
+      }
+        return asset.uri; // This returns a file URI
+      } catch (error) {
+        console.error('Error getting file URI:', error);
+        Alert.alert('Error getting file URI:', error.message);
+      }
+    }
+    return uri; // Return the original URI if it is not a content URI
+  };
+  
+  const openPDF = async (uri) => {
+    const fileInfo = await FileSystem.getInfoAsync(uri);
+    if (!fileInfo.exists) {
+      Alert.alert('File does not exist!');
+      return;
+    }
+  
+    // Use Linking to open the PDF
+    Linking.openURL(uri).catch((err) => {
+      Alert.alert('Error opening the document:', err.message);
+    });
+  };
+  
 
   const addRound = () => {
     setNewSubEvent({
@@ -425,11 +499,20 @@ const AddEvent = () => {
                 }
               />
 
-              <View style={styles.pdfContainer}>
+              <View style={styles.pdfName}>
                 <Button title="Upload Rulebook PDF" onPress={pickRulebookPDF} />
-                {newSubEvent.rulebookPDF && (
-                  <Text style={styles.pdfName}>{newSubEvent.rulebookPDF.name}</Text>
-                )}
+                  {newSubEvent.rulebookPDF ? (
+          <View>
+            <Text style={styles.pdfName}>{newSubEvent.rulebookPDF.name}</Text>
+            <Button
+              title="Open Rulebook PDF"
+              onPress={() => openPDF(newSubEvent.rulebookPDF.uri)} // Call the openPDF function with the PDF URI
+            />
+          </View>
+        ) : (
+          <Text style={styles.pdfName}>No PDF uploaded</Text>
+        )}
+                
               </View>
 
               {/* add google form link */}

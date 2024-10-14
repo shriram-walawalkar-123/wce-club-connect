@@ -1,12 +1,22 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, FlatList } from 'react-native';
+import { View, Text, StyleSheet, Image, FlatList, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { FontAwesome, Entypo, MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const { width, height } = Dimensions.get('window');
+
+const scaleFontSize = (size) => {
+    const screenWidth = width;
+    if (screenWidth > 400) {
+        return size * 1.3; // Increased scaling factor for larger screens
+    }
+    return size; // Keep original size for smaller screens
+};
 
 const MemberInfo = ({ route }) => {
-    const { member } = route.params; // Extracting member data from route params
-    // console.log("member", member); // Log the received member data
+    const { member } = route.params;
 
-    // Handle case when member is null or empty
     if (!member || member.length === 0) {
         return (
             <SafeAreaView style={styles.container}>
@@ -19,97 +29,120 @@ const MemberInfo = ({ route }) => {
         <SafeAreaView style={styles.container}>
             <Text style={styles.header}>Club Members</Text>
             <FlatList
-                data={member} // Use member passed from params
-                keyExtractor={item => item._id.toString()} // Ensure id is a string
-                contentContainerStyle={{ padding: 20 }}
+                data={member}
+                keyExtractor={item => item._id.toString()}
+                contentContainerStyle={{ padding: width * 0.03 }}
                 renderItem={({ item }) => (
-                    <View style={styles.memberCard}>
+                    <LinearGradient
+                    colors={['#E6F3FF', '#B0C4DE', '#778899']}
+                        style={styles.memberCard}
+                    >
                         <Image source={{ uri: item.profilepic }} style={styles.image} />
                         <Text style={styles.title}>{item.name}</Text>
                         <View style={styles.row}>
-                            <Text style={styles.label}>Role:</Text>
+                            <MaterialIcons name="person-outline" size={scaleFontSize(24)} color="#091057" />
                             <Text style={styles.value}>{item.role}</Text>
                         </View>
                         <View style={styles.row}>
-                            <Text style={styles.label}>Email:</Text>
+                            <MaterialIcons name="email" size={scaleFontSize(24)} color="#F95454" />
                             <Text style={styles.value}>{item.email}</Text>
                         </View>
                         <View style={styles.row}>
-                            <Text style={styles.label}>Instagram:</Text>
+                            <FontAwesome name="instagram" size={scaleFontSize(24)} color="#E4405F" />
                             <Text style={styles.value}>{item.instagram}</Text>
                         </View>
                         <View style={styles.row}>
-                            <Text style={styles.label}>LinkedIn:</Text>
+                            <FontAwesome name="linkedin-square" size={scaleFontSize(24)} color="#0077B5" />
                             <Text style={styles.value}>{item.linkedin}</Text>
                         </View>
                         <View style={styles.row}>
-                            <Text style={styles.label}>Slogan:</Text>
+                            <Entypo name="quote" size={scaleFontSize(24)} color="#091057" />
                             <Text style={styles.value}>{item.slogan}</Text>
                         </View>
-                        <View style={styles.row}>
-                            <Text style={styles.label}>Description:</Text>
-                            <Text style={styles.value}>{item.description}</Text>
+                        <View style={styles.descriptionRow}>
+                            <MaterialIcons name="info-outline" size={scaleFontSize(24)} color="#3C3D37" />
+                            <Text style={styles.descriptionValue}>{item.description}</Text>
                         </View>
-                    </View>
+                    </LinearGradient>
                 )}
             />
         </SafeAreaView>
     );
 };
 
-// Styles for the MemberInfo component
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#e7e7c7',
+        backgroundColor:'#7077A1',
+        elevation: 6, // Higher elevation for Android
+        shadowColor: '#000000', // Dark shadow color
+        shadowOffset: { width: 0, height: 4 }, // Larger shadow offset for a bolder shadow
+        shadowOpacity: 0.5, // Stronger shadow opacity for more contrast
+        shadowRadius: 6, // Wider shadow spread for a more diffused look
     },
     header: {
-        marginTop: 20,
-        fontSize: 24,
+        marginTop: height * 0.02,
+        fontSize: scaleFontSize(28),
         fontWeight: 'bold',
         textAlign: 'center',
-        marginVertical: 20,
+        marginVertical: height * 0.02,
         color: '#003366',
     },
     memberCard: {
-        marginBottom: 20,
-        padding: 15,
-        backgroundColor: '#07768c',
-        borderRadius: 8,
-        elevation: 2,
+        marginBottom: height * 0.025,
+        padding: width * 0.05,
+        borderRadius: 15,
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
         alignItems: 'center',
     },
     title: {
-        color: 'lightblue',
-        fontSize: 20,
+        color: '#000000',
+        fontSize: scaleFontSize(26),
         fontWeight: 'bold',
-        marginBottom: 5,
+        marginBottom: height * 0.02,
         textAlign: 'center',
     },
     row: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 5,
+        marginBottom: height * 0.015,
         width: '100%',
     },
-    label: {
-        color: 'lightblue',
-        flex: 1,
-        textAlign: 'left', // Align the label to the left
-        fontWeight: 'bold',
+    descriptionRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        marginBottom: height * 0.015,
+        width: '100%',
     },
     value: {
-        color: 'lightblue',
-        flex: 2,
-        textAlign: 'left', // Align the value to the left
-        paddingLeft: 5,
-        fontWeight: 'bold',
+        color: '#000000', 
+        flex: 1,
+        textAlign: 'left', 
+        paddingLeft: 15,
+        fontSize: scaleFontSize(18),
+        fontWeight: '600',
+    },
+    descriptionValue: {
+        color: '#000000', 
+        flex: 1,
+        textAlign: 'left', 
+        paddingLeft: 15,
+        fontSize: scaleFontSize(16),
+        fontWeight: '500',
+        lineHeight: scaleFontSize(22),
     },
     image: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        marginTop: 10,
+        width: width * 0.35,
+        height: width * 0.35,
+        borderRadius: width * 0.175,
+        marginTop: height * 0.01,
+        marginBottom: height * 0.02,
+        borderWidth: 3,
+        borderColor: '#ffffff',
     },
 });
 

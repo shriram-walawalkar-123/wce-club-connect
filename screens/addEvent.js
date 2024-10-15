@@ -11,7 +11,7 @@ import {
   Modal,
   Linking,
   Alert,
-  Dimensions
+  Dimensions,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
@@ -55,7 +55,7 @@ const AddEvent = () => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [datePickerTarget, setDatePickerTarget] = useState(null);
-  const [timePickerTarget, setTimePickerTarget] = useState(null);
+  const [timePickerTarget, setTimePickerTarget] = useState('');
 
   // Function to open Google Form URL
   const openGoogleForm = () => {
@@ -127,16 +127,21 @@ const AddEvent = () => {
   const handleTimeChange = (event, selectedTime) => {
     const currentTime = selectedTime || new Date();
     setShowTimePicker(false);
-
+    console.log("timePickerTarget",timePickerTarget);
     if (timePickerTarget === 'subEvent') {
       setNewSubEvent({ ...newSubEvent, time: currentTime });
-    } else if (timePickerTarget && timePickerTarget.startsWith('round-')) {
-      const roundIndex = parseInt(timePickerTarget.split('-')[1], 10);
-      if (!isNaN(roundIndex)) {
-        const updatedRounds = [...newSubEvent.rounds];
-        updatedRounds[roundIndex].roundTime = currentTime;
-        setNewSubEvent({ ...newSubEvent, rounds: updatedRounds });
+    } else if (timePickerTarget && timePickerTarget?.startsWith('round-')) {
+      const parts = timePickerTarget?.split('-');
+      if (parts.length >= 2) {
+        const roundIndex = parseInt(parts[1], 10);
+        if (!isNaN(roundIndex)) {
+          const updatedRounds = [...newSubEvent.rounds];
+          updatedRounds[roundIndex].roundTime = currentTime;
+          setNewSubEvent({ ...newSubEvent, rounds: updatedRounds });
+        }
       }
+    } else {
+      console.warn('Unexpected timePickerTarget:', timePickerTarget);
     }
   };
 
@@ -557,7 +562,7 @@ const AddEvent = () => {
           value={
             timePickerTarget === 'subEvent'
               ? newSubEvent.time
-              : newSubEvent.rounds[parseInt(timePickerTarget.split('-')[1])].roundTime
+              : newSubEvent.rounds[parseInt(timePickerTarget.split('-'))].roundTime
           }
           mode="time"
           display="default"

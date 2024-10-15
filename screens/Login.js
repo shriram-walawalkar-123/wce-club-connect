@@ -1,9 +1,7 @@
 import React, { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { setEmail, setPassword, setRole, setAuthentication, setUser, setClubId } from '../slices/authSlice';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Image, Dimensions, ImageBackground, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,8 +12,9 @@ const { width, height } = Dimensions.get('window');
 WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen({ navigation }) {
-  const dispatch = useDispatch();
-  const { email, password, role } = useSelector((state) => state.auth);
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [role, setRole] = React.useState('');
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     expoClientId: 'YOUR_EXPO_CLIENT_ID',
@@ -28,7 +27,6 @@ export default function LoginScreen({ navigation }) {
     if (response?.type === 'success') {
       const { authentication } = response;
       Alert.alert('Success', 'Logged in with Google');
-      dispatch(setAuthentication(true));
       navigateToRoleScreen(role);
     }
   }, [response]);
@@ -50,11 +48,7 @@ export default function LoginScreen({ navigation }) {
       const data = await response.json();
       if (data.success === true) {
         await AsyncStorage.setItem('authToken', data.token);
-        
-        if (role === 'club' && data.clubId) {
-          dispatch(setClubId(data.clubId));
-        }
-
+        console.log("data of user",data);
         navigateToRoleScreen(data);
       } else {
         Alert.alert('Error', data.message || 'Login failed');
@@ -95,7 +89,7 @@ export default function LoginScreen({ navigation }) {
                 style={styles.input}
                 placeholder="Email"
                 value={email}
-                onChangeText={(text) => dispatch(setEmail(text))}
+                onChangeText={(text) => setEmail(text)}
                 placeholderTextColor="#666666"
               />
             </View>
@@ -106,7 +100,7 @@ export default function LoginScreen({ navigation }) {
                 style={styles.input}
                 placeholder="Password"
                 value={password}
-                onChangeText={(text) => dispatch(setPassword(text))}
+                onChangeText={(text) => setPassword(text)}
                 secureTextEntry
                 placeholderTextColor="#666666"
               />
@@ -115,21 +109,21 @@ export default function LoginScreen({ navigation }) {
             <View style={styles.roleButtonsContainer}>
               <TouchableOpacity
                 style={[styles.roleButton, role === 'student' && styles.selectedRoleButton]}
-                onPress={() => dispatch(setRole('student'))}
+                onPress={() => setRole('student')}
               >
                 <Ionicons name="school-outline" size={24} color={role === 'student' ? "#ffffff" : "#333333"} />
                 <Text style={[styles.roleButtonText, role === 'student' && styles.selectedRoleButtonText]}>Student</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.roleButton, role === 'club' && styles.selectedRoleButton]}
-                onPress={() => dispatch(setRole('club'))}
+                onPress={() => setRole('club')}
               >
                 <Ionicons name="people-outline" size={24} color={role === 'club' ? "#ffffff" : "#333333"} />
                 <Text style={[styles.roleButtonText, role === 'club' && styles.selectedRoleButtonText]}>Club</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.roleButton, role === 'admin' && styles.selectedRoleButton]}
-                onPress={() => dispatch(setRole('admin'))}
+                onPress={() => setRole('admin')}
               >
                 <Ionicons name="settings-outline" size={24} color={role === 'admin' ? "#ffffff" : "#333333"} />
                 <Text style={[styles.roleButtonText, role === 'admin' && styles.selectedRoleButtonText]}>Admin</Text>
@@ -249,8 +243,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#ffffff',
-    fontSize: width * 0.04,
-    fontWeight: 'bold',
+    fontSize: width * 0.05,
   },
   googleButton: {
     flexDirection: 'row',
@@ -259,33 +252,28 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     padding: height * 0.02,
     borderRadius: 5,
-    marginBottom: height * 0.02,
-    borderWidth: 1,
-    borderColor: '#dddddd',
   },
   googleLogo: {
-    width: width * 0.06,
-    height: width * 0.06,
-    marginRight: width * 0.02,
+    width: width * 0.07,
+    height: width * 0.07,
+    marginRight: width * 0.03,
   },
   googleButtonText: {
+    fontSize: width * 0.045,
     color: '#333333',
-    fontSize: width * 0.04,
-    fontWeight: 'bold',
   },
   footerLinks: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
+    marginTop: height * 0.02,
   },
   footerText: {
-    color: '#333333',
     fontSize: width * 0.035,
+    color: '#333333',
   },
   signupLink: {
-    color: '#4a90e2',
     fontSize: width * 0.035,
-    fontWeight: 'bold',
-    marginLeft: width * 0.02,
+    color: '#4a90e2',
+    marginLeft: width * 0.01,
   },
 });

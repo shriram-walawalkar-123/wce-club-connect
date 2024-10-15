@@ -1,8 +1,6 @@
-// PastEventsScreen.js
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, FlatList, Image } from 'react-native';
+import { View, Text, ActivityIndicator, FlatList, Image, StyleSheet } from 'react-native';
 import SummaryApi from '../backendRoutes';
-import 'nativewind'; // Import nativewind
 
 const PastEventsScreen = ({ route }) => {
   const { clubId } = route.params;
@@ -18,11 +16,6 @@ const PastEventsScreen = ({ route }) => {
         },
         body: JSON.stringify({ clubId }),
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch past events.');
-      }
-
       const data = await response.json();
       setPastEvents(data.data); // Update the state with fetched events
     } catch (err) {
@@ -38,7 +31,7 @@ const PastEventsScreen = ({ route }) => {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-100">
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#003366" />
       </View>
     );
@@ -46,36 +39,31 @@ const PastEventsScreen = ({ route }) => {
 
   if (pastEvents.length === 0) {
     return (
-      <View className="flex-1 justify-center items-center bg-gray-100">
-        <Text className="text-lg text-gray-700">No past events available</Text>
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyText}>No past events available</Text>
       </View>
     );
   }
-
   return (
-    <View className="flex-1 p-4 bg-gray-100">
+    <View style={styles.container}>
       <FlatList
         data={pastEvents}
         keyExtractor={(item) => item._id} // Assuming each event has a unique _id
         renderItem={({ item }) => (
-          <View className="mb-4 p-4 bg-white rounded-lg shadow-md">
+          <View style={styles.eventCard}>
             {item.eventPoster && (
               <Image
-                source={{ uri: item.eventPoster }}
-                className="h-40 w-full rounded-t-lg"
+                source={{ uri: item.eventPoster}}
+                style={styles.eventImage}
                 resizeMode="cover"
               />
             )}
-            <View className="mt-2">
-              <Text className="text-xl font-bold text-blue-800">
-                {item.eventName}
-              </Text>
-              <Text className="text-gray-500">
+            <View style={styles.eventDetails}>
+              <Text style={styles.eventTitle}>{item.eventName}</Text>
+              <Text style={styles.eventDate}>
                 {new Date(item.eventDate).toLocaleDateString()}
               </Text>
-              <Text className="text-gray-700 mt-2">
-                {item.description}
-              </Text>
+              <Text style={styles.eventDescription}>{item.description}</Text>
             </View>
           </View>
         )}
@@ -83,5 +71,64 @@ const PastEventsScreen = ({ route }) => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+  },
+  emptyText: {
+    fontSize: 18,
+    color: '#666',
+  },
+  container: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: '#f0f0f0',
+  },
+  eventCard: {
+    marginBottom: 16,
+    padding: 16,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  eventImage: {
+    height: 160,
+    width: '100%',
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+  },
+  eventDetails: {
+    marginTop: 8,
+  },
+  eventTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#003366',
+  },
+  eventDate: {
+    fontSize: 14,
+    color: '#888',
+    marginTop: 4,
+  },
+  eventDescription: {
+    fontSize: 16,
+    color: '#444',
+    marginTop: 8,
+  },
+});
 
 export default PastEventsScreen;

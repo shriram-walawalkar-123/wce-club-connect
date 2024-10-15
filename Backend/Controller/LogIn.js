@@ -29,6 +29,7 @@ const login = async (req, res) => {
 
         // Find the user by email
         const user = await User.findOne({ email });
+        console.log("user data is in login",user);
         if (!user) {
             return res.status(400).json({
                 success: false,
@@ -54,7 +55,9 @@ const login = async (req, res) => {
         const payload = {
             email: user.email,
             role: user.role,
-            profilepic:user.profilepic
+            profilepic:user.profilepic,
+            clubId:user.clubId,
+            id:user._id,
         };
         // console.log("userId",user.clubId);
         const token = jwt.sign(payload, process.env.JWT_TOKEN, { expiresIn: "1d" });
@@ -68,6 +71,8 @@ const login = async (req, res) => {
             role: user.role,
             profilepic:user.profilepic,
             name:user.name,
+            id:user._id,
+            clubId:user.clubId,
             error: false,
         });
         

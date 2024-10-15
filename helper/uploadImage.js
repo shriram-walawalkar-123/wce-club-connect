@@ -11,7 +11,7 @@ const uploadImage = async (imageUri) => {
     formData.append("file", `data:image/jpeg;base64,${base64File}`); // Append the base64 image data
     formData.append("upload_preset", "wce_club_connect"); // Replace with your actual Cloudinary upload preset
 
-    const url = `https://api.cloudinary.com/v1_1/dlmftenmm/image/upload`; // Replace with your Cloudinary URL
+    const url = 'https://api.cloudinary.com/v1_1/dlmftenmm/image/upload'; // Replace with your Cloudinary URL
 
     const response = await fetch(url, {
       method: "POST",

@@ -180,7 +180,7 @@ const EditEvent = () => {
       type: 'application/pdf',
       copyToCacheDirectory: false,
     });
-  
+
     if (!result.canceled) {
       setNewSubEvent({
         ...newSubEvent,
@@ -191,7 +191,7 @@ const EditEvent = () => {
       });
     }
   };
-  
+
 
   const addRound = () => {
     setNewSubEvent({
@@ -219,8 +219,8 @@ const EditEvent = () => {
   };
 
   const handleSubmit = async () => {
-    const eventDetails = { 
-      ...mainEvent, 
+    const eventDetails = {
+      ...mainEvent,
       subEvents
     };
     await updateEvent(eventDetails);

@@ -9,6 +9,7 @@ const getClubGallery = async (req, res) => {
 
     // Find the club by its ID
     let club = await Club.findOne({ clubId });
+    console.log("club is if galary",club);
     if (!club) {
       return res.status(404).json({
         success: false,

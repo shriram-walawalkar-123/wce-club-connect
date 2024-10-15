@@ -9,6 +9,7 @@ const deleteGalleryImage = async (req, res) => {
 
     // Find the club by ID (replace clubId field with the correct one if needed)
     let club = await Club.findOne({ clubId });
+    console.log("club is if galary",club);
     if (!club) {
       return res.status(404).json({
         success: false,

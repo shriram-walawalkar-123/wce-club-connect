@@ -27,7 +27,7 @@ const EventSchema = new mongoose.Schema({
       name: { type: String },
       phone: { type: Number },
     }],
-    rulebookPDF: {
+    rulebookPDF:{
       uri: { type: String }, // URI field for the PDF location
       name: { type: String }, // Name field for the PDF file
     },

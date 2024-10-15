@@ -7,6 +7,7 @@ const clubSocialMedia = async (req, res) => {
     console.log("clubId deepak",clubId);
     // Check if the club exists in the database
     let club = await Club.findOne({clubId });
+    console.log("club is if galary",club);
     if (!club) {
       // If the club is not found, return an error response
       return res.status(404).json({

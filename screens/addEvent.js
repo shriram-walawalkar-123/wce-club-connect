@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,8 @@ import {
   TouchableOpacity,
   Modal,
   Linking,
-  Alert
+  Alert,
+  Dimensions
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
@@ -20,6 +21,8 @@ import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SummaryApi from '../backendRoutes';
+import uploadImage from '../helper/uploadImage'; // Function to upload image
+import uploadPDF from '../helper/uploadPDF';
 
 const AddEvent = () => {
   const navigation = useNavigation();
@@ -45,7 +48,7 @@ const AddEvent = () => {
     time: new Date(),
     venue: '',
     contacts: [{ name: '', phone: '' }],
-    rulebookPDF: [{name:'',uri:''}],
+    rulebookPDF: { name: '', uri: '' },
     rounds: [],
   });
 
@@ -66,12 +69,13 @@ const AddEvent = () => {
   const pickEventPoster = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
+      aspect: [4,3],
+      quality: 1,  // Keep high quality
     });
 
     if (!result.canceled && result.assets?.[0].uri) {
+      const selectedImageUri = result.assets[0].uri;
+      const dataResponse = await uploadImage(selectedImageUri);
       setMainEvent({ ...mainEvent, eventPoster: result.assets[0].uri });
     }
   };
@@ -85,6 +89,8 @@ const AddEvent = () => {
     });
 
     if (!result.canceled && result.assets?.[0].uri) {
+      const selectedImageUri = result.assets[0].uri;
+      const dataResponse = await uploadImage(selectedImageUri);
       setMainEvent({
         ...mainEvent,
         sponsors: [
@@ -121,7 +127,7 @@ const AddEvent = () => {
   const handleTimeChange = (event, selectedTime) => {
     const currentTime = selectedTime || new Date();
     setShowTimePicker(false);
-  
+
     if (timePickerTarget === 'subEvent') {
       setNewSubEvent({ ...newSubEvent, time: currentTime });
     } else if (timePickerTarget && timePickerTarget.startsWith('round-')) {
@@ -133,7 +139,7 @@ const AddEvent = () => {
       }
     }
   };
-  
+
 
   const showDatePickerModal = (target) => {
     setDatePickerTarget(target);
@@ -171,7 +177,7 @@ const AddEvent = () => {
       time: new Date(),
       venue: '',
       contacts: [{ name: '', phone: '' }],
-      rulebookPDF: [{name:'',uri:''}],
+      rulebookPDF: [{ name: '', uri: '' }],
       rounds: [],
     });
   };
@@ -189,78 +195,34 @@ const AddEvent = () => {
     });
   };
 
+
   const pickRulebookPDF = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        mimeType: 'application/pdf',
-        copyToCacheDirectory: false,
+        type: 'application/pdf',
       });
   
-      console.log("get a pdf: ", result);
-  
       if (!result.canceled) {
-        const fileUri = await getFileUri(result.assets[0].uri); // Get the file URI
-        console.log("lets see bhai ", fileUri);
-        
-        // Set the PDF info to state
-        setNewSubEvent({
-          ...newSubEvent,
-          rulebookPDF: { name: result.assets[0].name, uri: fileUri },
-        });
-  
-        // Open PDF after selecting
-        openPDF(fileUri); 
+        // console.log("Picked PDF URI: ", result.assets[0].uri);
+        const uploadedPDF = await uploadPDF(result.assets[0].uri);
+        // console.log(" hii subodh",uploadedPDF);
+        if (uploadedPDF) {
+          setNewSubEvent((prev) => ({
+            ...prev,
+            rulebookPDF: {
+              name: result.assets[0].name, // Set the name of the PDF
+              uri: uploadedPDF, // Set the URL of the uploaded PDF
+            },
+          }));
+        }
+        // console.log("Uploaded PDF Info: ", uploadedPDF);
       } else {
-        Alert.alert('Document picking cancelled.');
+        console.log('User canceled document picking');
       }
     } catch (error) {
-      Alert.alert('Error picking document:', error.message);
+      console.error("Error picking or uploading PDF:", error);
     }
   };
-  
-  const getFileUri = async (uri) => {
-    // Check if the URI starts with 'content://'
-    console.log("show me uri : ",uri);
-    if (uri.startsWith('content://')) {
-      try {
-        await MediaLibrary.requestPermissionsAsync();
-        const { status } = await MediaLibrary.requestPermissionsAsync();
-        console.log("show me status : ",status);
-if (status !== 'granted') {
-  Alert.alert('Permission to access media was denied');
-}
-
-        const asset = await MediaLibrary.getAssetInfoAsync(uri);
-        console.log("show me asset : ",asset);
-        try {
-          const asset = await MediaLibrary.getAssetInfoAsync(uri);
-          console.log("Asset info:", asset);
-      } catch (error) {
-          console.error('Error retrieving asset info:', error);
-      }
-        return asset.uri; // This returns a file URI
-      } catch (error) {
-        console.error('Error getting file URI:', error);
-        Alert.alert('Error getting file URI:', error.message);
-      }
-    }
-    return uri; // Return the original URI if it is not a content URI
-  };
-  
-  const openPDF = async (uri) => {
-    const fileInfo = await FileSystem.getInfoAsync(uri);
-    if (!fileInfo.exists) {
-      Alert.alert('File does not exist!');
-      return;
-    }
-  
-    // Use Linking to open the PDF
-    Linking.openURL(uri).catch((err) => {
-      Alert.alert('Error opening the document:', err.message);
-    });
-  };
-  
-
   const addRound = () => {
     setNewSubEvent({
       ...newSubEvent,
@@ -286,7 +248,7 @@ if (status !== 'granted') {
     setNewSubEvent({ ...newSubEvent, rounds: updatedRounds });
   };
 
-  const handleSubmit = async() => {
+  const handleSubmit = async () => {
     const eventDetails = { ...mainEvent, subEvents };
     // console.log('Event Created:', eventDetails);
     await AddEvent();
@@ -298,13 +260,14 @@ if (status !== 'granted') {
     try {
       // Get the auth token from AsyncStorage
       const token = await AsyncStorage.getItem("authToken");
-     
+
       // Combine mainEvent and subEvents into a single object
       // console.log("checking main event",mainEvent);
       const eventData = {
         ...mainEvent, // Assuming mainEvent is a state variable
         subEvents, // Assuming subEvents is a state variable
       };
+      console.log('Rulebook PDF:', subEvents);
       // console.log("whole data",eventData);
       const response = await fetch(SummaryApi.club_event_add.url, {
         method: SummaryApi.club_event_add.method,
@@ -314,7 +277,7 @@ if (status !== 'granted') {
         },
         body: JSON.stringify(eventData), // Convert the combined object to JSON string
       });
-     
+
       // Check if the response is okay (status in the range of 200-299)
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -328,7 +291,7 @@ if (status !== 'granted') {
       console.error("Error fetching events in add event.js:", err);
     }
   };
-  
+
 
   const openSubEventModal = (subEvent) => {
     setSelectedSubEvent(subEvent);
@@ -443,20 +406,20 @@ if (status !== 'granted') {
                   setNewSubEvent({ ...newSubEvent, subEventName: text })
                 }
               />
-      <View style={styles.container}>
+              <View style={styles.container}>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Enter Google Form URL"
-        value={formUrl}
-        onChangeText={setFormUrl}
-      />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter Google Form URL"
+                  value={formUrl}
+                  onChangeText={setFormUrl}
+                />
 
-      {/* Button to register for the event */}
-      <TouchableOpacity style={styles.button} onPress={openGoogleForm}>
-        <Text style={styles.buttonText}>Register for the Event</Text>
-      </TouchableOpacity>
-    </View>
+                {/* Button to register for the event */}
+                <TouchableOpacity style={styles.button} onPress={openGoogleForm}>
+                  <Text style={styles.buttonText}>Register for the Event</Text>
+                </TouchableOpacity>
+              </View>
               <TextInput
                 style={styles.input}
                 placeholder="Entry Fee"
@@ -501,18 +464,18 @@ if (status !== 'granted') {
 
               <View style={styles.pdfName}>
                 <Button title="Upload Rulebook PDF" onPress={pickRulebookPDF} />
-                  {newSubEvent.rulebookPDF ? (
-          <View>
-            <Text style={styles.pdfName}>{newSubEvent.rulebookPDF.name}</Text>
-            <Button
-              title="Open Rulebook PDF"
-              onPress={() => openPDF(newSubEvent.rulebookPDF.uri)} // Call the openPDF function with the PDF URI
-            />
-          </View>
-        ) : (
-          <Text style={styles.pdfName}>No PDF uploaded</Text>
-        )}
-                
+                {newSubEvent.rulebookPDF ? (
+                  <View>
+                    <Text style={styles.pdfName}>{newSubEvent.rulebookPDF.name}</Text>
+                    <Button
+                      title="Open Rulebook PDF"
+                      onPress={() => openPDF(newSubEvent.rulebookPDF.uri)} // Call the openPDF function with the PDF URI
+                    />
+                  </View>
+                ) : (
+                  <Text style={styles.pdfName}>No PDF uploaded</Text>
+                )}
+
               </View>
 
               {/* add google form link */}
@@ -537,14 +500,14 @@ if (status !== 'granted') {
                   />
                 </View>
               ))}
-              
+
               <Button title="Add Contact" onPress={addSubEventContact} />
               {newSubEvent.rounds.map((round, roundIndex) => (
                 <View key={roundIndex} style={styles.roundContainer}>
                   <Text style={styles.roundTitle}>Round {roundIndex + 1}</Text>
                   <TouchableOpacity
                     style={[styles.input, styles.timePicker]}
-                    onPress={() => showTimePickerModal(round-`${roundIndex}`)}
+                    onPress={() => showTimePickerModal(round - `${roundIndex}`)}
                   >
                     <Text>
                       {round.roundTime.toLocaleTimeString()}
@@ -558,19 +521,19 @@ if (status !== 'granted') {
                       value={desc}
                       onChangeText={(text) => updateRoundDescription(roundIndex, descIndex, text)}
                     />
-                    
+
                   ))
                   }
-                  
+
                   <Button
                     title="Add Description Point"
                     onPress={() => addRoundDescriptionPoint(roundIndex)}
                   />
-                  
+
                 </View>
-                
+
               )
-            )
+              )
               }
               <Button title="Add Round" onPress={addRound} />
               <Button title="Save Sub Event" onPress={handleAddSubEvent} />
@@ -589,7 +552,7 @@ if (status !== 'granted') {
       )
       }
 
-       {showTimePicker && (
+      {showTimePicker && (
         <DateTimePicker
           value={
             timePickerTarget === 'subEvent'
@@ -602,7 +565,7 @@ if (status !== 'granted') {
         />
       )}
 
-      </ScrollView>
+    </ScrollView>
   );
 };
 
@@ -648,6 +611,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   imagePicker: {
+    // width: screenWidth,       // Full screen width
+    // aspectRatio: 16 / 3,      // Aspect ratio of 16:3
+    // resizeMode: 'cover',
     padding: 10,
     marginBottom: 12,
     backgroundColor: '#f0f0f0',
@@ -723,7 +689,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 5,
-},
+  },
 });
 
 export default AddEvent;

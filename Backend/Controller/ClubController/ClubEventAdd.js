@@ -25,12 +25,12 @@ const clubEventAdd = async (req, res) => {
       eventPoster,
       description,
       eventDate,
-
       sponsors,
       subEvents
     } = req.body;
-    console.log("backend",eventName)
     // Create a new event object
+  
+    console.log("subEvents boy  ;",subEvents);
 
     const newEvent = new Event({
       clubId,             // Use the clubId from the authenticated user
@@ -44,9 +44,6 @@ const clubEventAdd = async (req, res) => {
     });
     // Save the new event to the database
     const savedEvent = await newEvent.save();
-
-    console.log("subodh",savedEvent);
-
 
     // Send success response
     return res.status(201).json({

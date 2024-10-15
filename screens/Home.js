@@ -20,7 +20,7 @@ const Home = ({ navigation, route }) => {
 
   const [modalVisible, setModalVisible] = useState(false);
   const { data } = route.params || {};
-
+  console.log("data in home",data);
   useEffect(() => {
     if (data) {
       setLoggedIn(true);

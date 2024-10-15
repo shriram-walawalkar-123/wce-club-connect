@@ -47,7 +47,7 @@ export default function PastEvents() {
 
       {/* Event Card with Poster and Details */}
       <View style={styles.card}>
-        <Image source={{ uri: item.eventPoster }} style={styles.eventImage} />
+        <Image source={{ uri: item?.eventPoster }} style={styles.eventImage} />
         <View style={styles.eventDetails}>
           <Text style={styles.clubName}>{item.clubName}</Text>
           <Text style={styles.eventDescription}>{item.description}</Text>

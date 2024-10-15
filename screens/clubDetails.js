@@ -26,11 +26,6 @@ const ClubDetailsScreen = ({ route }) => {
         },
         body: JSON.stringify({ clubId }),
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch club information.');
-      }
-
       const data = await response.json();
       setClubData(data.data); // Update the state with fetched club data
     } catch (err) {

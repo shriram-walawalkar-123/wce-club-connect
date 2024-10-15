@@ -1,16 +1,14 @@
 const bcrypt = require("bcryptjs");
 const User = require("../Models/SignUpModel");
+const Id = require('../Models/ClubIdModel');
 
 const signup = async (req, res) => {
     try {
-        // Extract the fields from the request body
-        const { name, email, clubName, collegeName, clubId, password, role,profilepic} = req?.body;
-        // console.log("profileImage",profileImage);
-        console.log(req?.body);
+        const { name, email, clubName, collegeName, clubId, password, role, profilepic } = req.body;
+        console.log(req.body);
         
         // Basic input validation
         if (!name || !email || !password || !role) {
-            console.log("here is problem d");
             return res.status(400).json({
                 success: false,
                 message: "Name, email, password, and role are required fields",
@@ -31,11 +29,20 @@ const signup = async (req, res) => {
                     message: "Club ID is required for club role",
                 });
             }
-        } else if (role === "student") { // Adjusted to include "Student"
-            if (!collegeName || collegeName.trim() === '') { // Fixed case
+
+            // Check if the clubId is present in the Id model
+            const clubIdExists = await Id.findOne({ clubId });
+            if (!clubIdExists) {
                 return res.status(400).json({
                     success: false,
-                    message: "College name is required for general role",
+                    message: "Club ID does not exist",
+                });
+            }
+        } else if (role === "student") {
+            if (!collegeName || collegeName.trim() === '') {
+                return res.status(400).json({
+                    success: false,
+                    message: "College name is required for student role",
                 });
             }
         }
@@ -68,7 +75,7 @@ const signup = async (req, res) => {
             email,
             clubName: role === "club" ? clubName : undefined,
             clubId: role === "club" ? clubId : undefined,
-            collegeName: role === "general" || role === "Student" ? collegeName : undefined, // Fixed case
+            collegeName: role === "general" || role === "student" ? collegeName : undefined,
             password: hashPassword,
             profilepic,
             role,

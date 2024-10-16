@@ -29,8 +29,8 @@ const clubEventAdd = async (req, res) => {
       subEvents
     } = req.body;
     // Create a new event object
-  
-    console.log("subEvents boy  ;",subEvents);
+     
+    // console.log("hey  ;",req.body);
 
     const newEvent = new Event({
       clubId,             // Use the clubId from the authenticated user

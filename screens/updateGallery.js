@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Button, Image, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import uploadImage from '../helper/uploadImage'; // Function to upload image
+  import uploadImage from '../helper/uploadImage'; // Function to upload image
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SummaryApi from '../backendRoutes'; // Backend API routes
 import { MaterialIcons } from '@expo/vector-icons'; // Import MaterialIcons for delete button

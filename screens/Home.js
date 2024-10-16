@@ -124,7 +124,7 @@ const Home = ({ navigation, route }) => {
           </View>
 
           {/* Heading */}
-          <Text style={styles.heading}>WCE College Clubs</Text>
+          <Text style={styles.heading}>WCE College</Text>
 
           {/* Navigation bar */}
           <View style={styles.navBar}>

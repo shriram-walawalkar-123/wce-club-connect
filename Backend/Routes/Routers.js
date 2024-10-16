@@ -25,7 +25,7 @@ const signup = require('../Controller/SignUp');
 const login = require('../Controller/LogIn');
 const { clubIdCreate } = require('../Controller/AdminController/ClubIdCreate');
 const  getAllClubId = require('../Controller/AdminController/GetAllClubId');
-const getClubMemberCommon = require('../Controller/CommonController/GetClubMemberCommon');
+const getClubMemberCommon = require('../Controller/CommonController/getClubMemberCommon');
 // user route
 router.post("/sign-up",signup);
 

@@ -14,7 +14,7 @@ app.use(express.json()); // Allows the app to parse JSON data in the request bod
 
 // Enable Cross-Origin Resource Sharing (CORS) for all routes
 app.use(cors({
-  origin: process.env.FRONTEND_URL,  // Ensure this matches the frontend URL
+  origin: true || process.dotenv.FRONTEND_URL,  // Ensure this matches the frontend URL
   credentials: true  // This must be true to allow cookies to be sent
 })); // This middleware allows handling requests from different origins
 

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import SummaryApi from '../backendRoutes';
 import { useNavigation } from '@react-navigation/native';
 
-const UpcomingEventsScreen = ({ route }) => {
+const UpcommingEventsInfo= ({ route }) => {
   const { clubId } = route.params;
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,13 +19,12 @@ const UpcomingEventsScreen = ({ route }) => {
         },
         body: JSON.stringify({ clubId }),
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch upcoming events of the club.');
-      }
-
       const data = await response.json();
-      setUpcomingEvents(data.data); // Update the state with fetched events
+      if(data.success===true){
+        setUpcomingEvents(data.data); // Update the state with fetched events
+      }else{
+        Alert("not only upcomming events");
+      }
     } catch (err) {
       console.error(err); // Log error for debugging
     } finally {
@@ -146,4 +145,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default UpcomingEventsScreen;
+export default UpcommingEventsInfo;

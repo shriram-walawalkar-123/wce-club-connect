@@ -1,7 +1,7 @@
 // const backend_url = "https://wce-club-connect.onrender.com/api/v1";
 const render = "https://wce-club-connect.onrender.com/api/v1";
 const local = "http://192.168.30.40:5000/api/v1";
-const backend_url = local
+const backend_url = render
 
 const SummaryApi = {
     signUp: { // Changed to camelCase and used quotes for keys with hyphens

@@ -3,13 +3,13 @@ const Club = require("../../Models/ClubModel"); // Import the Club model
 const deleteGalleryImage = async (req, res) => {
   try {
     const { imageId } = req.body; // Expecting `imageId` in the request body
-    console.log("Received imageId:", imageId);
+    // console.log("Received imageId:", imageId);
 
     const clubId = req.user.id; // Assuming the user object contains the club's ID
 
     // Find the club by ID (replace clubId field with the correct one if needed)
     let club = await Club.findOne({ clubId });
-    console.log("club is if galary",club);
+    // console.log("club is if galary",club);
     if (!club) {
       return res.status(404).json({
         success: false,

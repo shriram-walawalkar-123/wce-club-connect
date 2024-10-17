@@ -2,7 +2,7 @@ const Club=require('../../Models/ClubModel')
 const mongoose = require('mongoose');
 // Create or Update club details
 const clubDescription = async (req, res) => {
-    console.log("userdata",req);
+    // console.log("userdata",req);
     try {
         const {
             clubName,
@@ -16,7 +16,7 @@ const clubDescription = async (req, res) => {
             facultyAdvisor
         } = req?.body;
         const id=req?.user?.id;
-        console.log("facultyAdvisor",req.body);
+        // console.log("facultyAdvisor",req.body);
         const clubId = mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : id;
         // console.log("clubId",clubId);
 

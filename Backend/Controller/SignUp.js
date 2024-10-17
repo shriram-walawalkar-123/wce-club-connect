@@ -5,7 +5,7 @@ const Id = require('../Models/ClubIdModel');
 const signup = async (req, res) => {
     try {
         const { name, email, clubName, collegeName, clubId, password, role, profilepic } = req.body;
-        console.log(req.body);
+        // console.log(req.body);
         
         // Basic input validation
         if (!name || !email || !password || !role) {

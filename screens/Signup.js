@@ -80,7 +80,7 @@ const Signup = () => {
           collegeName, 
           clubId, 
           role: isStudentSignup ? "student" : "club", 
-          profilepic: uploadedImageUrl?.url 
+          profilepic: uploadedImageUrl?.secure_url, 
         }),
       });
       const result = await response.json();

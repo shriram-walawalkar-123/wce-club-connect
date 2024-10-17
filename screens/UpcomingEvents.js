@@ -1,13 +1,35 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, Image, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
-import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
-import SummaryApi from '../backendRoutes';
+import React, { useEffect, useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  Image,
+  FlatList,
+  ActivityIndicator,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  Animated,
+  Dimensions,
+  Alert,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
+import * as Haptics from 'expo-haptics';
+import SummaryApi from '../backendRoutes';
+import RegisterEvent from '../Modal/RegisterEvent';
 
-const UpcomingEventsScreen = () => {
+const { width, height } = Dimensions.get('window');
+const ITEM_SIZE = width * 0.72;
+const SPACING = 10;
+const FULL_SIZE = ITEM_SIZE + SPACING * 2;
+
+const UpcomingEventsScreen= () => {
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isModalVisible, setModalVisible] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const navigation = useNavigation();
+  const scrollX = useRef(new Animated.Value(0)).current;
 
   const fetchUpcomingEvents = async () => {
     try {
@@ -18,7 +40,11 @@ const UpcomingEventsScreen = () => {
         },
       });
       const data = await response.json();
-      setUpcomingEvents(data.data);
+      if(data.success===true){
+        setUpcomingEvents([{ key: 'left-spacer' }, ...data.data, { key: 'right-spacer' }]);
+      }else{
+        Alert("error to get events");
+      }
     } catch (error) {
       console.error('Error fetching events:', error.message);
     } finally {
@@ -30,96 +56,219 @@ const UpcomingEventsScreen = () => {
     fetchUpcomingEvents();
   }, []);
 
-  const renderItem = ({ item }) => (
-    <TouchableOpacity 
-      style={styles.eventContainer}
-      onPress={() => navigation.navigate('showEvent', { event: item })}
-    >
-      <Image source={{ uri: item?.eventPoster }} style={styles.eventImage} />
-      <View style={styles.eventContent}>
-        <Text style={styles.eventName}>{item.eventName}</Text>
-        <View style={styles.eventDetailsRow}>
-          <FontAwesome5 name="calendar-alt" size={16} color="#555" />
-          <Text style={styles.eventDetails}>
-            {new Date(item.eventDate).toLocaleDateString()}
-          </Text>
-        </View>
-        <View style={styles.eventDetailsRow}>
-          <MaterialIcons name="location-on" size={16} color="#555" />
-          <Text style={styles.eventDetails}>{item.description}</Text>
-        </View>
-        {item.fee && (
-          <View style={styles.eventDetailsRow}>
-            <FontAwesome5 name="money-bill-wave" size={16} color="#555" />
-            <Text style={styles.eventDetails}>Fee: ${item.fee}</Text>
-          </View>
-        )}
-      </View>
-    </TouchableOpacity>
-  );
+  const openRegisterEventModal = (event) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setSelectedEvent(event);
+    setModalVisible(true);
+  };
+
+  const closeRegisterEventModal = () => {
+    setModalVisible(false);
+    setSelectedEvent(null);
+  };
+
+  const renderItem = ({ item, index }) => {
+    if (!item.eventName) {
+      return <View style={{ width: SPACING }} />;
+    }
+
+    const inputRange = [
+      (index - 2) * FULL_SIZE,
+      (index - 1) * FULL_SIZE,
+      index * FULL_SIZE,
+    ];
+
+    const translateY = scrollX.interpolate({
+      inputRange,
+      outputRange: [0, -50, 0],
+    });
+
+    const scale = scrollX.interpolate({
+      inputRange,
+      outputRange: [0.8, 1, 0.8],
+    });
+
+    const opacity = scrollX.interpolate({
+      inputRange,
+      outputRange: [0.5, 1, 0.5],
+    });
+
+    return (
+      <Animated.View
+        style={[
+          styles.eventContainer,
+          { transform: [{ translateY }, { scale }], opacity },
+        ]}
+      >
+        <LinearGradient
+          colors={['#6C63FF', '#4CAF50']}
+          style={styles.gradientBackground}
+        >
+          <TouchableOpacity
+            style={styles.card}
+            onPress={() => navigation.navigate('showEvent', { event: item })}
+          >
+            <View style={styles.imageContainer}>
+              <Image source={{ uri: item.eventPoster }} style={styles.eventImage} />
+            </View>
+            <View style={styles.detailsContainer}>
+              <Text style={styles.eventName}>{item.eventName}</Text>
+              <Text style={styles.eventDate}>
+                {new Date(item.eventDate).toLocaleDateString()}
+              </Text>
+              <Text style={styles.eventDescription}>{item.description}</Text>
+              <TouchableOpacity
+                style={styles.registerButton}
+                onPress={() => openRegisterEventModal(item)}
+              >
+                <Text style={styles.registerButtonText}>Register Now</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </LinearGradient>
+      </Animated.View>
+    );
+  };
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#6C63FF" />
       </View>
     );
   }
 
   return (
-    <FlatList
-      data={upcomingEvents}
-      keyExtractor={(item, index) => index.toString()}
-      renderItem={renderItem}
-      contentContainerStyle={styles.listContent}
-    />
+    <View style={styles.container}>
+      <Animated.FlatList
+        data={upcomingEvents}
+        keyExtractor={(item) => item.id || item.key}
+        renderItem={renderItem}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.listContent}
+        snapToInterval={FULL_SIZE}
+        decelerationRate="fast"
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+          { useNativeDriver: true }
+        )}
+      />
+      <Modal
+        visible={isModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={closeRegisterEventModal}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <RegisterEvent event={selectedEvent} onClose={closeRegisterEventModal} />
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F0F4F8',
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   listContent: {
+    alignItems: 'center',
     paddingVertical: 16,
   },
   eventContainer: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
+    width: ITEM_SIZE,
+    height: height * 0.7,
+    marginHorizontal: SPACING,
+    borderRadius: 24,
     overflow: 'hidden',
+  },
+  gradientBackground: {
+    flex: 1,
+    borderRadius: 24,
+  },
+  card: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderRadius: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowRadius: 20,
     elevation: 5,
+    padding: 10,
+    margin: 2,
+  },
+  imageContainer: {
+    height: '60%',
+    marginBottom: 10,
   },
   eventImage: {
     width: '100%',
-    height: 200,
-    resizeMode: 'cover',
+    height: '100%',
+    borderRadius: 15,
   },
-  eventContent: {
-    padding: 16,
+  detailsContainer: {
+    padding: 10,
   },
   eventName: {
+    fontSize: 24,
     fontWeight: 'bold',
-    fontSize: 18,
-    marginBottom: 8,
+    marginBottom: 4,
     color: '#333',
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
-  eventDetailsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  eventDetails: {
-    fontSize: 14,
+  eventDate: {
+    fontSize: 16,
+    fontWeight: '600',
     color: '#555',
-    marginLeft: 8,
+    marginBottom: 8,
+  },
+  eventDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 16,
+  },
+  registerButton: {
+    backgroundColor: '#FF6B6B',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  registerButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: '90%',
+    maxHeight: '80%',
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    overflow: 'hidden',
   },
 });
 

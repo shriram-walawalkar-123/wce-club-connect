@@ -22,7 +22,7 @@ const EditEvent = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const eventToEdit = route.params?.event || {};
-  console.log("eventEdit data", eventToEdit);
+  // console.log("eventEdit data", eventToEdit);
   const [formUrl, setFormUrl] = useState(eventToEdit.formUrl || '');
 
   const [mainEvent, setMainEvent] = useState({
@@ -239,7 +239,7 @@ const EditEvent = () => {
         body: JSON.stringify(eventDetails), // Convert the combined object to JSON string
       });
       const data = await response?.json();
-      console.log("data", data);
+      // console.log("data", data);
       // if (data.success) {
       //   setAllEvent(data.events);
       // }

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, FlatList, Image, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, FlatList, Image, StyleSheet, Alert } from 'react-native';
 import SummaryApi from '../backendRoutes';
 
-const PastEventsScreen = ({ route }) => {
+const PastEventInfo = ({ route }) => {
   const { clubId } = route.params;
   const [pastEvents, setPastEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,7 +17,11 @@ const PastEventsScreen = ({ route }) => {
         body: JSON.stringify({ clubId }),
       });
       const data = await response.json();
-      setPastEvents(data.data); // Update the state with fetched events
+      if(data.success===true){
+        setPastEvents(data.data); // Update the state with fetched events
+      }else{
+        Alert("error to get past Events");
+      }
     } catch (err) {
       console.error(err); // Log error for debugging
     } finally {
@@ -131,4 +135,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PastEventsScreen;
+export default PastEventInfo;

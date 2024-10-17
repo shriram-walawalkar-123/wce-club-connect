@@ -1,201 +1,353 @@
-import { StyleSheet, Text, View, TextInput, Button, Modal, Image } from 'react-native';
 import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Modal, ScrollView, FlatList, Alert } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
 import Contact from './Contact';
 import Round from './Round';
 import * as DocumentPicker from 'expo-document-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import uploadPDF from '../helper/uploadPDF'; // Adjust the import path as necessary
-import uploadImage from '../helper/uploadImage'; // Import the uploadImage function
+import uploadPDF from '../helper/uploadPDF';
 
 export default function SubEvent({ setEvent, event, closeModal }) {
-  const [subEventName, setSubEventName] = useState(event.subEvents[0].subEventName);
-  const [entryFee, setEntryFee] = useState(event.subEvents[0].entryFee);
-  const [description, setDescription] = useState(event.subEvents[0].description);
-  const [date, setDate] = useState(event.subEvents[0].date || new Date());
-  const [time, setTime] = useState(event.subEvents[0].time || new Date());
-  const [venue, setVenue] = useState(event.subEvents[0].venue);
-  const [formUrl, setFormUrl] = useState(event.subEvents[0].formUrl);
-  const [rulebookPDF, setRulebookPDF] = useState({ name: '', uri: '' }); // PDF state
-   
-  // Modal state for Contact and Round
+  const [subEvents, setSubEvents] = useState(event.subEvents || []);
+  const [currentSubEventId, setCurrentSubEventId] = useState(null);
+
   const [contactModalVisible, setContactModalVisible] = useState(false);
   const [roundModalVisible, setRoundModalVisible] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const [contacts, setContacts] = useState(event.subEvents[0].contacts || []);
-  const [rounds, setRounds] = useState(event.subEvents[0].rounds || []);
+  useEffect(() => {
+    if (subEvents.length === 0) {
+      addNewSubEvent();
+    } else {
+      setCurrentSubEventId(subEvents[0].id);
+    }
+  }, []);
 
-  // Function to pick a PDF document for the rulebook
+  const addNewSubEvent = () => {
+    const newSubEvent = {
+      id: `${Date.now()}-${Math.random()}`,
+      subEventName: '',
+      entryFee: '',
+      description: '',
+      date: new Date(),
+      time: new Date(),
+      venue: '',
+      formUrl: '',
+      rulebookPDF: { name: '', uri: '' },
+      contacts: [],
+      rounds: [],
+    };
+    setSubEvents((prevSubEvents) => [...prevSubEvents, newSubEvent]);
+    setCurrentSubEventId(newSubEvent.id);
+  };
+
+console.log("subevent info",subEvents)
+
+  const deleteSubEvent = (id) => {
+    Alert.alert(
+      "Delete Sub Event",
+      "Are you sure you want to delete this sub event?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          onPress: () => {
+            const updatedSubEvents = subEvents.filter(subEvent => subEvent.id !== id);
+            setSubEvents(updatedSubEvents);
+            setCurrentSubEventId(updatedSubEvents[0]?.id || null);
+          },
+          style: "destructive"
+        }
+      ]
+    );
+  };
+
+  const updateSubEvent = (field, value) => {
+    setSubEvents((prevSubEvents) =>
+      prevSubEvents.map((subEvent) =>
+        subEvent.id === currentSubEventId
+          ? { ...subEvent, [field]: value }
+          : subEvent
+      )
+    );
+  };
+
   const pickRulebook = async () => {
-    let result = await DocumentPicker.getDocumentAsync({
-      type: 'application/pdf',
-    });
+    let result = await DocumentPicker.getDocumentAsync({ type: 'application/pdf' });
     if (!result.canceled) {
-      // Log the selected document info before updating the state
-      console.log("Selected PDF:", result.assets[0]);
-      
-      setRulebookPDF({ name: result.assets[0].name, uri: result.assets[0].uri });
-      
-      // Log the PDF state after it's been set
-      console.log("Updated PDF State:", { name: result.assets[0].name, uri: result.assets[0].uri });
+      updateSubEvent('rulebookPDF', { name: result.assets[0].name, uri: result.assets[0].uri });
     }
   };
 
-  // Effect to log when PDF state updates
-  useEffect(() => {
-    console.log("PDF State Updated:", rulebookPDF);
-  }, [rulebookPDF]);
+  const handleUpdateSubEvents = async () => {
+    const updatedSubEvents = await Promise.all(subEvents.map(async (subEvent) => {
+      let uploadedPDFUrl = null;
+      if (subEvent.rulebookPDF.uri) {
+        uploadedPDFUrl = await uploadPDF(subEvent.rulebookPDF.uri);
+      }
+      return {
+        ...subEvent,
+        rulebookPDF: uploadedPDFUrl ? { name: subEvent.rulebookPDF.name, uri: uploadedPDFUrl } : subEvent.rulebookPDF,
+      };
+    }));
 
-  const handleUpdateSubEvent = async () => {
-    // Upload rulebook rulebookPDF if a file has been selected
-    let uploadedPDFUrl = null;
-    if (rulebookPDF.uri) {
-      uploadedPDFUrl = await uploadPDF(rulebookPDF.uri);
-      console.log("Uploaded PDF URL:", uploadedPDFUrl);
-    }
-
-    // Update the event with the new sub-event details
     setEvent(prevEvent => ({
       ...prevEvent,
-      subEvents: [
-        {
-          subEventName,
-          entryFee,
-          description,
-          date,
-          time,
-          venue,
-          formUrl,
-          rulebookPDF: rulebookPDF,
-          contacts,
-          rounds,
-        },
-      ],
+      subEvents: updatedSubEvents,
     }));
-    closeModal(); // Close modal after updating
+    closeModal();
   };
 
-  const handleTimeChange = (event, selectedTime) => {
-    const currentTime = selectedTime || time; // Use the selected time or the existing time
-    setShowTimePicker(false); // Hide the picker after selection
-    setTime(currentTime); // Update the time state
-  };
+  const renderSubEventItem = ({ item }) => (
+    <View style={styles.subEventItemContainer}>
+      <TouchableOpacity
+        style={[styles.subEventItem, currentSubEventId === item.id && styles.selectedSubEvent]}
+        onPress={() => setCurrentSubEventId(item.id)}
+      >
+        <Text style={styles.subEventItemText}>{item.subEventName || 'Unnamed Sub Event'}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.deleteButton}
+        onPress={() => deleteSubEvent(item.id)}
+      >
+        <Icon name="close-circle" size={24} color="#FF5722" />
+      </TouchableOpacity>
+    </View>
+  );
 
-  const handleDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || date; // Use the selected date or the existing date
-    setShowDatePicker(false); // Hide the picker after selection
-    setDate(currentDate); // Update the date state
-  };
+  const currentSubEvent = subEvents.find(subEvent => subEvent.id === currentSubEventId);
 
   return (
-    <View>
-      <Text>Sub Event</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Sub Events</Text>
 
-      {/* Sub Event Name */}
-      <TextInput
-        placeholder="Sub Event Name"
-        value={subEventName}
-        onChangeText={setSubEventName}
-      />
-
-      {/* Entry Fee */}
-      <TextInput
-        placeholder="Entry Fee"
-        value={entryFee}
-        onChangeText={setEntryFee}
-        keyboardType="numeric"
-      />
-
-      {/* Description */}
-      <TextInput
-        placeholder="Description"
-        value={description}
-        onChangeText={setDescription}
-        multiline
-      />
-
-      {/* Date Picker */}
-      <Button title="Select Date" onPress={() => setShowDatePicker(true)} />
-      {showDatePicker && (
-        <DateTimePicker
-          value={date || new Date()} // Use the selected date or current date
-          mode="date" // Set mode to "date"
-          display="default"
-          onChange={handleDateChange}
+      <View style={styles.subEventList}>
+        <FlatList
+          data={subEvents}
+          renderItem={renderSubEventItem}
+          keyExtractor={item => item.id}
+          horizontal
+          showsHorizontalScrollIndicator={false}
         />
-      )}
-      {date && (
-        <Text>Selected Date: {date.toLocaleDateString()}</Text>
-      )}
+        <TouchableOpacity style={styles.addButton} onPress={addNewSubEvent}>
+          <Icon name="add-circle" size={24} color="#4CAF50" />
+        </TouchableOpacity>
+      </View>
 
-      {/* Time Picker */}
-      <Button title="Select Time" onPress={() => setShowTimePicker(true)} />
-      {showTimePicker && (
-        <DateTimePicker
-          value={time || new Date()} // Use the selected time or current time
-          mode="time" // Set mode to "time"
-          display="default"
-          onChange={handleTimeChange}
-        />
-      )}
-      {time && (
-        <Text>Selected Time: {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
-      )}
+      <ScrollView style={styles.form}>
+        {currentSubEvent && (
+          <>
+            <TextInput
+              style={styles.input}
+              placeholder="Sub Event Name"
+              value={currentSubEvent.subEventName}
+              onChangeText={(text) => updateSubEvent('subEventName', text)}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Entry Fee"
+              value={currentSubEvent.entryFee}
+              onChangeText={(text) => updateSubEvent('entryFee', text)}
+              keyboardType="numeric"
+            />
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="Description"
+              value={currentSubEvent.description}
+              onChangeText={(text) => updateSubEvent('description', text)}
+              multiline
+            />
+            <TouchableOpacity style={styles.dateTimeButton} onPress={() => setShowDatePicker(true)}>
+              <Icon name="calendar" size={24} color="#2196F3" />
+              <Text style={styles.dateTimeText}>
+                {currentSubEvent.date.toLocaleDateString()}
+              </Text>
+            </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={currentSubEvent.date}
+                mode="date"
+                display="default"
+                onChange={(event, selectedDate) => {
+                  setShowDatePicker(false);
+                  if (selectedDate) updateSubEvent('date', selectedDate);
+                }}
+              />
+            )}
+            <TouchableOpacity style={styles.dateTimeButton} onPress={() => setShowTimePicker(true)}>
+              <Icon name="time" size={24} color="#2196F3" />
+              <Text style={styles.dateTimeText}>
+                {currentSubEvent.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </Text>
+            </TouchableOpacity>
+            {showTimePicker && (
+              <DateTimePicker
+                value={currentSubEvent.time}
+                mode="time"
+                display="default"
+                onChange={(event, selectedTime) => {
+                  setShowTimePicker(false);
+                  if (selectedTime) updateSubEvent('time', selectedTime);
+                }}
+              />
+            )}
+            <TextInput
+              style={styles.input}
+              placeholder="Venue"
+              value={currentSubEvent.venue}
+              onChangeText={(text) => updateSubEvent('venue', text)}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Form URL"
+              value={currentSubEvent.formUrl}
+              onChangeText={(text) => updateSubEvent('formUrl', text)}
+            />
+            <TouchableOpacity style={styles.button} onPress={pickRulebook}>
+              <Icon name="document" size={24} color="#FFFFFF" />
+              <Text style={styles.buttonText}>Pick Rulebook PDF</Text>
+            </TouchableOpacity>
+            {currentSubEvent.rulebookPDF.name && (
+              <Text style={styles.pdfName}>{currentSubEvent.rulebookPDF.name}</Text>
+            )}
+            <TouchableOpacity style={styles.button} onPress={() => setContactModalVisible(true)}>
+              <Icon name="people" size={24} color="#FFFFFF" />
+              <Text style={styles.buttonText}>Add Contacts</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.button} onPress={() => setRoundModalVisible(true)}>
+              <Icon name="trophy" size={24} color="#FFFFFF" />
+              <Text style={styles.buttonText}>Add Rounds</Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </ScrollView>
 
-      {/* Venue */}
-      <TextInput
-        placeholder="Venue"
-        value={venue}
-        onChangeText={setVenue}
-      />
+      <View style={styles.actionButtons}>
+        <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={closeModal}>
+          <Text style={styles.buttonText}>Cancel</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.button, styles.updateButton]} onPress={handleUpdateSubEvents}>
+          <Text style={styles.buttonText}>Update Sub Events</Text>
+        </TouchableOpacity>
+      </View>
 
-      {/* Form URL */}
-      <TextInput
-        placeholder="Form URL"
-        value={formUrl}
-        onChangeText={setFormUrl}
-      />
-
-      {/* Rulebook PDF Picker */}
-      <Button title="Pick Rulebook PDF" onPress={pickRulebook} />
-      {rulebookPDF.name ? <Text>Selected rulebookPDF: {rulebookPDF.name}</Text> : null}
-
-      {/* Open Contact Modal */}
-      <Button title="Add Contacts" onPress={() => setContactModalVisible(true)} />
-      <Modal
-        visible={contactModalVisible}
-        transparent={false}
-        animationType="slide"
-        onRequestClose={() => setContactModalVisible(false)}
-      >
+      {/* Contact Modal */}
+      <Modal visible={contactModalVisible} animationType="slide">
         <Contact
-          setContacts={setContacts}
-          contacts={contacts}
           closeModal={() => setContactModalVisible(false)}
+          subEvent={currentSubEvent}
+          updateSubEvent={updateSubEvent}
         />
       </Modal>
 
-      {/* Open Round Modal */}
-      <Button title="Add Rounds" onPress={() => setRoundModalVisible(true)} />
-      <Modal
-        visible={roundModalVisible}
-        transparent={false}
-        animationType="slide"
-        onRequestClose={() => setRoundModalVisible(false)}
-      >
+      {/* Round Modal */}
+      <Modal visible={roundModalVisible} animationType="slide">
         <Round
-          setRounds={setRounds}
-          rounds={rounds}
           closeModal={() => setRoundModalVisible(false)}
+          subEvent={currentSubEvent}
+          updateSubEvent={updateSubEvent}
         />
       </Modal>
-
-      {/* Update Button */}
-      <Button title="Update Sub Event" onPress={handleUpdateSubEvent} />
-      <Button title="Close" onPress={closeModal} />
     </View>
   );
 }
 
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#F5F5F5',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#333',
+  },
+  subEventList: {
+    flexDirection: 'row',
+    marginBottom: 20,
+  },
+  subEventItem: {
+    padding: 10,
+    marginRight: 10,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 20,
+  },
+  selectedSubEvent: {
+    backgroundColor: '#2196F3',
+  },
+  subEventItemText: {
+    color: '#333',
+  },
+  addButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 40,
+  },
+  form: {
+    flex: 1,
+  },
+  input: {
+    backgroundColor: '#FFFFFF',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  textArea: {
+    height: 100,
+    textAlignVertical: 'top',
+  },
+  dateTimeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  dateTimeText: {
+    marginLeft: 10,
+    color: '#333',
+  },
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#2196F3',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    marginLeft: 10,
+  },
+  pdfName: {
+    marginBottom: 10,
+    color: '#666',
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  cancelButton: {
+    backgroundColor: '#FF5722',
+    flex: 1,
+    marginRight: 5,
+  },
+  updateButton: {
+    backgroundColor: '#4CAF50',
+    flex: 1,
+    marginLeft: 5,
+  },
+  subEventItemContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  deleteButton: {
+    marginLeft: 5,
+  },
+});

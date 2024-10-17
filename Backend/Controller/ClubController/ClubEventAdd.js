@@ -1,10 +1,9 @@
-const Event=require("../../Models/EventModel")
+const Event = require("../../Models/EventModel");
+
 const clubEventAdd = async (req, res) => {
   try {
-    // Extract clubId from the authenticated user's data
     const clubId = req?.user?.id;
 
-    // Check if clubId exists
     if (!clubId) {
       return res.status(400).json({
         success: false,
@@ -12,13 +11,6 @@ const clubEventAdd = async (req, res) => {
       });
     }
 
-    // Extract main event and sub-event data from the request body
-    // const {
-    //   mainEvent,  // Destructuring the main event object
-    //   subEvents   // Directly using the subEvents array from req.body
-    // } = req.body;
-
-    // Extract the individual main event fields from the nested 'mainEvent' object
     const {
       clubName,
       eventName,
@@ -28,24 +20,26 @@ const clubEventAdd = async (req, res) => {
       sponsors,
       subEvents
     } = req.body;
-    // Create a new event object
-     
-    // console.log("hey  ;",req.body);
+
+    // Process sponsors to ensure image is a string
+    const processedSponsors = sponsors.map(sponsor => ({
+      ...sponsor,
+      image: sponsor.image?.secure_url || sponsor.image
+    }));
 
     const newEvent = new Event({
-      clubId,             // Use the clubId from the authenticated user
+      clubId,
       clubName,
       eventName,
       eventPoster,
       description,
       eventDate,
-      sponsors,
+      sponsors: processedSponsors,
       subEvents
     });
-    // Save the new event to the database
+    console.log("subevemt backend",subEvents);
     const savedEvent = await newEvent.save();
 
-    // Send success response
     return res.status(201).json({
       success: true,
       message: 'Event created successfully',
@@ -53,7 +47,6 @@ const clubEventAdd = async (req, res) => {
     });
   } catch (err) {
     console.error('Error creating event:', err);
-    // Send error response
     return res.status(500).json({
       success: false,
       message: 'Failed to create event',

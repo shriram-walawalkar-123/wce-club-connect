@@ -7,7 +7,6 @@ import Home from './screens/Home';
 import Login from './screens/Login';
 import Signup from './screens/Signup';
 import { store } from './store'; // Import your Redux store
-import PastEvents from './screens/PastEvents';
 import ClubOptionsScreen from './screens/ClubOptions';
 import UpdateClubInfoScreen from './screens/updateDescription';
 import UpdateMembersScreen from './screens/updateMember';
@@ -19,11 +18,14 @@ import MembersInfo from './screens/memberInfo';
 import GalleryInfo from './screens/galleryInfo';
 import DescriptionInfo from './screens/DescriptionInfo';
 import UploadEventScreen from './screens/UploadEvent';
-import UpcomingEventsScreen from './screens/UpcomingEvents';
 import AddEvent from './screens/addEvent';
 import ShowEvent from './screens/showEvent';
 import EditEvent from './screens/EditEventScreen';
 import AdminScreen from './screens/AdminScreen';
+import PastEventInfo from './screens/PastEventInfo';
+import PastEventsScreen from './screens/PastEvents';
+import UpcomingEventsScreen from './screens/UpcomingEvents';
+import UpcommingEventsInfo from './screens/UpcommingEventInfo';
 
 const Stack = createStackNavigator();
 
@@ -36,7 +38,6 @@ export default function App() {
           <Stack.Screen name="Home" component={Home}  />
           <Stack.Screen name="Login" component={Login} />
           <Stack.Screen name="Signup" component={Signup} />
-          <Stack.Screen name="PastEvents" component={PastEvents} />
           <Stack.Screen name="ClubOptionsScreen" component={ClubOptionsScreen} />
           <Stack.Screen name="UpdateClubInfoScreen" component={UpdateClubInfoScreen} />
           <Stack.Screen name="UpdateMembersScreen" component={UpdateMembersScreen} />
@@ -48,11 +49,14 @@ export default function App() {
           <Stack.Screen name="GalleryInfo" component={GalleryInfo}/>
           <Stack.Screen name="DescriptionInfo" component={DescriptionInfo}/>
           <Stack.Screen name="UploadEventScreen" component={UploadEventScreen}/>
-          <Stack.Screen name="UpcomingEventsScreen" component={UpcomingEventsScreen}/>
           <Stack.Screen name="AddEvent" component={AddEvent}/>
           <Stack.Screen name="showEvent" component={ShowEvent}></Stack.Screen>
           <Stack.Screen name="EditEvent" component={EditEvent}/>
           <Stack.Screen name="AdminScreen" component={AdminScreen}/>
+          <Stack.Screen name="PastEventInfo" component={PastEventInfo}/>
+          <Stack.Screen name="PastEventsScreen" component={PastEventsScreen}/>
+          <Stack.Screen name="UpcomingEventsScreen" component={UpcomingEventsScreen}/>
+          <Stack.Screen name="UpcommingEventsInfo" component={UpcommingEventsInfo}/>
 
         </Stack.Navigator>
       </NavigationContainer>

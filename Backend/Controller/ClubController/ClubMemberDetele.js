@@ -4,7 +4,7 @@ const clubMemberDelete = async (req, res) => {
     try {
         const { MemberId } = req?.body; // Extract MemberId from request body
         const clubId = req?.user.id; // Extract clubId from authenticated user
-        console.log("MemberId:", MemberId, "ClubId:", clubId);
+        // console.log("MemberId:", MemberId, "ClubId:", clubId);
         // Check if the member exists in the club
         const member = await ClubMember.findOne({ clubId, _id: MemberId });
         if (!member) {

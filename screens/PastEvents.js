@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Text, View, Image, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, Image, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity, Button } from 'react-native';
+import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import SummaryApi from '../backendRoutes';
+import { useNavigation } from '@react-navigation/native';
 
-export default function PastEvents() {
-  const [pastEvents, setPastEvents] = useState([]); // State to hold past events
-  const [loading, setLoading] = useState(true); // Loading state
+const PastEventsScreen = () => {
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
 
-  // Function to fetch past events from the backend
-  const fetchPastEvents = async () => {
+  const fetchUpcomingEvents = async () => {
     try {
       const response = await fetch(SummaryApi.get_all_past_events.url, {
         method: SummaryApi.get_all_past_events.method,
@@ -15,126 +17,131 @@ export default function PastEvents() {
           'Content-Type': 'application/json',
         },
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch past events');
-      }
-
       const data = await response.json();
-      console.log("All past events:", data);
-
-      if (data.data && data.data.length > 0) {
-        setPastEvents(data.data); // Update state if events exist
-      } else {
-        console.log("No past events found.");
-        setPastEvents([]); // Ensure it's empty when no events found
-      }
-    } catch (err) {
-      console.error(err.message);
+      setUpcomingEvents(data.data);
+    } catch (error) {
+      console.error('Error fetching events:', error.message);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchPastEvents(); // Fetch events on component mount
+    fetchUpcomingEvents();
   }, []);
 
   const renderItem = ({ item }) => (
-    <View style={styles.eventCard}>
-      {/* Event Name */}
-      <Text style={styles.eventName}>{item.eventName}</Text>
-
-      {/* Event Card with Poster and Details */}
-      <View style={styles.card}>
+    <View style={styles.eventContainer}>
+      <TouchableOpacity 
+        onPress={() => navigation.navigate('showEvent', { event: item })}
+      > 
         <Image source={{ uri: item?.eventPoster }} style={styles.eventImage} />
-        <View style={styles.eventDetails}>
-          <Text style={styles.clubName}>{item.clubName}</Text>
-          <Text style={styles.eventDescription}>{item.description}</Text>
+        <View style={styles.eventContent}>
+          <Text style={styles.eventName}>{item.eventName}</Text>
+          <View style={styles.eventDetailsRow}>
+            <FontAwesome5 name="calendar-alt" size={16} color="#555" />
+            <Text style={styles.eventDetails}>
+              {new Date(item.eventDate).toLocaleDateString()}
+            </Text>
+          </View>
+          <View style={styles.eventDetailsRow}>
+            <MaterialIcons name="location-on" size={16} color="#555" />
+            <Text style={styles.eventDetails}>{item.description}</Text>
+          </View>
+          {item.fee && (
+            <View style={styles.eventDetailsRow}>
+              <FontAwesome5 name="money-bill-wave" size={16} color="#555" />
+              <Text style={styles.eventDetails}>Fee: ${item.fee}</Text>
+            </View>
+          )}
         </View>
-      </View>
+      </TouchableOpacity>
+      
+      {/* Register button */}
+      <TouchableOpacity 
+        style={styles.registerButton}
+        onPress={() => navigation.navigate('Register', { event: item })}
+      >
+        <Text style={styles.registerButtonText}>Register</Text>
+      </TouchableOpacity>
     </View>
   );
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#003366" />
-      </View>
-    );
-  }
-
-  // Check if there are no past events to display
-  if (pastEvents.length === 0) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.noEventsText}>No past events found.</Text>
+        <ActivityIndicator size="large" color="#0000ff" />
       </View>
     );
   }
 
   return (
     <FlatList
-      data={pastEvents}
+      data={upcomingEvents}
       keyExtractor={(item, index) => index.toString()}
       renderItem={renderItem}
       contentContainerStyle={styles.listContent}
     />
   );
-}
+};
 
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  noEventsText: {
-    fontSize: 18,
-    color: '#666',
   },
   listContent: {
-    paddingBottom: 20,
-    paddingTop: 10,
+    paddingVertical: 16,
   },
-  eventCard: {
-    marginBottom: 20,
-    paddingHorizontal: 16,
-  },
-  eventName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#003366',
-    marginBottom: 8,
-  },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
+  eventContainer: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
     elevation: 5,
-    borderWidth: 2,         // Thickness of the border
-    borderColor: 'black',
   },
   eventImage: {
     width: '100%',
-    height: 180,
+    height: 200,
+    resizeMode: 'cover',
   },
-  eventDetails: {
+  eventContent: {
     padding: 16,
   },
-  clubName: {
-    fontSize: 16,
-    fontWeight: '600',
+  eventName: {
+    fontWeight: 'bold',
+    fontSize: 18,
+    marginBottom: 8,
     color: '#333',
-    marginBottom: 4,
   },
-  eventDescription: {
+  eventDetailsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  eventDetails: {
     fontSize: 14,
     color: '#555',
+    marginLeft: 8,
+  },
+  registerButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 6,
+    margin: 10,
+  },
+  registerButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });
+
+export default PastEventsScreen;

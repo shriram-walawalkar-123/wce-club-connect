@@ -4,7 +4,7 @@ import { FontAwesome5, MaterialIcons, Ionicons, MaterialCommunityIcons } from '@
 
 const ShowEvent = ({ route }) => {
   const { event } = route.params;
-
+  
   const openURL = (url) => {
     if (url) {
       Linking.openURL(url).catch((err) => Alert.alert("Failed to open URL", err.message));

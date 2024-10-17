@@ -6,7 +6,7 @@ const clubMemberUpdate = async (req, res) => {
     try {
         console.log("user data into backend",req.body);
         const { _id, profilepic, name, role, email, instagram, linkedin, slogan, description } = req?.body;
-        console.log("profilepic",profilepic);
+        // console.log("profilepic",profilepic);
         const clubId=req?.user?.clubId
         // Validate member ID and required fields
         if (!_id|| !name || !role || !email) {
@@ -37,7 +37,7 @@ const clubMemberUpdate = async (req, res) => {
 
         // Save the updated member
         await clubMember.save();
-        console.log("clubMember",clubMember);
+        // console.log("clubMember",clubMember);
         return res.status(200).json({
             success: true,
             message: "Club member updated successfully",

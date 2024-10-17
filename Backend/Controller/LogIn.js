@@ -29,7 +29,7 @@ const login = async (req, res) => {
 
         // Find the user by email
         const user = await User.findOne({ email });
-        console.log("user data is in login",user);
+        // console.log("user data is in login",user);
         if (!user) {
             return res.status(400).json({
                 success: false,

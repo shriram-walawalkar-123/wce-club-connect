@@ -89,7 +89,7 @@ const ClubInfoFormModal = ({ visible, onClose, formData, fetchClubInfo }) => {
 
     const updateData = async () => {
         setLoading(true);
-        console.log("formState in clubInfoFormModal", formState);
+        // console.log("formState in clubInfoFormModal", formState);
         try {
             const token = await AsyncStorage.getItem("authToken");
             const response = await fetch(SummaryApi.club_description.url, {

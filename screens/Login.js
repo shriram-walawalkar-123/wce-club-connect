@@ -48,7 +48,7 @@ export default function LoginScreen({ navigation }) {
       const data = await response.json();
       if (data.success === true) {
         await AsyncStorage.setItem('authToken', data.token);
-        console.log("data of user",data);
+        // console.log("data of user",data);
         navigateToRoleScreen(data);
       } else {
         Alert.alert('Error', data.message || 'Login failed');

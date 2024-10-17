@@ -20,7 +20,7 @@ const Home = ({ navigation, route }) => {
 
   const [modalVisible, setModalVisible] = useState(false);
   const { data } = route.params || {};
-  console.log("data in home",data);
+  // console.log("data in home",data);
   useEffect(() => {
     if (data) {
       setLoggedIn(true);
@@ -37,8 +37,10 @@ const Home = ({ navigation, route }) => {
     try {
       const response = await fetch(SummaryApi.get_all_club.url);
       const data = await response.json();
-      console.log("club dekho ",data);
-      setClubs(data.clubs);
+      // console.log("club dekho ",data);
+      if(data.success===true){
+        setClubs(data.clubs);
+      }
     } catch (err) {
       console.error("Error in fetchAllClubs:", err);
     } finally {

@@ -2,7 +2,7 @@ const Club = require("../../Models/ClubModel"); // Import the Club model
 const getClubInfo = async (req, res) => {
     try {
         const { clubId } = req.body; // Destructure clubId from the request body
-        console.log("clubId",clubId);
+        // console.log("clubId",clubId);
         // Validate the clubId
         if (!clubId) {
             return res.status(400).json({

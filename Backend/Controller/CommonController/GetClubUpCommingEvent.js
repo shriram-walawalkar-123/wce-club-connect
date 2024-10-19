@@ -3,7 +3,7 @@ const Event = require('../../Models/EventModel'); // Ensure the Event model is i
 const getClubUpcomingEvent = async (req, res) => {
     try {
         const { clubId } = req.body; // Destructure clubId from the request body
-
+        console.log("clubId",clubId);
         // Get the current date
         const currentDate = new Date();
 

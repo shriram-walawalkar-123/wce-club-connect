@@ -2,9 +2,7 @@ const mongoose = require("mongoose");
 const ClubMember = require("../../Models/ClubMemberModel");
 
 const clubMemberUpdate = async (req, res) => {
-    console.log("req body for update", req.body);
     try {
-        console.log("user data into backend",req.body);
         const { _id, profilepic, name, role, email, instagram, linkedin, slogan, description } = req?.body;
         // console.log("profilepic",profilepic);
         const clubId=req?.user?.clubId

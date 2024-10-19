@@ -25,7 +25,8 @@ const signup = require('../Controller/SignUp');
 const login = require('../Controller/LogIn');
 const { clubIdCreate } = require('../Controller/AdminController/ClubIdCreate');
 const  getAllClubId = require('../Controller/AdminController/GetAllClubId');
-const getClubMemberCommon = require('../Controller/CommonController/getClubMemberCommon');
+const { deleteEvent } = require('../Controller/ClubController/DeleteEvent');
+const getClubMemberCommon = require('../Controller/CommonController/GetClubMemberCommon');
 // user route
 router.post("/sign-up",signup);
 
@@ -60,6 +61,8 @@ router.post("/club_event_add",auth,isClub,clubEventAdd);
 router.post("/club_event_edit",auth,isClub,clubEventEdit);
 
 router.get("/get_club_event",auth,isClub,getClubEvent);
+
+router.post("/delete_event",auth,isClub,deleteEvent);
 
 // common route
 router.get("/get_all_club",getAllClub);

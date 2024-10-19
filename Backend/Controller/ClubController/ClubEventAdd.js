@@ -37,7 +37,6 @@ const clubEventAdd = async (req, res) => {
       sponsors: processedSponsors,
       subEvents
     });
-    console.log("subevemt backend",subEvents);
     const savedEvent = await newEvent.save();
 
     return res.status(201).json({

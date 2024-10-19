@@ -2,7 +2,6 @@ const Event = require('../../Models/EventModel');
 
 const clubEventEdit = async (req, res) => {
     try {
-        console.log("i am suboo", req.body);
         const { eventId, clubName, eventName, formUrl, eventPoster, description, eventDate, sponsors, subEvents } = req.body;
         const clubId = req.user.id;
         // Ensure the eventId is provided

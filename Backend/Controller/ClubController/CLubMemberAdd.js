@@ -2,7 +2,6 @@ const mongoose = require("mongoose");
 const ClubMember = require("../../Models/ClubMemberModel");
 
 const clubMemberAdd = async (req, res) => {
-    console.log("req body of member", req.body);
     try {
         const { profilepic, name, role, email, instagram, linkedin, slogan, description } = req?.body;
         // console.log("res bosy",req?.body);

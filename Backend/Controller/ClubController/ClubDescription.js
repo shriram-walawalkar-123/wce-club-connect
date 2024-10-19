@@ -67,7 +67,6 @@ const clubDescription = async (req, res) => {
         }
 
     } catch (err) {
-        console.log("userdata",req);
         return res.status(500).json({
             success: false,
             message: "Server error during clubDescription",

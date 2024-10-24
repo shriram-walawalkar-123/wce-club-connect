@@ -35,9 +35,9 @@ export default function MainEvent({ setEvent, event, closeModal }) {
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
+      allowsEditing: false, // Disable the crop option
       quality: 1,
+      selectionLimit: 0, // 0 means unlimited selection
     });
 
     if (!result.canceled) {
@@ -51,7 +51,6 @@ export default function MainEvent({ setEvent, event, closeModal }) {
 
     if (eventPoster) {
       uploadedPosterUrl = await uploadImage(eventPoster);
-      console.log("uploadedPosterUrl", uploadedPosterUrl);
     }
 
     setEvent(prevEvent => ({
@@ -168,7 +167,7 @@ export default function MainEvent({ setEvent, event, closeModal }) {
               <Text style={styles.updateButtonText}>Update Main Event</Text>
             </TouchableOpacity>
           )}
-          
+
           <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
             <Text style={styles.closeButtonText}>Close</Text>
           </TouchableOpacity>

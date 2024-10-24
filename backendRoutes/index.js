@@ -1,6 +1,6 @@
 // const backend_url = "https://wce-club-connect.onrender.com/api/v1";
 const render = "https://wce-club-connect.onrender.com/api/v1";
-const local = "http://192.168.30.40:5000/api/v1";
+const local = "http://192.168.78.3:5000/api/v1";
 const backend_url = render
 
 const SummaryApi = {
@@ -104,7 +104,10 @@ const SummaryApi = {
         url:`${backend_url}/get_all_past_events`,
         method:"get",
     },
-
+    delete_event:{
+        url:`${backend_url}/delete_event`,
+        method:"post",
+    },
     // admin route get_all_club_id
     club_id_create:{
         url:`${backend_url}/club_id_create`,

@@ -28,6 +28,8 @@ const UploadEventScreen = () => {
 const styles = StyleSheet.create({
   container: {
     padding: 20, // Add padding around the content
+    marginBottom:50
+
   },
   uploadButton: {
     flexDirection: 'row', // Align icon and text horizontally

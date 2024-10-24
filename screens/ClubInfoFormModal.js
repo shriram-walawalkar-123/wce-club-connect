@@ -113,7 +113,6 @@ const ClubInfoFormModal = ({ visible, onClose, formData, fetchClubInfo }) => {
             }
         } catch (error) {
             Alert.alert('Error', 'Failed to update club info. Please try again.');
-            console.log("this is clubInfoModal error", error);
         } finally {
             setLoading(false);
         }
@@ -132,9 +131,9 @@ const ClubInfoFormModal = ({ visible, onClose, formData, fetchClubInfo }) => {
     const pickImage = async (key) => {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [1, 1],
+            allowsEditing: false, // Disable the crop option
             quality: 1,
+            selectionLimit: 0, // 0 means unlimited selection
         });
 
         if (!result.canceled && result.assets && result.assets.length > 0) {
@@ -180,9 +179,9 @@ const ClubInfoFormModal = ({ visible, onClose, formData, fetchClubInfo }) => {
     const pickAdvisorImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [1, 1],
+            allowsEditing: false, // Disable the crop option
             quality: 1,
+            selectionLimit: 0, // 0 means unlimited selection
         });
 
         if (!result.canceled && result.assets && result.assets.length > 0) {

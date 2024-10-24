@@ -7,7 +7,6 @@ const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpaci
 
 const RegisterEvent = ({ event, onClose }) => {
   const animatedValue = new Animated.Value(0);
-  console.log("event is sheeram:",event);
   React.useEffect(() => {
     Animated.timing(animatedValue, {
       toValue: 1,

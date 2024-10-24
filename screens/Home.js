@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, Dimensions, ImageBackground, ActivityIndicator} from 'react-native';
+import { View, Text, Image, FlatList, TouchableOpacity, StyleSheet, Dimensions, ImageBackground, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import SummaryApi from '../backendRoutes';
 import UserDetailsModal from '../Modal/UserDetailsModal';
 
@@ -15,12 +15,12 @@ const Home = ({ navigation, route }) => {
     username: '',
     profileImage: 'https://via.placeholder.com/150',
     role: '',
-    email: ''
+    email: '',
   });
 
   const [modalVisible, setModalVisible] = useState(false);
   const { data } = route.params || {};
-  // console.log("data in home",data);
+
   useEffect(() => {
     if (data) {
       setLoggedIn(true);
@@ -37,9 +37,10 @@ const Home = ({ navigation, route }) => {
     try {
       const response = await fetch(SummaryApi.get_all_club.url);
       const data = await response.json();
-      // console.log("club dekho ",data);
-      if(data.success===true){
+      if (data.success) {
         setClubs(data.clubs);
+      } else {
+        console.error("Failed to fetch clubs:", data.message);
       }
     } catch (err) {
       console.error("Error in fetchAllClubs:", err);
@@ -50,7 +51,7 @@ const Home = ({ navigation, route }) => {
 
   useEffect(() => {
     fetchAllClubs();
-  }, [data]);
+  }, [fetchAllClubs]);
 
   const handleLogout = useCallback(() => {
     setLoggedIn(false);
@@ -60,7 +61,7 @@ const Home = ({ navigation, route }) => {
       role: '',
       email: '',
     });
-  }, [navigation]);
+  }, []);
 
   const renderClubItem = ({ item }) => (
     <TouchableOpacity
@@ -74,14 +75,16 @@ const Home = ({ navigation, route }) => {
         end={{ x: 1, y: 1 }}
         style={styles.clubGradient}
       >
-        <FontAwesome5 name="users" size={32} color="white" style={styles.clubIcon} />
+        <Image source={{ uri: item.profilepic }} style={styles.clubIcon} />
         <Text style={styles.clubText}>{item.clubName}</Text>
       </LinearGradient>
     </TouchableOpacity>
   );
+
   const toggleModal = () => {
-    setModalVisible(!modalVisible);
+    setModalVisible((prev) => !prev);
   };
+
   return (
     <ImageBackground
       source={{ uri: 'https://images.unsplash.com/photo-1495510091154-4581df8e2b1f' }}
@@ -112,7 +115,7 @@ const Home = ({ navigation, route }) => {
                   </TouchableOpacity>
                 )}
                 {profileData.role === 'admin' && (
-                  <TouchableOpacity style={styles.headerButton} onPress={() => navigation.navigate('AdminScreen', { clubs: clubs })}>
+                  <TouchableOpacity style={styles.headerButton} onPress={() => navigation.navigate('AdminScreen', { clubs })}>
                     <Ionicons name="settings-outline" size={24} color="white" />
                   </TouchableOpacity>
                 )}
@@ -137,18 +140,18 @@ const Home = ({ navigation, route }) => {
                 end={{ x: 1, y: 0 }}
                 style={styles.navButtonGradient}
               >
-                <Ionicons name="calendar-outline" size={28} color="white" />
+                <Ionicons name="calendar-outline" size={24} color="white" />
                 <Text style={styles.navText}>Upcoming Events</Text>
               </LinearGradient>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('PastEvents')}>
+            <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('PastEventsScreen')}>
               <LinearGradient
                 colors={['#11998e', '#38ef7d']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.navButtonGradient}
               >
-                <Ionicons name="time-outline" size={28} color="white" />
+                <Ionicons name="time-outline" size={24} color="white" />
                 <Text style={styles.navText}>Past Events</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -163,6 +166,7 @@ const Home = ({ navigation, route }) => {
               renderItem={renderClubItem}
               keyExtractor={(item) => item._id}
               contentContainerStyle={styles.clubList}
+              numColumns={width > 600 ? 2 : 1}
               ListEmptyComponent={
                 <View style={styles.noClubsContainer}>
                   <Text style={styles.noClubsText}>No clubs available.</Text>
@@ -194,126 +198,121 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 40,
+    paddingHorizontal: width * 0.05,
+    paddingTop: height * 0.05,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: height * 0.02,
   },
   logo: {
-    width: 50,
-    height: 50,
+    width: width * 0.12,
+    height: width * 0.12,
     resizeMode: 'contain',
-    borderRadius: 25,
+    borderRadius: width * 0.06,
   },
   profileContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 25,
-    padding: 5,
+    borderRadius: width * 0.06,
+    padding: width * 0.01,
   },
   profileImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: width * 0.1,
+    height: width * 0.1,
+    borderRadius: width * 0.05,
     borderWidth: 2,
     borderColor: 'white',
-    marginHorizontal: 8,
+    marginHorizontal: width * 0.02,
   },
   headerButton: {
-    padding: 10,
-    borderRadius: 20,
+    padding: width * 0.02,
+    borderRadius: width * 0.05,
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    marginLeft: 8,
+    marginLeft: width * 0.02,
   },
   loginButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#4CAF50',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 25,
+    paddingVertical: height * 0.01,
+    paddingHorizontal: width * 0.04,
+    borderRadius: width * 0.05,
   },
   loginButtonText: {
     color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
-    marginLeft: 10,
+    marginLeft: width * 0.01,
+    fontSize: width * 0.04,
   },
   heading: {
-    fontSize: 32,
+    fontSize: width * 0.06,
+    color: 'white',
     fontWeight: 'bold',
-    color: '#ffffff',
-    textAlign: 'center',
-    marginBottom: 30,
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 5,
+    marginBottom: height * 0.01,
   },
   navBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 30,
+    marginBottom: height * 0.02,
   },
   navButton: {
     flex: 1,
-    marginHorizontal: 5,
-    borderRadius: 15,
+    marginHorizontal: width * 0.01,
+    borderRadius: width * 0.05,
     overflow: 'hidden',
-    elevation: 5,
   },
   navButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 5,
-    height:70,
+    paddingVertical: height * 0.02,
   },
   navText: {
     color: 'white',
-    marginLeft: 10,
-    fontSize: 16,
-    fontWeight: 'bold',
+    marginLeft: width * 0.01,
+    fontSize: width * 0.04,
   },
   loadingIndicator: {
-    marginTop: 50,
+    flex: 1,
+    justifyContent: 'center',
   },
   clubList: {
-    paddingBottom: 50,
+    paddingBottom: height * 0.02,
   },
   clubCard: {
-    marginBottom: 20,
-    borderRadius: 15,
-    elevation: 5,
+    flex: 1,
+    margin: width * 0.02,
+    borderRadius: width * 0.04,
     overflow: 'hidden',
   },
   clubGradient: {
-    paddingVertical: 25,
-    paddingHorizontal: 30,
-    justifyContent: 'center',
+    padding: width * 0.05,
+    borderRadius: width * 0.04,
     alignItems: 'center',
   },
   clubIcon: {
-    marginBottom: 15,
+    width: width * 0.15,
+    height: width * 0.15,
+    borderRadius: width * 0.075,
+    marginBottom: height * 0.01,
   },
   clubText: {
     color: 'white',
-    fontSize: 20,
+    fontSize: width * 0.045,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
   noClubsContainer: {
-    alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 50,
+    alignItems: 'center',
+    padding: width * 0.05,
   },
   noClubsText: {
     color: 'white',
-    fontSize: 18,
+    fontSize: width * 0.045,
   },
 });
 

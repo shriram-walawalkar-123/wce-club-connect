@@ -4,7 +4,7 @@ const clubGallery = async (req, res) => {
   try {
     const clubId = req.user.id; // Assuming the user object contains the club's ID
     const { eventPhoto } = req.body; // Expecting eventPhoto as an array of URLs
-    // console.log("eventPhoto", eventPhoto); // Log the incoming event photos for debugging
+    console.log("eventPhoto", eventPhoto); // Log the incoming event photos for debugging
 
     // Find the club by its ID
     let club = await Club.findOne({ clubId });

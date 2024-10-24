@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity, Button } from 'react-native';
+import { View, Text, Image, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import SummaryApi from '../backendRoutes';
 import { useNavigation } from '@react-navigation/native';
@@ -55,14 +55,6 @@ const PastEventsScreen = () => {
             </View>
           )}
         </View>
-      </TouchableOpacity>
-      
-      {/* Register button */}
-      <TouchableOpacity 
-        style={styles.registerButton}
-        onPress={() => navigation.navigate('Register', { event: item })}
-      >
-        <Text style={styles.registerButtonText}>Register</Text>
       </TouchableOpacity>
     </View>
   );
@@ -129,18 +121,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#555',
     marginLeft: 8,
-  },
-  registerButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 6,
-    margin: 10,
-  },
-  registerButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
   },
 });
 

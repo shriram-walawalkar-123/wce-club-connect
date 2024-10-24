@@ -19,8 +19,8 @@ export default function Sponsor({ setEvent, event, closeModal }) {
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
+      allowsEditing: false, // Disable the crop option
+      selectionLimit: 0, // 0 means unlimited selection
       quality: 1,
     });
 

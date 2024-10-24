@@ -121,7 +121,7 @@ const UpdateMembersScreen = () => {
         if (!result.canceled) {
             const selectedImageUri = result.assets[0].uri;
             const dataResponse = await uploadImage(selectedImageUri);
-            setSelectedImage(dataResponse.url);
+            setSelectedImage(dataResponse.secure_url);
         }
     };
 

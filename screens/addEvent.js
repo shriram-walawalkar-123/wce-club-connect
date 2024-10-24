@@ -63,7 +63,6 @@ export default function AddEvent() {
         Alert.alert("Error", "There was an error submitting the event");
       }
     } catch (err) {
-      console.error('Error submitting event:', err);
       Alert.alert("Error", "An unexpected error occurred");
     }
   };

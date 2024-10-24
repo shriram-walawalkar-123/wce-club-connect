@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, ScrollView, Image, TouchableOpacity, ActivityIndicator, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons'; // Icons from react-native-vector-icons
@@ -11,13 +11,13 @@ const AllUploadedEvents = () => {
   const [error, setError] = useState(null);
   const navigation = useNavigation();
 
-  const fetchAllEvent = async () => {
+  const fetchAllEvent = useCallback(async () => {
     try {
       setLoading(true);
-
+  
       const token = await AsyncStorage.getItem("authToken");
       if (!token) throw new Error("Authentication token is missing");
-
+  
       const response = await fetch(SummaryApi.get_club_event.url, {
         method: SummaryApi.get_club_event.method,
         headers: {
@@ -25,29 +25,70 @@ const AllUploadedEvents = () => {
           'Authorization': `Bearer ${token}`,
         },
       });
-
       const data = await response.json();
-
       if (data.success) {
         setAllEvent(data?.events);
       } else {
         setError("No events found.");
       }
     } catch (err) {
-      console.error("Error in showAll event fetching events:", err);
+      console.error("Error fetching events:", err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
+  }, []);
+  
+  const deleteEvent = async (eventId) => {
+    const token = await AsyncStorage.getItem("authToken");
+    if (!token) throw new Error("Authentication token is missing");
+    try {
+      const response = await fetch(SummaryApi.delete_event.url, {
+        method: SummaryApi.delete_event.method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body:JSON.stringify({eventId}),
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        Alert.alert("Success", "Event deleted successfully");
+        fetchAllEvent(); // Refresh events after deletion
+      } else {
+        setError("Failed to delete event.");
+      }
+    } catch (err) {
+      console.error("Error deleting event:", err);
+      setError("Failed to delete event.");
+    }
+  };
+
+  const confirmDelete = (eventId) => {
+    Alert.alert(
+      "Delete Event",
+      "Are you sure you want to delete this event?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Yes",
+          onPress: () => deleteEvent(eventId),
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
   useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      fetchAllEvent();
-    });
-
+    const unsubscribe = navigation.addListener('focus', fetchAllEvent);
+  
     return unsubscribe;
-  }, [navigation]);
+  }, [navigation, fetchAllEvent]);
+  
 
   const handleNavigate = (item) => {
     navigation.navigate('showEvent', { event: item });
@@ -100,14 +141,24 @@ const AllUploadedEvents = () => {
                   {item?.description}
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => handleEdit(item)}
-                style={styles.editButton}
-              >
-                <Text style={styles.editButtonText}>
-                  <Icon name="pencil-outline" size={18} color="#fff" /> Edit Event
-                </Text>
-              </TouchableOpacity>
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  onPress={() => handleEdit(item)}
+                  style={styles.editButton}
+                >
+                  <Text style={styles.editButtonText}>
+                    <Icon name="pencil-outline" size={18} color="#fff" /> Edit Event
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => confirmDelete(item._id)}
+                  style={styles.deleteButton}
+                >
+                  <Text style={styles.deleteButtonText}>
+                    <Icon name="trash-outline" size={18} color="#fff" /> Delete Event
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           ))
         )}
@@ -156,14 +207,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
-    borderWidth: 2,         // Thickness of the border
+    borderWidth: 2, 
     borderColor: 'black',
   },
   eventImage: {
     width: '100%',
     height: 200,
     borderRadius: 8,
-    borderWidth: 2,         // Thickness of the border
+    borderWidth: 2,
     borderColor: 'black',
   },
   eventName: {
@@ -181,14 +232,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#555',
   },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
   editButton: {
     backgroundColor: '#007BFF',
     padding: 10,
     borderRadius: 6,
-    marginTop: 10,
+    flex: 1,
+    marginRight: 10,
     alignItems: 'center',
   },
   editButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  deleteButton: {
+    backgroundColor: '#DC3545',
+    padding: 10,
+    borderRadius: 6,
+    flex: 1,
+    alignItems: 'center',
+  },
+  deleteButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',

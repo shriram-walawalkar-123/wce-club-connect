@@ -79,9 +79,9 @@ const EditEvent = () => {
   const addSponsor = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
+      allowsEditing: false, // Disable the crop option
       quality: 1,
+      selectionLimit: 0, // 0 means unlimited selection
     });
 
     if (!result.canceled && result.assets?.[0].uri) {

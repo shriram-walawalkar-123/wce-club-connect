@@ -28,7 +28,6 @@ const uploadImage = async (imageUri) => {
       throw new Error("Image upload failed!");
     }
 
-    console.log("Image uploaded successfully:", dataResponse);
     return dataResponse; // Return the response from Cloudinary
   } catch (err) {
     console.error("Error uploading image:", err);

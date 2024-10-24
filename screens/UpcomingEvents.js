@@ -23,7 +23,7 @@ const ITEM_SIZE = width * 0.72;
 const SPACING = 10;
 const FULL_SIZE = ITEM_SIZE + SPACING * 2;
 
-const UpcomingEventsScreen= () => {
+const UpcomingEventsScreen = () => {
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalVisible, setModalVisible] = useState(false);
@@ -40,9 +40,9 @@ const UpcomingEventsScreen= () => {
         },
       });
       const data = await response.json();
-      if(data.success===true){
+      if (data.success === true) {
         setUpcomingEvents([{ key: 'left-spacer' }, ...data.data, { key: 'right-spacer' }]);
-      }else{
+      } else {
         Alert("error to get events");
       }
     } catch (error) {
@@ -51,7 +51,6 @@ const UpcomingEventsScreen= () => {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchUpcomingEvents();
   }, []);
@@ -142,7 +141,7 @@ const UpcomingEventsScreen= () => {
     <View style={styles.container}>
       <Animated.FlatList
         data={upcomingEvents}
-        keyExtractor={(item) => item.id || item.key}
+        keyExtractor={(item, index) => item.id ? item.id.toString() : `spacer-${index}`}
         renderItem={renderItem}
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -154,6 +153,7 @@ const UpcomingEventsScreen= () => {
           { useNativeDriver: true }
         )}
       />
+
       <Modal
         visible={isModalVisible}
         transparent={true}

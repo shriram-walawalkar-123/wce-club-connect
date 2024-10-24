@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Modal, ScrollView, FlatList, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import Contact from './Contact';
-import Round from './Round';
+import Contact from './Contact'; // Assuming Contact is another component you have
+import Round from './Round'; // Assuming Round is another component you have
 import * as DocumentPicker from 'expo-document-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import uploadPDF from '../helper/uploadPDF';
+import uploadPDF from '../helper/uploadPDF'; // Assuming you have this helper for uploading PDFs
 
 export default function SubEvent({ setEvent, event, closeModal }) {
   const [subEvents, setSubEvents] = useState(event.subEvents || []);
   const [currentSubEventId, setCurrentSubEventId] = useState(null);
-
   const [contactModalVisible, setContactModalVisible] = useState(false);
   const [roundModalVisible, setRoundModalVisible] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -26,7 +25,7 @@ export default function SubEvent({ setEvent, event, closeModal }) {
 
   const addNewSubEvent = () => {
     const newSubEvent = {
-      id: `${Date.now()}-${Math.random()}`,
+      id: `${Date.now()}-${Math.random()}`, // Unique ID for each sub-event
       subEventName: '',
       entryFee: '',
       description: '',
@@ -42,23 +41,21 @@ export default function SubEvent({ setEvent, event, closeModal }) {
     setCurrentSubEventId(newSubEvent.id);
   };
 
-console.log("subevent info",subEvents)
-
   const deleteSubEvent = (id) => {
     Alert.alert(
-      "Delete Sub Event",
-      "Are you sure you want to delete this sub event?",
+      'Delete Sub Event',
+      'Are you sure you want to delete this sub event?',
       [
-        { text: "Cancel", style: "cancel" },
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: "Delete",
+          text: 'Delete',
           onPress: () => {
-            const updatedSubEvents = subEvents.filter(subEvent => subEvent.id !== id);
+            const updatedSubEvents = subEvents.filter((subEvent) => subEvent.id !== id);
             setSubEvents(updatedSubEvents);
             setCurrentSubEventId(updatedSubEvents[0]?.id || null);
           },
-          style: "destructive"
-        }
+          style: 'destructive',
+        },
       ]
     );
   };
@@ -66,9 +63,7 @@ console.log("subevent info",subEvents)
   const updateSubEvent = (field, value) => {
     setSubEvents((prevSubEvents) =>
       prevSubEvents.map((subEvent) =>
-        subEvent.id === currentSubEventId
-          ? { ...subEvent, [field]: value }
-          : subEvent
+        subEvent.id === currentSubEventId ? { ...subEvent, [field]: value } : subEvent
       )
     );
   };
@@ -76,23 +71,25 @@ console.log("subevent info",subEvents)
   const pickRulebook = async () => {
     let result = await DocumentPicker.getDocumentAsync({ type: 'application/pdf' });
     if (!result.canceled) {
-      updateSubEvent('rulebookPDF', { name: result.assets[0].name, uri: result.assets[0].uri });
+      updateSubEvent('rulebookPDF', { name: result.name, uri: result.uri });
     }
   };
 
   const handleUpdateSubEvents = async () => {
-    const updatedSubEvents = await Promise.all(subEvents.map(async (subEvent) => {
-      let uploadedPDFUrl = null;
-      if (subEvent.rulebookPDF.uri) {
-        uploadedPDFUrl = await uploadPDF(subEvent.rulebookPDF.uri);
-      }
-      return {
-        ...subEvent,
-        rulebookPDF: uploadedPDFUrl ? { name: subEvent.rulebookPDF.name, uri: uploadedPDFUrl } : subEvent.rulebookPDF,
-      };
-    }));
+    const updatedSubEvents = await Promise.all(
+      subEvents.map(async (subEvent) => {
+        let uploadedPDFUrl = null;
+        if (subEvent.rulebookPDF.uri) {
+          uploadedPDFUrl = await uploadPDF(subEvent.rulebookPDF.uri);
+        }
+        return {
+          ...subEvent,
+          rulebookPDF: uploadedPDFUrl ? { name: subEvent.rulebookPDF.name, uri: uploadedPDFUrl } : subEvent.rulebookPDF,
+        };
+      })
+    );
 
-    setEvent(prevEvent => ({
+    setEvent((prevEvent) => ({
       ...prevEvent,
       subEvents: updatedSubEvents,
     }));
@@ -107,16 +104,13 @@ console.log("subevent info",subEvents)
       >
         <Text style={styles.subEventItemText}>{item.subEventName || 'Unnamed Sub Event'}</Text>
       </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={() => deleteSubEvent(item.id)}
-      >
+      <TouchableOpacity style={styles.deleteButton} onPress={() => deleteSubEvent(item.id)}>
         <Icon name="close-circle" size={24} color="#FF5722" />
       </TouchableOpacity>
     </View>
   );
 
-  const currentSubEvent = subEvents.find(subEvent => subEvent.id === currentSubEventId);
+  const currentSubEvent = subEvents.find((subEvent) => subEvent.id === currentSubEventId);
 
   return (
     <View style={styles.container}>
@@ -126,7 +120,7 @@ console.log("subevent info",subEvents)
         <FlatList
           data={subEvents}
           renderItem={renderSubEventItem}
-          keyExtractor={item => item.id}
+          keyExtractor={(item) => item.id}
           horizontal
           showsHorizontalScrollIndicator={false}
         />
@@ -160,9 +154,7 @@ console.log("subevent info",subEvents)
             />
             <TouchableOpacity style={styles.dateTimeButton} onPress={() => setShowDatePicker(true)}>
               <Icon name="calendar" size={24} color="#2196F3" />
-              <Text style={styles.dateTimeText}>
-                {currentSubEvent.date.toLocaleDateString()}
-              </Text>
+              <Text style={styles.dateTimeText}>{currentSubEvent.date.toLocaleDateString()}</Text>
             </TouchableOpacity>
             {showDatePicker && (
               <DateTimePicker
@@ -234,20 +226,12 @@ console.log("subevent info",subEvents)
 
       {/* Contact Modal */}
       <Modal visible={contactModalVisible} animationType="slide">
-        <Contact
-          closeModal={() => setContactModalVisible(false)}
-          subEvent={currentSubEvent}
-          updateSubEvent={updateSubEvent}
-        />
+        <Contact closeModal={() => setContactModalVisible(false)} subEvent={currentSubEvent} updateSubEvent={updateSubEvent} />
       </Modal>
 
       {/* Round Modal */}
       <Modal visible={roundModalVisible} animationType="slide">
-        <Round
-          closeModal={() => setRoundModalVisible(false)}
-          subEvent={currentSubEvent}
-          updateSubEvent={updateSubEvent}
-        />
+        <Round closeModal={() => setRoundModalVisible(false)} subEvent={currentSubEvent} updateSubEvent={updateSubEvent} />
       </Modal>
     </View>
   );

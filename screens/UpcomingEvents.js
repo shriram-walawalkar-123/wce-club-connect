@@ -3,25 +3,23 @@ import {
   View,
   Text,
   Image,
-  FlatList,
   ActivityIndicator,
   StyleSheet,
   TouchableOpacity,
   Modal,
-  Animated,
-  Dimensions,
   Alert,
+  Dimensions,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import SummaryApi from '../backendRoutes';
 import RegisterEvent from '../Modal/RegisterEvent';
+import { FlatList } from 'react-native-gesture-handler';
 
-const { width, height } = Dimensions.get('window');
-const ITEM_SIZE = width * 0.72;
-const SPACING = 10;
-const FULL_SIZE = ITEM_SIZE + SPACING * 2;
+const { width } = Dimensions.get('window');
+const ITEM_SIZE = width < 768 ? width * 0.85 : width * 0.4; // Responsive card width
+const SPACING = 8;
+const CARD_HEIGHT = 420; // Fixed card height for consistency
 
 const UpcomingEventsScreen = () => {
   const [upcomingEvents, setUpcomingEvents] = useState([]);
@@ -29,7 +27,6 @@ const UpcomingEventsScreen = () => {
   const [isModalVisible, setModalVisible] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const navigation = useNavigation();
-  const scrollX = useRef(new Animated.Value(0)).current;
 
   const fetchUpcomingEvents = async () => {
     try {
@@ -43,14 +40,15 @@ const UpcomingEventsScreen = () => {
       if (data.success === true) {
         setUpcomingEvents([{ key: 'left-spacer' }, ...data.data, { key: 'right-spacer' }]);
       } else {
-        Alert("error to get events");
+        Alert.alert("Error", "Failed to fetch events");
       }
     } catch (error) {
-      console.error('Error fetching events:', error.message);
+      console.error('Error fetching events:', error);
     } finally {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     fetchUpcomingEvents();
   }, []);
@@ -66,92 +64,62 @@ const UpcomingEventsScreen = () => {
     setSelectedEvent(null);
   };
 
-  const renderItem = ({ item, index }) => {
+  const renderItem = ({ item }) => {
     if (!item.eventName) {
       return <View style={{ width: SPACING }} />;
     }
 
-    const inputRange = [
-      (index - 2) * FULL_SIZE,
-      (index - 1) * FULL_SIZE,
-      index * FULL_SIZE,
-    ];
-
-    const translateY = scrollX.interpolate({
-      inputRange,
-      outputRange: [0, -50, 0],
-    });
-
-    const scale = scrollX.interpolate({
-      inputRange,
-      outputRange: [0.8, 1, 0.8],
-    });
-
-    const opacity = scrollX.interpolate({
-      inputRange,
-      outputRange: [0.5, 1, 0.5],
-    });
-
     return (
-      <Animated.View
-        style={[
-          styles.eventContainer,
-          { transform: [{ translateY }, { scale }], opacity },
-        ]}
-      >
-        <LinearGradient
-          colors={['#6C63FF', '#4CAF50']}
-          style={styles.gradientBackground}
+      <View style={styles.eventContainer}>
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => navigation.navigate('showEvent', { event: item })}
         >
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => navigation.navigate('showEvent', { event: item })}
-          >
-            <View style={styles.imageContainer}>
-              <Image source={{ uri: item.eventPoster }} style={styles.eventImage} />
-            </View>
-            <View style={styles.detailsContainer}>
-              <Text style={styles.eventName}>{item.eventName}</Text>
-              <Text style={styles.eventDate}>
-                {new Date(item.eventDate).toLocaleDateString()}
-              </Text>
-              <Text style={styles.eventDescription}>{item.description}</Text>
-              <TouchableOpacity
-                style={styles.registerButton}
-                onPress={() => openRegisterEventModal(item)}
-              >
-                <Text style={styles.registerButtonText}>Register Now</Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
-        </LinearGradient>
-      </Animated.View>
+          <View style={styles.imageContainer}>
+            <Image 
+              source={{ uri: item.eventPoster }} 
+              style={styles.eventImage}
+              resizeMode="cover"
+            />
+          </View>
+          <View style={styles.detailsContainer}>
+            <Text style={styles.eventName} numberOfLines={1}>
+              {item.eventName}
+            </Text>
+            <Text style={styles.eventDate}>
+              {new Date(item.eventDate).toLocaleDateString()}
+            </Text>
+            <Text style={styles.eventDescription} numberOfLines={1}>
+              {item.description}
+            </Text>
+            <TouchableOpacity
+              style={styles.registerButton}
+              onPress={() => openRegisterEventModal(item)}
+            >
+              <Text style={styles.registerButtonText}>Register Now</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </View>
     );
   };
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6C63FF" />
+        <ActivityIndicator size="large" color="#4e545c" />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Animated.FlatList
+      <FlatList
         data={upcomingEvents}
         keyExtractor={(item, index) => item.id ? item.id.toString() : `spacer-${index}`}
         renderItem={renderItem}
-        horizontal
-        showsHorizontalScrollIndicator={false}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
-        snapToInterval={FULL_SIZE}
-        decelerationRate="fast"
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-          { useNativeDriver: true }
-        )}
       />
 
       <Modal
@@ -173,7 +141,8 @@ const UpcomingEventsScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F0F4F8',
+    backgroundColor: '#000401', // Jet Black background
+    padding: 16, // Added padding for better spacing around cards
   },
   loadingContainer: {
     flex: 1,
@@ -181,93 +150,74 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   listContent: {
-    alignItems: 'center',
-    paddingVertical: 16,
+    paddingBottom: 16, // Add space at the bottom of the list
   },
   eventContainer: {
-    width: ITEM_SIZE,
-    height: height * 0.7,
-    marginHorizontal: SPACING,
-    borderRadius: 24,
-    overflow: 'hidden',
-  },
-  gradientBackground: {
-    flex: 1,
-    borderRadius: 24,
+    width: '100%', // Full width of the container
+    height: CARD_HEIGHT,
+    marginBottom: SPACING, // Space between cards vertically
   },
   card: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
+    backgroundColor: '#4e545c', // Gunmetal Gray background for cards
+    borderRadius: 16,
+    shadowColor: '#000401', // Jet Black shadow
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 20,
+    shadowRadius: 8,
     elevation: 5,
-    padding: 10,
-    margin: 2,
+    overflow: 'hidden',
   },
   imageContainer: {
     height: '60%',
-    marginBottom: 10,
   },
   eventImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 15,
   },
   detailsContainer: {
-    padding: 10,
+    padding: 16,
+    backgroundColor: '#8d9797', // Pewter background for the card details section
   },
   eventName: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
+    color: '#e5e8e8', // White for event name text
     marginBottom: 4,
-    color: '#333',
-    textShadowColor: 'rgba(0, 0, 0, 0.1)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
   },
   eventDate: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#555',
+    fontSize: 14,
+    color: '#e5e8e8', // White for event date text
     marginBottom: 8,
   },
   eventDescription: {
     fontSize: 14,
-    color: '#666',
+    color: '#e5e8e8', // White for event description text
     marginBottom: 16,
   },
   registerButton: {
-    backgroundColor: '#FF6B6B',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 25,
+    backgroundColor: '#000401', // Jet Black background for button
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: 8,
     alignSelf: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 5,
   },
   registerButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
-    textAlign: 'center',
+    color: '#e5e8e8', // White text for button
+    fontWeight: '600',
+    fontSize: 14,
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent black for modal background
   },
   modalContent: {
     width: '90%',
     maxHeight: '80%',
-    backgroundColor: '#fff',
-    borderRadius: 24,
+    backgroundColor: '#8d9797', // Pewter background for modal content
+    borderRadius: 16,
     overflow: 'hidden',
   },
 });

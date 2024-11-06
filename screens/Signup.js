@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Dimensions, Image, ImageBackground, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Dimensions, Image, ImageBackground, KeyboardAvoidingView, ScrollView, Platform,ActivityIndicator } from 'react-native';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import * as ImagePicker from 'expo-image-picker';
@@ -23,6 +23,8 @@ const Signup = () => {
   const [collegeName, setCollegeName] = useState('');
   const [clubId, setClubId] = useState('');
   const [profileImage, setProfileImage] = useState(null);
+  const [loading, setLoading] = useState(false); // Added state for loader
+
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     expoClientId: 'YOUR_EXPO_CLIENT_ID',
@@ -40,7 +42,7 @@ const Signup = () => {
 
   const handleImagePicker = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
+
     if (permissionResult.granted === false) {
       Alert.alert('Permission to access camera roll is required!');
       return;
@@ -59,6 +61,7 @@ const Signup = () => {
   };
 
   const handleSignup = async () => {
+    setLoading(true); // Set loading to true when signup is initiated
     try {
       let uploadedImageUrl = null;
 
@@ -72,15 +75,15 @@ const Signup = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          name, 
-          clubName, 
-          email, 
-          password, 
-          collegeName, 
-          clubId, 
-          role: isStudentSignup ? "student" : "club", 
-          profilepic: uploadedImageUrl?.secure_url, 
+        body: JSON.stringify({
+          name,
+          clubName,
+          email,
+          password,
+          collegeName,
+          clubId,
+          role: isStudentSignup ? "student" : "club",
+          profilepic: uploadedImageUrl?.secure_url,
         }),
       });
       const result = await response.json();
@@ -94,15 +97,17 @@ const Signup = () => {
     } catch (error) {
       console.error('Signup error:', error);
       Alert.alert('Error', 'An error occurred during signup. Please try again.');
+    } finally {
+      setLoading(false); // Set loading to false when signup is complete
     }
   };
 
   return (
-    <ImageBackground 
-      source={{ uri: 'https://www.nikaiacours.fr/wp-content/uploads/2019/12/login-background.jpg' }} 
+    <ImageBackground
+      source={{ uri: 'https://www.nikaiacours.fr/wp-content/uploads/2019/12/login-background.jpg' }}
       style={styles.backgroundImage}
     >
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
       >
@@ -112,17 +117,17 @@ const Signup = () => {
             style={styles.formContainer}
           >
             <Text style={styles.title}>Sign Up</Text>
-            
+
             <View style={styles.toggleContainer}>
-              <TouchableOpacity 
-                style={[styles.toggleButton, isStudentSignup && styles.activeToggle]} 
+              <TouchableOpacity
+                style={[styles.toggleButton, isStudentSignup && styles.activeToggle]}
                 onPress={() => setIsStudentSignup(true)}
               >
                 <Ionicons name="school-outline" size={24} color={isStudentSignup ? "#ffffff" : "#333333"} />
                 <Text style={[styles.toggleText, isStudentSignup && styles.activeToggleText]}>Student</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.toggleButton, !isStudentSignup && styles.activeToggle]} 
+              <TouchableOpacity
+                style={[styles.toggleButton, !isStudentSignup && styles.activeToggle]}
                 onPress={() => setIsStudentSignup(false)}
               >
                 <Ionicons name="business-outline" size={24} color={!isStudentSignup ? "#ffffff" : "#333333"} />
@@ -212,15 +217,19 @@ const Signup = () => {
               <Image source={{ uri: profileImage }} style={styles.imagePreview} />
             )}
 
-            <TouchableOpacity style={styles.signupButton} onPress={handleSignup}>
-              <Text style={styles.signupButtonText}>Sign Up</Text>
+            <TouchableOpacity style={styles.signupButton} onPress={handleSignup} disabled={loading}>
+              {loading ? ( // Display loader when loading is true
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <Text style={styles.signupButtonText}>Sign Up</Text>
+              )}
             </TouchableOpacity>
 
             {isStudentSignup && (
               <TouchableOpacity style={styles.googleButton} onPress={() => promptAsync()}>
-                <Image 
-                  source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg' }} 
-                  style={styles.googleLogo} 
+                <Image
+                  source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg' }}
+                  style={styles.googleLogo}
                 />
                 <Text style={styles.googleButtonText}>Sign up with Google</Text>
               </TouchableOpacity>
